@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"encoding/hex"
 	"fmt"
 	"strings"
 
@@ -172,4 +173,24 @@ func ManifestByPr(dir, from, to string) (*Manifest, error) {
 	}
 
 	return reduceToDiff(m, diff)
+}
+
+func ManifestBySha(dir, sha string) (*Manifest, error) {
+	repo, err := git.OpenRepository(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	bytes, err := hex.DecodeString(sha)
+	if err != nil {
+		return nil, err
+	}
+
+	oid := git.NewOidFromBytes(bytes)
+	commit, err := repo.LookupCommit(oid)
+	if err != nil {
+		return nil, err
+	}
+
+	return fromCommit(repo, dir, commit)
 }

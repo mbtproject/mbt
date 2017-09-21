@@ -9,7 +9,9 @@ import (
 )
 
 func init() {
-	DescribeCmd.AddCommand(DescribeEnvironment)
+	DescribeCmd.AddCommand(DescribeCommitCmd)
+	DescribeCmd.AddCommand(DescribeBranchCmd)
+	DescribeCmd.AddCommand(DescribePrCmd)
 	RootCmd.AddCommand(DescribeCmd)
 }
 
@@ -18,7 +20,7 @@ var DescribeCmd = &cobra.Command{
 	Short: "describe the repo",
 }
 
-var DescribeEnvironment = &cobra.Command{
+var DescribeBranchCmd = &cobra.Command{
 	Use:   "branch <path> <branch>",
 	Short: "describe the environment for the given branch",
 	Args: func(cmd *cobra.Command, args []string) error {
@@ -31,6 +33,57 @@ var DescribeEnvironment = &cobra.Command{
 		path := args[0]
 		branch := args[1]
 		m, err := lib.ManifestByBranch(path, branch)
+		if err != nil {
+			return err
+		}
+
+		for _, a := range m.Applications {
+			fmt.Printf("%s %s\n", a.Application.Name, a.Version)
+		}
+
+		return nil
+	},
+}
+
+var DescribePrCmd = &cobra.Command{
+	Use:   "pr <path> <source> <dest>",
+	Short: "describe the environment unique for a given pr",
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) < 3 {
+			return errors.New("requires path and source and dest")
+		}
+		return nil
+	},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		path := args[0]
+		source := args[1]
+		dest := args[2]
+		m, err := lib.ManifestByPr(path, source, dest)
+		if err != nil {
+			return err
+		}
+
+		for _, a := range m.Applications {
+			fmt.Printf("%s %s\n", a.Application.Name, a.Version)
+		}
+
+		return nil
+	},
+}
+
+var DescribeCommitCmd = &cobra.Command{
+	Use:   "commit <path> <sha>",
+	Short: "describe the environment for a given commit",
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) < 2 {
+			return errors.New("requires path and commit")
+		}
+		return nil
+	},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		path := args[0]
+		commit := args[1]
+		m, err := lib.ManifestBySha(path, commit)
 		if err != nil {
 			return err
 		}
