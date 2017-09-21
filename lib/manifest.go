@@ -7,15 +7,20 @@ import (
 	git "github.com/libgit2/git2go"
 )
 
-type VersionedApplication struct {
-	Application *Application
-	Version     string
+func (m *Manifest) IndexByName() map[string]*VersionedApplication {
+	q := make(map[string]*VersionedApplication)
+	for _, a := range m.Applications {
+		q[a.Application.Name] = a
+	}
+	return q
 }
 
-type Manifest struct {
-	Dir          string
-	Sha          string
-	Applications []*VersionedApplication
+func (m *Manifest) IndexByPath() map[string]*VersionedApplication {
+	q := make(map[string]*VersionedApplication)
+	for _, a := range m.Applications {
+		q[fmt.Sprintf("%s/", a.Application.Path)] = a
+	}
+	return q
 }
 
 func ResolveChanges(path string) ([]string, error) {
@@ -110,11 +115,7 @@ func ManifestByBranch(dir, branch string) (*Manifest, error) {
 }
 
 func reduceToDiff(manifest *Manifest, diff *git.Diff) (*Manifest, error) {
-	q := make(map[string]*VersionedApplication)
-	for _, a := range manifest.Applications {
-		q[fmt.Sprintf("%s/", a.Application.Path)] = a
-	}
-
+	q := manifest.IndexByPath()
 	filtered := make(map[string]*VersionedApplication)
 	err := diff.ForEach(func(delta git.DiffDelta, num float64) (git.DiffForEachHunkCallback, error) {
 		for k, _ := range q {

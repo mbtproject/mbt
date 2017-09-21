@@ -19,21 +19,18 @@ var DescribeCmd = &cobra.Command{
 }
 
 var DescribeEnvironment = &cobra.Command{
-	Use:   "environment",
-	Short: "describe the environment at the given rev",
+	Use:   "branch <path> <branch>",
+	Short: "describe the environment for the given branch",
 	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 1 {
-			return errors.New("requires the path to repo")
+		if len(args) < 2 {
+			return errors.New("requires path and branch")
 		}
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		var path, rev string
-		path = args[0]
-		if len(args) > 1 {
-			rev = args[1]
-		}
-		m, err := lib.ManifestByBranch(path, rev)
+		path := args[0]
+		branch := args[1]
+		m, err := lib.ManifestByBranch(path, branch)
 		if err != nil {
 			return err
 		}
