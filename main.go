@@ -1,8 +1,9 @@
 package main
 
 import (
-	"mbt/cmd"
 	"os"
+
+	"github.com/buddyspike/mbt/cmd"
 )
 
 func main() {

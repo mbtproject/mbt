@@ -7,8 +7,11 @@
     // words - list of words to be always considered correct
     "words": [
         "Dwim",
+        "Infof",
+        "Warnf",
         "fpath",
         "fsutil",
+        "logrus",
         "repo",
         "vapps"
     ],

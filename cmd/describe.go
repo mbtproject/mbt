@@ -3,8 +3,8 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"mbt/lib"
 
+	"github.com/buddyspike/mbt/lib"
 	"github.com/spf13/cobra"
 )
 

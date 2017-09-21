@@ -5,9 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"mbt/fsutil"
 	"path"
 	"sort"
+
+	"github.com/buddyspike/mbt/fsutil"
 
 	yaml "gopkg.in/yaml.v2"
 )
@@ -33,19 +34,15 @@ func (a Applications) Swap(i, j int) {
 	a[i], a[j] = a[j], a[i]
 }
 
-func NewApplication(dir string, appDir string) (*Application, error) {
+func NewApplication(dir string, spec []byte) (*Application, error) {
 	a := &Application{}
-	spec, err := ioutil.ReadFile(path.Join(dir, appDir, "appspec.yaml"))
+
+	err := yaml.Unmarshal(spec, a)
 	if err != nil {
 		return nil, err
 	}
 
-	err = yaml.Unmarshal(spec, a)
-	if err != nil {
-		return nil, err
-	}
-
-	a.Path = appDir
+	a.Path = dir
 	return a, nil
 }
 
@@ -70,7 +67,12 @@ func Discover(dir string) ([]*Application, error) {
 		nextDir := q.Front().Value.(string)
 		fpath := path.Join(dir, nextDir)
 		if isApplicationDir(fpath) {
-			a, err := NewApplication(dir, nextDir)
+			spec, err := ioutil.ReadFile(path.Join(fpath, "appspec.yaml"))
+			if err != nil {
+				return nil, err
+			}
+
+			a, err := NewApplication(nextDir, spec)
 			if err != nil {
 				return nil, err
 			}
