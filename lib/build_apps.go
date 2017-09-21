@@ -15,7 +15,7 @@ func buildOne(dir string, app *VersionedApplication, args []string) error {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Args = append(args, "--version", app.Version)
+	cmd.Args = append(cmd.Args, append(args, "--version", app.Version)...)
 	err := cmd.Run()
 	return err
 }

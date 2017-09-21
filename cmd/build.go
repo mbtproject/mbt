@@ -2,16 +2,32 @@ package cmd
 
 import (
 	"errors"
-	"os"
+	"strings"
 
 	"github.com/buddyspike/mbt/lib"
 	"github.com/spf13/cobra"
 )
 
+var pipedArgs []string
+
 func init() {
+	buildCommand.PersistentFlags().StringArrayVarP(&pipedArgs, "args", "a", []string{}, "arguments to be passed into build scripts")
 	buildCommand.AddCommand(buildBranch)
 	buildCommand.AddCommand(buildPr)
 	RootCmd.AddCommand(buildCommand)
+}
+
+func preparePipedArgs() []string {
+	a := []string{}
+	for _, i := range pipedArgs {
+		if strings.Contains(i, "=") {
+			k := strings.Split(i, "=")
+			a = append(a, k...)
+		} else {
+			a = append(a, i)
+		}
+	}
+	return a
 }
 
 var buildBranch = &cobra.Command{
@@ -29,7 +45,7 @@ var buildBranch = &cobra.Command{
 			return err
 		}
 
-		err = lib.Build(m, os.Args)
+		err = lib.Build(m, preparePipedArgs())
 		return err
 	},
 }
@@ -51,7 +67,7 @@ var buildPr = &cobra.Command{
 			return err
 		}
 
-		err = lib.Build(m, os.Args)
+		err = lib.Build(m, preparePipedArgs())
 		return err
 	},
 }
