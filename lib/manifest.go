@@ -54,9 +54,14 @@ func fromCommit(repo *git.Repository, dir string, commit *git.Commit) (*Manifest
 				return 1
 			}
 
+			dirEntry, err := tree.EntryByPath(p)
+			if err != nil {
+				return 1
+			}
+
 			vapps = append(vapps, &VersionedApplication{
 				Application: a,
-				Version:     entry.Id.String(),
+				Version:     dirEntry.Id.String(),
 			})
 		}
 		return 0

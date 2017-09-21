@@ -15,6 +15,12 @@ func init() {
 	RootCmd.AddCommand(DescribeCmd)
 }
 
+func output(m *lib.Manifest) {
+	for _, a := range m.Applications {
+		fmt.Printf("%s %s\n", a.Application.Name, a.Version)
+	}
+}
+
 var DescribeCmd = &cobra.Command{
 	Use:   "describe",
 	Short: "describe the repo",
@@ -32,15 +38,13 @@ var DescribeBranchCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		path := args[0]
 		branch := args[1]
+
 		m, err := lib.ManifestByBranch(path, branch)
 		if err != nil {
 			return err
 		}
 
-		for _, a := range m.Applications {
-			fmt.Printf("%s %s\n", a.Application.Name, a.Version)
-		}
-
+		output(m)
 		return nil
 	},
 }
@@ -58,14 +62,13 @@ var DescribePrCmd = &cobra.Command{
 		path := args[0]
 		source := args[1]
 		dest := args[2]
+
 		m, err := lib.ManifestByPr(path, source, dest)
 		if err != nil {
 			return err
 		}
 
-		for _, a := range m.Applications {
-			fmt.Printf("%s %s\n", a.Application.Name, a.Version)
-		}
+		output(m)
 
 		return nil
 	},
@@ -83,14 +86,13 @@ var DescribeCommitCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		path := args[0]
 		commit := args[1]
+
 		m, err := lib.ManifestBySha(path, commit)
 		if err != nil {
 			return err
 		}
 
-		for _, a := range m.Applications {
-			fmt.Printf("%s %s\n", a.Application.Name, a.Version)
-		}
+		output(m)
 
 		return nil
 	},
