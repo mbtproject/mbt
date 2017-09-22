@@ -18,12 +18,6 @@ func init() {
 	RootCmd.AddCommand(DescribeCmd)
 }
 
-func output(m *lib.Manifest) {
-	for _, a := range m.Applications {
-		fmt.Printf("%s %s\n", a.Application.Name, a.Version)
-	}
-}
-
 var DescribeCmd = &cobra.Command{
 	Use:   "describe",
 	Short: "describe the repo",
@@ -89,4 +83,10 @@ var DescribeCommitCmd = &cobra.Command{
 
 		return nil
 	},
+}
+
+func output(m *lib.Manifest) {
+	for _, a := range m.Applications {
+		fmt.Printf("%s %s\n", a.Name, a.Version)
+	}
 }

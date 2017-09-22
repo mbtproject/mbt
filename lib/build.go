@@ -38,7 +38,7 @@ func Build(m *Manifest, args []string) error {
 	}
 
 	for _, a := range m.Applications {
-		if !canBuildHere(a.Application) {
+		if !canBuildHere(a) {
 			continue
 		}
 
@@ -51,10 +51,10 @@ func Build(m *Manifest, args []string) error {
 	return nil
 }
 
-func buildOne(dir string, app *VersionedApplication, args []string) error {
-	cmd := exec.Command(app.Application.Build)
+func buildOne(dir string, app *Application, args []string) error {
+	cmd := exec.Command(app.Build)
 	cmd.Env = os.Environ()
-	cmd.Dir = path.Join(dir, app.Application.Path)
+	cmd.Dir = path.Join(dir, app.Path)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

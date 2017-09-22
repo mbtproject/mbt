@@ -7,7 +7,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var to, out string
+var (
+	to  string
+	out string
+)
 
 func init() {
 	ApplyCmd.PersistentFlags().StringVar(&to, "to", "", "template to apply")

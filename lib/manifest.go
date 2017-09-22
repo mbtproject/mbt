@@ -6,7 +6,30 @@ import (
 	"strings"
 
 	git "github.com/libgit2/git2go"
+	yaml "gopkg.in/yaml.v2"
 )
+
+type Application struct {
+	Name           string
+	Path           string
+	BuildPlatforms []string `yaml:"buildPlatforms,flow"`
+	Build          string
+	Version        string
+}
+
+type Applications []*Application
+
+type Manifest struct {
+	Dir          string
+	Sha          string
+	Applications Applications
+}
+
+type TemplateData struct {
+	Args         map[string]interface{}
+	Sha          string
+	Applications map[string]*Application
+}
 
 func ManifestByPr(dir, from, to string) (*Manifest, error) {
 	repo, err := git.OpenRepository(dir)
@@ -79,18 +102,18 @@ func (a Applications) Swap(i, j int) {
 	a[i], a[j] = a[j], a[i]
 }
 
-func (m *Manifest) indexByName() map[string]*VersionedApplication {
-	q := make(map[string]*VersionedApplication)
+func (m *Manifest) indexByName() map[string]*Application {
+	q := make(map[string]*Application)
 	for _, a := range m.Applications {
-		q[a.Application.Name] = a
+		q[a.Name] = a
 	}
 	return q
 }
 
-func (m *Manifest) indexByPath() map[string]*VersionedApplication {
-	q := make(map[string]*VersionedApplication)
+func (m *Manifest) indexByPath() map[string]*Application {
+	q := make(map[string]*Application)
 	for _, a := range m.Applications {
-		q[fmt.Sprintf("%s/", a.Application.Path)] = a
+		q[fmt.Sprintf("%s/", a.Path)] = a
 	}
 	return q
 }
@@ -101,7 +124,7 @@ func fromCommit(repo *git.Repository, dir string, commit *git.Commit) (*Manifest
 		return nil, err
 	}
 
-	vapps := []*VersionedApplication{}
+	vapps := []*Application{}
 
 	err = tree.Walk(func(path string, entry *git.TreeEntry) int {
 		if entry.Name == "appspec.yaml" && entry.Type == git.ObjectBlob {
@@ -111,20 +134,17 @@ func fromCommit(repo *git.Repository, dir string, commit *git.Commit) (*Manifest
 			}
 
 			p := strings.TrimRight(path, "/")
-			a, err := NewApplication(p, blob.Contents())
-			if err != nil {
-				return 1
-			}
-
 			dirEntry, err := tree.EntryByPath(p)
 			if err != nil {
 				return 1
 			}
 
-			vapps = append(vapps, &VersionedApplication{
-				Application: a,
-				Version:     dirEntry.Id.String(),
-			})
+			a, err := newApplication(p, dirEntry.Id.String(), blob.Contents())
+			if err != nil {
+				return 1
+			}
+
+			vapps = append(vapps, a)
 		}
 		return 0
 	})
@@ -134,6 +154,19 @@ func fromCommit(repo *git.Repository, dir string, commit *git.Commit) (*Manifest
 	}
 
 	return &Manifest{dir, commit.Id().String(), vapps}, nil
+}
+
+func newApplication(dir, version string, spec []byte) (*Application, error) {
+	a := &Application{}
+
+	err := yaml.Unmarshal(spec, a)
+	if err != nil {
+		return nil, err
+	}
+
+	a.Path = dir
+	a.Version = version
+	return a, nil
 }
 
 func getBranchCommit(repo *git.Repository, branch string) (*git.Commit, error) {
@@ -175,7 +208,7 @@ func fromBranch(repo *git.Repository, dir string, branch string) (*Manifest, err
 
 func reduceToDiff(manifest *Manifest, diff *git.Diff) (*Manifest, error) {
 	q := manifest.indexByPath()
-	filtered := make(map[string]*VersionedApplication)
+	filtered := make(map[string]*Application)
 	err := diff.ForEach(func(delta git.DiffDelta, num float64) (git.DiffForEachHunkCallback, error) {
 		for k, _ := range q {
 			if _, ok := filtered[k]; ok {
@@ -192,7 +225,7 @@ func reduceToDiff(manifest *Manifest, diff *git.Diff) (*Manifest, error) {
 		return nil, err
 	}
 
-	apps := []*VersionedApplication{}
+	apps := []*Application{}
 	for _, v := range filtered {
 		apps = append(apps, v)
 	}
