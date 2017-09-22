@@ -35,6 +35,6 @@ var ApplyBranchCmd = &cobra.Command{
 			return errors.New("requires the path to template")
 		}
 
-		return lib.ApplyBranch(globalArgIn, to, branch, out)
+		return lib.ApplyBranch(in, to, branch, out)
 	},
 }

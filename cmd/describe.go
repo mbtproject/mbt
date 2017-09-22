@@ -8,8 +8,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var source, dest string
-
 func init() {
 	DescribePrCmd.Flags().StringVar(&source, "source", "", "source branch")
 	DescribePrCmd.Flags().StringVar(&dest, "dest", "", "destination branch")
@@ -39,8 +37,7 @@ var DescribeBranchCmd = &cobra.Command{
 		if len(args) > 0 {
 			branch = args[0]
 		}
-
-		m, err := lib.ManifestByBranch(globalArgIn, branch)
+		m, err := lib.ManifestByBranch(in, branch)
 		if err != nil {
 			return err
 		}
@@ -62,7 +59,7 @@ var DescribePrCmd = &cobra.Command{
 			return errors.New("requires dest")
 		}
 
-		m, err := lib.ManifestByPr(globalArgIn, source, dest)
+		m, err := lib.ManifestByPr(in, source, dest)
 		if err != nil {
 			return err
 		}
@@ -83,7 +80,7 @@ var DescribeCommitCmd = &cobra.Command{
 
 		commit := args[0]
 
-		m, err := lib.ManifestBySha(globalArgIn, commit)
+		m, err := lib.ManifestBySha(in, commit)
 		if err != nil {
 			return err
 		}

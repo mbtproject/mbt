@@ -9,11 +9,10 @@ import (
 )
 
 var pipedArgs []string
-var prSource, prDest string
 
 func init() {
-	buildPr.Flags().StringVar(&prSource, "source", "", "source branch")
-	buildPr.Flags().StringVar(&prDest, "dest", "", "destination branch")
+	buildPr.Flags().StringVar(&source, "source", "", "source branch")
+	buildPr.Flags().StringVar(&dest, "dest", "", "destination branch")
 
 	buildCommand.PersistentFlags().StringArrayVarP(&pipedArgs, "args", "a", []string{}, "arguments to be passed into build scripts")
 	buildCommand.AddCommand(buildBranch)
@@ -43,7 +42,7 @@ var buildBranch = &cobra.Command{
 			branch = args[0]
 		}
 
-		m, err := lib.ManifestByBranch(globalArgIn, branch)
+		m, err := lib.ManifestByBranch(in, branch)
 		if err != nil {
 			return err
 		}
@@ -57,15 +56,15 @@ var buildPr = &cobra.Command{
 	Use:   "pr",
 	Short: "builds the pr from a source branch to destination branch",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if prSource == "" {
+		if source == "" {
 			return errors.New("requires source")
 		}
 
-		if prDest == "" {
+		if dest == "" {
 			return errors.New("requires dest")
 		}
 
-		m, err := lib.ManifestByPr(globalArgIn, prSource, prDest)
+		m, err := lib.ManifestByPr(in, source, dest)
 		if err != nil {
 			return err
 		}
