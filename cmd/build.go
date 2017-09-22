@@ -9,8 +9,12 @@ import (
 )
 
 var pipedArgs []string
+var prSource, prDest string
 
 func init() {
+	buildPr.Flags().StringVar(&prSource, "source", "", "source branch")
+	buildPr.Flags().StringVar(&prDest, "dest", "", "destination branch")
+
 	buildCommand.PersistentFlags().StringArrayVarP(&pipedArgs, "args", "a", []string{}, "arguments to be passed into build scripts")
 	buildCommand.AddCommand(buildBranch)
 	buildCommand.AddCommand(buildPr)
@@ -31,16 +35,15 @@ func preparePipedArgs() []string {
 }
 
 var buildBranch = &cobra.Command{
-	Use:   "branch <path> <branch>",
+	Use:   "branch <branch>",
 	Short: "builds the specific branch",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 2 {
-			return errors.New("Must specify the path to repo and branch")
+		branch := "master"
+		if len(args) > 0 {
+			branch = args[0]
 		}
-		path := args[0]
-		branch := args[1]
 
-		m, err := lib.ManifestByBranch(path, branch)
+		m, err := lib.ManifestByBranch(globalArgIn, branch)
 		if err != nil {
 			return err
 		}
@@ -51,18 +54,18 @@ var buildBranch = &cobra.Command{
 }
 
 var buildPr = &cobra.Command{
-	Use:   "pr <path> <source> <dest>",
+	Use:   "pr",
 	Short: "builds the pr from a source branch to destination branch",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 3 {
-			return errors.New("require path, source branch and destination branch")
+		if prSource == "" {
+			return errors.New("requires source")
 		}
 
-		path := args[0]
-		source := args[1]
-		dest := args[2]
+		if prDest == "" {
+			return errors.New("requires dest")
+		}
 
-		m, err := lib.ManifestByPr(path, source, dest)
+		m, err := lib.ManifestByPr(globalArgIn, prSource, prDest)
 		if err != nil {
 			return err
 		}

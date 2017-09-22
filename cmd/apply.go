@@ -7,7 +7,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var to, out string
+
 func init() {
+	ApplyCmd.PersistentFlags().StringVar(&to, "to", "", "template to apply")
+	ApplyCmd.PersistentFlags().StringVar(&out, "out", "", "output path")
 	ApplyCmd.AddCommand(ApplyBranchCmd)
 	RootCmd.AddCommand(ApplyCmd)
 }
@@ -18,21 +22,19 @@ var ApplyCmd = &cobra.Command{
 }
 
 var ApplyBranchCmd = &cobra.Command{
-	Use:   "branch <path> <branch> <template> [out]",
+	Use:   "branch <branch>",
 	Short: "applies the manifest of specified branch over a given template",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 3 {
-			return errors.New("required path, branch and template")
-		}
-		dir := args[0]
-		branch := args[1]
-		template := args[2]
 		out := ""
-
-		if len(args) > 3 {
-			out = args[3]
+		branch := "master"
+		if len(args) > 0 {
+			branch = args[0]
 		}
 
-		return lib.ApplyBranch(dir, template, branch, out)
+		if to == "" {
+			return errors.New("requires the path to template")
+		}
+
+		return lib.ApplyBranch(globalArgIn, to, branch, out)
 	},
 }

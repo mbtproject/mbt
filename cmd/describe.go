@@ -8,7 +8,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var source, dest string
+
 func init() {
+	DescribePrCmd.Flags().StringVar(&source, "source", "", "source branch")
+	DescribePrCmd.Flags().StringVar(&dest, "dest", "", "destination branch")
+
 	DescribeCmd.AddCommand(DescribeCommitCmd)
 	DescribeCmd.AddCommand(DescribeBranchCmd)
 	DescribeCmd.AddCommand(DescribePrCmd)
@@ -27,19 +32,15 @@ var DescribeCmd = &cobra.Command{
 }
 
 var DescribeBranchCmd = &cobra.Command{
-	Use:   "branch <path> <branch>",
+	Use:   "branch <branch>",
 	Short: "describe the environment for the given branch",
-	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 2 {
-			return errors.New("requires path and branch")
-		}
-		return nil
-	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		path := args[0]
-		branch := args[1]
+		branch := "master"
+		if len(args) > 0 {
+			branch = args[0]
+		}
 
-		m, err := lib.ManifestByBranch(path, branch)
+		m, err := lib.ManifestByBranch(globalArgIn, branch)
 		if err != nil {
 			return err
 		}
@@ -50,20 +51,18 @@ var DescribeBranchCmd = &cobra.Command{
 }
 
 var DescribePrCmd = &cobra.Command{
-	Use:   "pr <path> <source> <dest>",
+	Use:   "pr <source> <dest>",
 	Short: "describe the environment unique for a given pr",
-	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 3 {
-			return errors.New("requires path and source and dest")
-		}
-		return nil
-	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		path := args[0]
-		source := args[1]
-		dest := args[2]
+		if source == "" {
+			return errors.New("requires source")
+		}
 
-		m, err := lib.ManifestByPr(path, source, dest)
+		if dest == "" {
+			return errors.New("requires dest")
+		}
+
+		m, err := lib.ManifestByPr(globalArgIn, source, dest)
 		if err != nil {
 			return err
 		}
@@ -75,19 +74,16 @@ var DescribePrCmd = &cobra.Command{
 }
 
 var DescribeCommitCmd = &cobra.Command{
-	Use:   "commit <path> <sha>",
+	Use:   "commit <sha>",
 	Short: "describe the environment for a given commit",
-	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 2 {
-			return errors.New("requires path and commit")
-		}
-		return nil
-	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		path := args[0]
-		commit := args[1]
+		if len(args) == 0 {
+			return errors.New("requires the commit sha")
+		}
 
-		m, err := lib.ManifestBySha(path, commit)
+		commit := args[0]
+
+		m, err := lib.ManifestBySha(globalArgIn, commit)
 		if err != nil {
 			return err
 		}
