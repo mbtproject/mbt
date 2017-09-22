@@ -8,7 +8,78 @@ import (
 	git "github.com/libgit2/git2go"
 )
 
-func (m *Manifest) IndexByName() map[string]*VersionedApplication {
+func ManifestByPr(dir, from, to string) (*Manifest, error) {
+	repo, err := git.OpenRepository(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	m, err := fromBranch(repo, dir, from)
+	if err != nil {
+		return nil, err
+	}
+
+	fromTree, err := getBranchTree(repo, from)
+	if err != nil {
+		return nil, err
+	}
+
+	toTree, err := getBranchTree(repo, to)
+	if err != nil {
+		return nil, err
+	}
+
+	diff, err := repo.DiffTreeToTree(toTree, fromTree, &git.DiffOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return reduceToDiff(m, diff)
+}
+
+func ManifestBySha(dir, sha string) (*Manifest, error) {
+	repo, err := git.OpenRepository(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	bytes, err := hex.DecodeString(sha)
+	if err != nil {
+		return nil, err
+	}
+
+	oid := git.NewOidFromBytes(bytes)
+	commit, err := repo.LookupCommit(oid)
+	if err != nil {
+		return nil, err
+	}
+
+	return fromCommit(repo, dir, commit)
+}
+
+func ManifestByBranch(dir, branch string) (*Manifest, error) {
+	repo, err := git.OpenRepository(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	return fromBranch(repo, dir, branch)
+}
+
+// Sort interface to sort applications by path
+func (a Applications) Len() int {
+	return len(a)
+}
+
+func (a Applications) Less(i, j int) bool {
+	return a[i].Path < a[j].Path
+}
+
+func (a Applications) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
+
+func (m *Manifest) indexByName() map[string]*VersionedApplication {
 	q := make(map[string]*VersionedApplication)
 	for _, a := range m.Applications {
 		q[a.Application.Name] = a
@@ -16,21 +87,12 @@ func (m *Manifest) IndexByName() map[string]*VersionedApplication {
 	return q
 }
 
-func (m *Manifest) IndexByPath() map[string]*VersionedApplication {
+func (m *Manifest) indexByPath() map[string]*VersionedApplication {
 	q := make(map[string]*VersionedApplication)
 	for _, a := range m.Applications {
 		q[fmt.Sprintf("%s/", a.Application.Path)] = a
 	}
 	return q
-}
-
-func ResolveChanges(path string) ([]string, error) {
-	repo, _ := git.OpenRepository(path)
-	head, _ := repo.Head()
-	if head != nil {
-		println("head is found")
-	}
-	return nil, nil
 }
 
 func fromCommit(repo *git.Repository, dir string, commit *git.Commit) (*Manifest, error) {
@@ -111,17 +173,8 @@ func fromBranch(repo *git.Repository, dir string, branch string) (*Manifest, err
 	return fromCommit(repo, dir, commit)
 }
 
-func ManifestByBranch(dir, branch string) (*Manifest, error) {
-	repo, err := git.OpenRepository(dir)
-	if err != nil {
-		return nil, err
-	}
-
-	return fromBranch(repo, dir, branch)
-}
-
 func reduceToDiff(manifest *Manifest, diff *git.Diff) (*Manifest, error) {
-	q := manifest.IndexByPath()
+	q := manifest.indexByPath()
 	filtered := make(map[string]*VersionedApplication)
 	err := diff.ForEach(func(delta git.DiffDelta, num float64) (git.DiffForEachHunkCallback, error) {
 		for k, _ := range q {
@@ -149,53 +202,4 @@ func reduceToDiff(manifest *Manifest, diff *git.Diff) (*Manifest, error) {
 		Sha:          manifest.Sha,
 		Applications: apps,
 	}, nil
-}
-
-func ManifestByPr(dir, from, to string) (*Manifest, error) {
-	repo, err := git.OpenRepository(dir)
-	if err != nil {
-		return nil, err
-	}
-
-	m, err := fromBranch(repo, dir, from)
-	if err != nil {
-		return nil, err
-	}
-
-	fromTree, err := getBranchTree(repo, from)
-	if err != nil {
-		return nil, err
-	}
-
-	toTree, err := getBranchTree(repo, to)
-	if err != nil {
-		return nil, err
-	}
-
-	diff, err := repo.DiffTreeToTree(toTree, fromTree, &git.DiffOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	return reduceToDiff(m, diff)
-}
-
-func ManifestBySha(dir, sha string) (*Manifest, error) {
-	repo, err := git.OpenRepository(dir)
-	if err != nil {
-		return nil, err
-	}
-
-	bytes, err := hex.DecodeString(sha)
-	if err != nil {
-		return nil, err
-	}
-
-	oid := git.NewOidFromBytes(bytes)
-	commit, err := repo.LookupCommit(oid)
-	if err != nil {
-		return nil, err
-	}
-
-	return fromCommit(repo, dir, commit)
 }

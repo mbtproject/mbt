@@ -49,7 +49,7 @@ func ApplyBranch(dir, templatePath, branch, output string) error {
 
 	data := &TemplateData{
 		Sha:          m.Sha,
-		Applications: m.IndexByName(),
+		Applications: m.indexByName(),
 	}
 
 	return temp.Execute(writer, data)

@@ -9,28 +9,6 @@ import (
 	git "github.com/libgit2/git2go"
 )
 
-func buildOne(dir string, app *VersionedApplication, args []string) error {
-	cmd := exec.Command(app.Application.Build)
-	cmd.Env = os.Environ()
-	cmd.Dir = path.Join(dir, app.Application.Path)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Args = append(cmd.Args, append(args, "--version", app.Version)...)
-	err := cmd.Run()
-	return err
-}
-
-func canBuildHere(app *Application) bool {
-	for _, p := range app.BuildPlatforms {
-		if p == runtime.GOOS {
-			return true
-		}
-	}
-
-	return false
-}
-
 func Build(m *Manifest, args []string) error {
 	repo, err := git.OpenRepository(m.Dir)
 	if err != nil {
@@ -71,4 +49,26 @@ func Build(m *Manifest, args []string) error {
 	}
 
 	return nil
+}
+
+func buildOne(dir string, app *VersionedApplication, args []string) error {
+	cmd := exec.Command(app.Application.Build)
+	cmd.Env = os.Environ()
+	cmd.Dir = path.Join(dir, app.Application.Path)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Args = append(cmd.Args, append(args, "--version", app.Version)...)
+	err := cmd.Run()
+	return err
+}
+
+func canBuildHere(app *Application) bool {
+	for _, p := range app.BuildPlatforms {
+		if p == runtime.GOOS {
+			return true
+		}
+	}
+
+	return false
 }
