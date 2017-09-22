@@ -13,15 +13,6 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-type Application struct {
-	Name           string
-	Path           string
-	BuildPlatforms []string
-	Build          string
-}
-
-type Applications []*Application
-
 func (a Applications) Len() int {
 	return len(a)
 }

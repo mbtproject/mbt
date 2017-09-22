@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"runtime"
 
 	git "github.com/libgit2/git2go"
 )
@@ -18,6 +19,16 @@ func buildOne(dir string, app *VersionedApplication, args []string) error {
 	cmd.Args = append(cmd.Args, append(args, "--version", app.Version)...)
 	err := cmd.Run()
 	return err
+}
+
+func canBuildHere(app *Application) bool {
+	for _, p := range app.BuildPlatforms {
+		if p == runtime.GOOS {
+			return true
+		}
+	}
+
+	return false
 }
 
 func Build(m *Manifest, args []string) error {
@@ -49,6 +60,10 @@ func Build(m *Manifest, args []string) error {
 	}
 
 	for _, a := range m.Applications {
+		if !canBuildHere(a.Application) {
+			continue
+		}
+
 		err := buildOne(m.Dir, a, args)
 		if err != nil {
 			return err
