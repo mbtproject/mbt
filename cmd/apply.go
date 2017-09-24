@@ -21,12 +21,12 @@ func init() {
 
 var ApplyCmd = &cobra.Command{
 	Use:   "apply",
-	Short: "applies a manifest over a template",
+	Short: "Applies a manifest over a template",
 }
 
 var ApplyBranchCmd = &cobra.Command{
 	Use:   "branch <branch>",
-	Short: "applies the manifest of specified branch over a given template",
+	Short: "Applies the manifest of specified branch over a given template",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		out := ""
 		branch := "master"

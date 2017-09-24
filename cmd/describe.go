@@ -20,12 +20,12 @@ func init() {
 
 var DescribeCmd = &cobra.Command{
 	Use:   "describe",
-	Short: "describe the repo",
+	Short: "Describe the manifest of a repo",
 }
 
 var DescribeBranchCmd = &cobra.Command{
 	Use:   "branch <branch>",
-	Short: "describe the environment for the given branch",
+	Short: "Describe the manifest for the given branch",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		branch := "master"
 		if len(args) > 0 {
@@ -43,7 +43,7 @@ var DescribeBranchCmd = &cobra.Command{
 
 var DescribePrCmd = &cobra.Command{
 	Use:   "pr <source> <dest>",
-	Short: "describe the environment unique for a given pr",
+	Short: "Describe the manifest for a given pr",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if source == "" {
 			return errors.New("requires source")
@@ -66,7 +66,7 @@ var DescribePrCmd = &cobra.Command{
 
 var DescribeCommitCmd = &cobra.Command{
 	Use:   "commit <sha>",
-	Short: "describe the environment for a given commit",
+	Short: "Describe the environment for a given commit",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			return errors.New("requires the commit sha")
