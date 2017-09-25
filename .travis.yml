@@ -17,14 +17,3 @@ branches:
   only:
   - master
 
-addons:
-  apt:
-    packages:
-    - cmake
-    - libssh2-1-dev
-    - openssh-client
-    - openssh-server
-    - valgrind
-    - libssl-dev
-    - openssl
-
