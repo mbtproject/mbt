@@ -17,6 +17,6 @@ branches:
   only:
   - master
 
-addons:
-    - libssh2-1-dev
+before_install:
+    sudo apt-get install libssh2-1-dev -y
 
