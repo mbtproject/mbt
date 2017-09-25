@@ -15,6 +15,7 @@ type Application struct {
 	BuildPlatforms []string `yaml:"buildPlatforms,flow"`
 	Build          string
 	Version        string
+	Properties     map[string]interface{}
 }
 
 type Applications []*Application
@@ -157,7 +158,9 @@ func fromCommit(repo *git.Repository, dir string, commit *git.Commit) (*Manifest
 }
 
 func newApplication(dir, version string, spec []byte) (*Application, error) {
-	a := &Application{}
+	a := &Application{
+		Properties: make(map[string]interface{}),
+	}
 
 	err := yaml.Unmarshal(spec, a)
 	if err != nil {
