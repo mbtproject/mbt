@@ -17,3 +17,6 @@ branches:
   only:
   - master
 
+addons:
+    - libssh2-1-dev
+
