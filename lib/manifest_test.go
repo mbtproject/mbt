@@ -62,7 +62,8 @@ properties:
 }
 
 func (r *TestRepository) WriteContent(file, content string) error {
-	dir := path.Dir(file)
+	fpath := path.Join(r.Dir, file)
+	dir := path.Dir(fpath)
 	if dir != "" {
 		err := os.MkdirAll(dir, 0755)
 		if err != nil {
@@ -70,7 +71,7 @@ func (r *TestRepository) WriteContent(file, content string) error {
 		}
 	}
 
-	return ioutil.WriteFile(file, []byte(content), 0644)
+	return ioutil.WriteFile(fpath, []byte(content), 0644)
 }
 
 func (r *TestRepository) Commit(message string) error {
@@ -162,4 +163,23 @@ func TestApplicationDetection(t *testing.T) {
 
 	assert.Len(t, m.Applications, 1)
 	assert.Equal(t, "app-a", m.Applications[0].Name)
+}
+
+func TestNonApplicationDirectories(t *testing.T) {
+	repo, err := createTestRepository(".tmp/repo")
+	assert.NoError(t, err)
+
+	err = repo.InitApplication("app-a")
+	assert.NoError(t, err)
+
+	err = repo.WriteContent("content/index.html", "hello")
+	assert.NoError(t, err)
+
+	err = repo.Commit("first")
+	assert.NoError(t, err)
+
+	m, err := fromBranch(repo.Repo, ".tmp/repo", "master")
+	assert.NoError(t, err)
+
+	assert.Len(t, m.Applications, 1)
 }
