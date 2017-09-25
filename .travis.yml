@@ -25,4 +25,6 @@ addons:
     - openssh-client
     - openssh-server
     - valgrind
+    - libssl-dev
+    - openssl
 
