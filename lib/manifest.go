@@ -142,6 +142,7 @@ func fromCommit(repo *git.Repository, dir string, commit *git.Commit) (*Manifest
 
 			a, err := newApplication(p, dirEntry.Id.String(), blob.Contents())
 			if err != nil {
+				// TODO log this or fail
 				return 1
 			}
 
