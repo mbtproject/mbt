@@ -3,7 +3,13 @@
 set -ex
 
 GIT2GO_PATH=$GOPATH/src/github.com/libgit2/git2go
-GIT2GO_VENDOR_PATH="$GIT2GO_PATH/vendor/libgit2"
+GIT2GO_VENDOR_PATH=$GIT2GO_PATH/vendor/libgit2
+
+go get github.com/libgit2/git2go &&
+
+pushd $GIT2GO_PATH &&
+git checkout v26 &&
+git submodule update --init &&
 
 pushd $GIT2GO_VENDOR_PATH &&
 mkdir -p install/lib &&
@@ -22,4 +28,4 @@ make -j2 install &&
 
 go install github.com/libgit2/git2go &&
 
-popd && popd
+popd && popd && popd 
