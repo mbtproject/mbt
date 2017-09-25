@@ -27,6 +27,7 @@ cmake -DTHREADSAFE=ON \
 cmake --build . &&
 make -j2 install &&
 
+export PKG_CONFIG_PATH=$GIT2GO_VENDOR_PATH/build
 go install github.com/libgit2/git2go &&
 
 cd $DIR
