@@ -32,31 +32,48 @@ type TemplateData struct {
 	Applications map[string]*Application
 }
 
-func ManifestByPr(dir, from, to string) (*Manifest, error) {
+func ManifestByPr(dir, src, dst string) (*Manifest, error) {
 	repo, err := git.OpenRepository(dir)
 	if err != nil {
 		return nil, err
 	}
 
-	m, err := fromBranch(repo, dir, from)
+	srcC, err := getBranchCommit(repo, src)
 	if err != nil {
 		return nil, err
 	}
 
-	fromTree, err := getBranchTree(repo, from)
+	dstC, err := getBranchCommit(repo, dst)
+	if err != err {
+		return nil, err
+	}
+
+	base, err := repo.MergeBase(srcC.Id(), dstC.Id())
 	if err != nil {
 		return nil, err
 	}
 
-	toTree, err := getBranchTree(repo, to)
+	baseC, err := repo.LookupCommit(base)
 	if err != nil {
 		return nil, err
 	}
 
-	diff, err := repo.DiffTreeToTree(toTree, fromTree, &git.DiffOptions{})
+	baseTree, err := baseC.Tree()
 	if err != nil {
 		return nil, err
 	}
+
+	srcTree, err := getBranchTree(repo, src)
+	if err != nil {
+		return nil, err
+	}
+
+	diff, err := repo.DiffTreeToTree(baseTree, srcTree, &git.DiffOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	m, err := fromBranch(repo, dir, src)
 
 	return reduceToDiff(m, diff)
 }
