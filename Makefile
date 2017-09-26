@@ -3,5 +3,8 @@ default: install
 install: 
 	go install ./...
 
-build: 
-	./build-git2go-static.sh
+build: clean 
+	./build.sh
+
+clean:
+	rm -rf build

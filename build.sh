@@ -43,6 +43,11 @@ go get
 go build -o "build/${OUT}"
 shasum -a 1 -p "build/${OUT}" | cut -d ' ' -f 1 > "build/${OUT}.sha1"
 
+VERSION=$TRAVIS_COMMIT
+if [ -z $VERSION ]; then
+  VERSION=$(git log --pretty=oneline -1 | awk '{print $1}')
+fi
+
 cat >build/bintray.json << EOL
 {
     "package": {
@@ -51,7 +56,7 @@ cat >build/bintray.json << EOL
         "subject": "buddyspike",
         "desc": "I was pushed completely automatically",
         "website_url": "https://github.com/buddyspike/mbt", "issue_tracker_url": "https://github.com/buddyspike/mbt/issues", "vcs_url": "https://github.com/buddyspike/mbt.git", "public_download_numbers": true, "public_stats": true }, "version": {
-        "name": "0.1-alpha",
+        "name": "0.1-alpha-${VERSION:0:16}",
         "desc": "not for production use",
         "gpgSign": false
     },
