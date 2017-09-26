@@ -47,6 +47,7 @@ VERSION=$TRAVIS_COMMIT
 if [ -z $VERSION ]; then
   VERSION=$(git log --pretty=oneline -1 | awk '{print $1}')
 fi
+VERSION=$(echo $VERSION | awk '{print substr ($0, 0, 16)}')
 
 cat >build/bintray.json << EOL
 {
@@ -56,7 +57,7 @@ cat >build/bintray.json << EOL
         "subject": "buddyspike",
         "desc": "I was pushed completely automatically",
         "website_url": "https://github.com/buddyspike/mbt", "issue_tracker_url": "https://github.com/buddyspike/mbt/issues", "vcs_url": "https://github.com/buddyspike/mbt.git", "public_download_numbers": true, "public_stats": true }, "version": {
-        "name": "0.1-alpha-${VERSION:0:16}",
+        "name": "0.1-alpha-${VERSION}",
         "desc": "not for production use",
         "gpgSign": false
     },
