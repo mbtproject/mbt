@@ -7,13 +7,19 @@ import (
 	"runtime"
 
 	git "github.com/libgit2/git2go"
+	"github.com/sirupsen/logrus"
 )
+
+var DefaultCheckoutOptions = &git.CheckoutOpts{
+	Strategy: git.CheckoutForce,
+}
 
 func Build(m *Manifest, args []string) error {
 	repo, err := git.OpenRepository(m.Dir)
 	if err != nil {
 		return err
 	}
+
 	oid, err := git.NewOid(m.Sha)
 	if err != nil {
 		return err
@@ -30,12 +36,12 @@ func Build(m *Manifest, args []string) error {
 	}
 
 	// TODO: Confirm the strategy is correct
-	err = repo.CheckoutTree(tree, &git.CheckoutOpts{
-		Strategy: git.CheckoutForce,
-	})
+	err = repo.CheckoutTree(tree, DefaultCheckoutOptions)
 	if err != nil {
 		return err
 	}
+
+	defer checkoutHead(repo)
 
 	for _, a := range m.Applications {
 		if !canBuildHere(a) {
@@ -71,4 +77,11 @@ func canBuildHere(app *Application) bool {
 	}
 
 	return false
+}
+
+func checkoutHead(repo *git.Repository) {
+	err := repo.CheckoutHead(DefaultCheckoutOptions)
+	if err != nil {
+		logrus.Warnf("failed to checkout head: %s", err)
+	}
 }
