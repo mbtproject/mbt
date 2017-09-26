@@ -40,6 +40,7 @@ cd $DIR
 OUT="mbt_${OS}_${ARCH}"
 
 go get
+go test ./...
 go build -o "build/${OUT}"
 shasum -a 1 -p "build/${OUT}" | cut -d ' ' -f 1 > "build/${OUT}.sha1"
 
