@@ -24,4 +24,3 @@ deploy:
   skip_cleanup: true
   on:
     repo: buddyspike/mbt
-    tags: true
