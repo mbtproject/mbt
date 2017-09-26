@@ -9,8 +9,8 @@ import (
 )
 
 func init() {
-	DescribePrCmd.Flags().StringVar(&source, "source", "", "source branch")
-	DescribePrCmd.Flags().StringVar(&dest, "dest", "", "destination branch")
+	DescribePrCmd.Flags().StringVar(&src, "src", "", "source branch")
+	DescribePrCmd.Flags().StringVar(&dst, "dst", "", "destination branch")
 
 	DescribeCmd.AddCommand(DescribeCommitCmd)
 	DescribeCmd.AddCommand(DescribeBranchCmd)
@@ -42,18 +42,18 @@ var DescribeBranchCmd = &cobra.Command{
 }
 
 var DescribePrCmd = &cobra.Command{
-	Use:   "pr <source> <dest>",
+	Use:   "pr --src <branch> --dst <branch>",
 	Short: "Describe the manifest for a given pr",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if source == "" {
+		if src == "" {
 			return errors.New("requires source")
 		}
 
-		if dest == "" {
+		if dst == "" {
 			return errors.New("requires dest")
 		}
 
-		m, err := lib.ManifestByPr(in, source, dest)
+		m, err := lib.ManifestByPr(in, src, dst)
 		if err != nil {
 			return err
 		}

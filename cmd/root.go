@@ -8,9 +8,9 @@ import (
 
 // Flags available to all commands.
 var (
-	in     string
-	source string
-	dest   string
+	in  string
+	src string
+	dst string
 )
 
 func init() {

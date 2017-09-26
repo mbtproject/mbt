@@ -11,8 +11,8 @@ import (
 var pipedArgs []string
 
 func init() {
-	buildPr.Flags().StringVar(&source, "source", "", "source branch")
-	buildPr.Flags().StringVar(&dest, "dest", "", "destination branch")
+	buildPr.Flags().StringVar(&src, "src", "", "source branch")
+	buildPr.Flags().StringVar(&dst, "dst", "", "destination branch")
 
 	buildCommand.PersistentFlags().StringArrayVarP(&pipedArgs, "args", "a", []string{}, "arguments to be passed into build scripts")
 	buildCommand.AddCommand(buildBranch)
@@ -53,18 +53,18 @@ var buildBranch = &cobra.Command{
 }
 
 var buildPr = &cobra.Command{
-	Use:   "pr",
+	Use:   "pr --src <branch> --dst <branch>",
 	Short: "builds the pr from a source branch to destination branch",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if source == "" {
+		if src == "" {
 			return errors.New("requires source")
 		}
 
-		if dest == "" {
+		if dst == "" {
 			return errors.New("requires dest")
 		}
 
-		m, err := lib.ManifestByPr(in, source, dest)
+		m, err := lib.ManifestByPr(in, src, dst)
 		if err != nil {
 			return err
 		}
