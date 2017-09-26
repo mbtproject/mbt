@@ -28,6 +28,7 @@ cmake --build . &&
 make -j2 install &&
 
 export PKG_CONFIG_PATH=$GIT2GO_VENDOR_PATH/build
-go install github.com/libgit2/git2go &&
+export CGO_LDFLAGS="$(pkg-config --libs --static $GOPATH/src/github.com/libgit2/git2go/vendor/libgit2/build/libgit2.pc)"
+go install -x github.com/libgit2/git2go &&
 
 cd $DIR
