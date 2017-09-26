@@ -47,7 +47,7 @@ cat >build/bintray.json << EOL
 {
     "package": {
         "name": "${OUT}",
-        "repo": "mbt",
+        "repo": "bin",
         "subject": "buddyspike",
         "desc": "I was pushed completely automatically",
         "website_url": "https://github.com/buddyspike/mbt",
