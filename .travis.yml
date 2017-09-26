@@ -1,16 +1,19 @@
 language: go
+os:
+  - linux
+  - osx
 go:
-- 1.9
-- tip
+  - 1.9
+
 script: make build
 matrix:
   allow_failures:
-  - go: tip
+    - go: tip
 git:
   submodules: false
 branches:
   only:
-  - master
+    - master
 before_install: sudo apt-get install libssh2-1-dev -y
 deploy:
   provider: releases
@@ -21,3 +24,4 @@ deploy:
   skip_cleanup: true
   on:
     repo: buddyspike/mbt
+    tags: true
