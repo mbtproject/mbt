@@ -54,18 +54,14 @@ cat >build/bintray.json << EOL
         "issue_tracker_url": "https://github.com/buddyspike/mbt/issues",
         "vcs_url": "https://github.com/buddyspike/mbt.git",
         "public_download_numbers": true,
-        "public_stats": true,
+        "public_stats": true
     },
     "version": {
         "name": "0.1.",
         "desc": "not for production use",
         "gpgSign": false
     },
-
-    "files":
-        [
-        {"includePattern": "build/*"}
-        ],
+    "files": [ {"includePattern": "build/*"} ],
     "publish": true
 }
 EOL
