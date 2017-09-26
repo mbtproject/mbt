@@ -50,18 +50,12 @@ cat >build/bintray.json << EOL
         "repo": "bin",
         "subject": "buddyspike",
         "desc": "I was pushed completely automatically",
-        "website_url": "https://github.com/buddyspike/mbt",
-        "issue_tracker_url": "https://github.com/buddyspike/mbt/issues",
-        "vcs_url": "https://github.com/buddyspike/mbt.git",
-        "public_download_numbers": true,
-        "public_stats": true
-    },
-    "version": {
+        "website_url": "https://github.com/buddyspike/mbt", "issue_tracker_url": "https://github.com/buddyspike/mbt/issues", "vcs_url": "https://github.com/buddyspike/mbt.git", "public_download_numbers": true, "public_stats": true }, "version": {
         "name": "0.1-alpha",
         "desc": "not for production use",
         "gpgSign": false
     },
-    "files": [ {"includePattern": "build/(.*)", "uploadPattern": "/$1"} ],
+    "files": [ {"includePattern": "build/(.*)", "uploadPattern": "/$0"} ],
     "publish": true
 }
 EOL
