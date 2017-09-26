@@ -2,7 +2,6 @@
 
 set -ex
 
-export PKG_CONFIG_LIBDIR=""
 DIR=$(pwd)
 GIT2GO_PATH=$GOPATH/src/github.com/libgit2/git2go
 GIT2GO_VENDOR_PATH=$GIT2GO_PATH/vendor/libgit2
@@ -25,6 +24,8 @@ cmake -DTHREADSAFE=ON \
       -DCMAKE_C_FLAGS=-fPIC \
       -DCMAKE_BUILD_TYPE="RelWithDebInfo" \
       -DCMAKE_INSTALL_PREFIX=../install \
+      -DUSE_SSH=OFF \
+      -DCURL=OFF \
       .. &&
 
 cmake --build . &&
