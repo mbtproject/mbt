@@ -35,7 +35,7 @@ func preparePipedArgs() []string {
 
 var buildBranch = &cobra.Command{
 	Use:   "branch <branch>",
-	Short: "builds the specific branch",
+	Short: "Builds the specific branch",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		branch := "master"
 		if len(args) > 0 {
@@ -54,7 +54,7 @@ var buildBranch = &cobra.Command{
 
 var buildPr = &cobra.Command{
 	Use:   "pr --src <branch> --dst <branch>",
-	Short: "builds the pr from a source branch to destination branch",
+	Short: "Builds a pr from src branch to dst branch",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if src == "" {
 			return errors.New("requires source")

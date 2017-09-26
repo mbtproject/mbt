@@ -19,7 +19,7 @@ func init() {
 
 var RootCmd = &cobra.Command{
 	Use:   "mbt",
-	Short: "Monorepo build tool",
+	Short: "Build utility for monorepos",
 	Long:  "Build utility for monorepos",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if in == "" {
