@@ -42,3 +42,30 @@ OUT="mbt_${OS}_${ARCH}"
 go get
 go build -o "build/${OUT}"
 shasum -a 1 -p "build/${OUT}" | cut -d ' ' -f 1 > "build/${OUT}.sha1"
+
+cat >build/bintray.json << EOL
+{
+    "package": {
+        "name": "${OUT}",
+        "repo": "mbt",
+        "subject": "buddyspike",
+        "desc": "I was pushed completely automatically",
+        "website_url": "https://github.com/buddyspike/mbt",
+        "issue_tracker_url": "https://github.com/buddyspike/mbt/issues",
+        "vcs_url": "https://github.com/buddyspike/mbt.git",
+        "public_download_numbers": true,
+        "public_stats": true,
+    },
+    "version": {
+        "name": "0.1.",
+        "desc": "not for production use",
+        "gpgSign": false
+    },
+
+    "files":
+        [
+        {"includePattern": "build/*"}
+        ],
+    "publish": true
+}
+EOL

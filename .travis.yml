@@ -1,26 +1,20 @@
 language: go
 os:
-  - linux
-  - osx
-
+- linux
+- osx
 go:
-  - 1.9
-
+- 1.9
 script: make build
 matrix:
   allow_failures:
-    - go: tip
+  - go: tip
 git:
   submodules: false
 branches:
   only:
-    - master
+  - master
 deploy:
-  provider: releases
-  api_key:
-    secure: XgnfscpDvxrFxWJuxEx5mcMZr25Wra2DVe185902cHDg7y3ei4aqGRTx7iadzaiSJrrYljFa2wrxUh+mAXgisjt5muQeQTd6kyfoydc++Pzo6nJe9Kevhv/zI+y0uFFl39JOXYH5Cwpo06VjGFp1Xd4tszwF2e1M6ylpfibUU55CVz38NFxUjVwDsjUqPOSqOKaPhP3/vM81T6ARBFFV0W32ljSUFsg6W4xhKuCmBQTKFp0CHlCypLXJjG9lsq6nwOlVgI7vIraNy05uZ+L3IfOpC5RmCBihR62RYUNdSXPj0WUSX3Ll/fgi6EoAO97uZf8iXugQsjpyIoZpCFwJXHdb4KvpkJ+/HOu0l+mm+ChjNqVaCCnyNIfgSPKSm5TyGtP6EM2ThuOtgwOYP3Nu+I2KDPbTHrjc+c5Bv7QZvcnU1GI9eisY/V67bWvpiuwxGx4G+803y01EdMWimAGodT4rbI0VazlRREVscbnmVdga6moDdlLUy5F802vtZS26/K8vL0FvvIR+o1fOHN2LpUW091Ua/skv76rZloM28Nj8r9NqPIWlpsTmZMBk+MBeT/FBVcMii/lSnoK3oR3XFRwZYZ4JaY87bpSpvOime3U2xOF4sjroJ1Uxh4WWfnirWlYQNHsC6Y1w5FMJneFdnu7MvvmQGe6wsIK9Aerpc0s=
-  file_glob: true
-  file: build/*
-  skip_cleanup: true
-  on:
-    repo: buddyspike/mbt
+  provider: bintray
+  key:
+    secure: jihy8muom6pVkbAmOJfbvfoNlVQ6xDEctux0Vc8TCj9LsPA3Glzh8VFm5IFMKVErh3GbuOy93+gbxO+asKQ5Ftr0Yet9DlGrsSUovcLejvpeVvgnXnqffeWcSVJkY0UN02oh7r0yG0c6on2++qpZYtZPjv/dOheu3daKstKY7O6WABMQ50vCGOo0brtmLRXgsupE5A8lBDIZRVw+T4b2Wi/GPZt4GgfjACpxHDL1r1RzmtafEtsaC+YBT9+zKHEfJPw1BFpC+kFgWPdGLWLRhhIbAfGVs8G3YzT+ujTpx4pPdZk/SUTmvX3kipLtr8rtIsA52pTUdM8lwGrHl0nkK/OCHk3AoDA91YMWgEHsTtaC6EJmTlQCaS/PF4iHXqBd5Hzm4Ez1CFhZYOd2e+Yuv/1G/OUelgHUTaABMR8xrYIhQ3sYkT7vde9G71BH6kEGz+6D7JhghhXhxDRKO4cyad1nWgNnwpNDxeBn3avdUZdi3c2zP9ELeTjnLFGnZRDzsGtjDfSWHXjTHetYt1KFbNMDfaz1kmIH69oONVhiCSsM2nl+57oRcwPEV8EoODONCrui6X2Pj7Sn1SWH9Ec95Aj1HCMOlAWuLH1dlsaEf60dkQ7Ebh1fU589j+0sB/Fgou8ttJYMPDxHmxvJK85Ta5GqWF3juBOBQLPDqfkrkVk=
+  file: "./build/bintray.json"
