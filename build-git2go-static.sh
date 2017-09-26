@@ -61,7 +61,7 @@ cat >build/bintray.json << EOL
         "desc": "not for production use",
         "gpgSign": false
     },
-    "files": [ {"includePattern": "build/(.*)"} ],
+    "files": [ {"includePattern": "build/(.*)", "uploadPattern": "/$1"} ],
     "publish": true
 }
 EOL
