@@ -1,6 +1,7 @@
 language: go
 os:
   - linux
+  - osx
 
 go:
   - 1.9
@@ -14,7 +15,6 @@ git:
 branches:
   only:
     - master
-before_install: sudo apt-get install libssh2-1-dev -y
 deploy:
   provider: releases
   api_key:
