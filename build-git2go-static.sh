@@ -57,7 +57,7 @@ cat >build/bintray.json << EOL
         "public_stats": true
     },
     "version": {
-        "name": "0.1.",
+        "name": "0.1-alpha",
         "desc": "not for production use",
         "gpgSign": false
     },
