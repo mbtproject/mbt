@@ -6,7 +6,7 @@ DIR=$(pwd)
 GIT2GO_PATH=$GOPATH/src/github.com/libgit2/git2go
 GIT2GO_VENDOR_PATH=$GIT2GO_PATH/vendor/libgit2
 OS=$(uname -s | awk '{print tolower($0)}')
-ARCH=$(uname -a | rev | cut -d ' ' -f 1 | rev)
+ARCH=$(uname -m)
 
 go get github.com/libgit2/git2go || true &&
 
