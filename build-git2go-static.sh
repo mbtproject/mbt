@@ -2,6 +2,7 @@
 
 set -ex
 
+export PKG_CONFIG_LIBDIR=""
 DIR=$(pwd)
 GIT2GO_PATH=$GOPATH/src/github.com/libgit2/git2go
 GIT2GO_VENDOR_PATH=$GIT2GO_PATH/vendor/libgit2
