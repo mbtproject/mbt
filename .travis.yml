@@ -1,22 +1,23 @@
 language: go
-
 go:
-  - 1.9
-  - tip
-
+- 1.9
+- tip
 script: make build
-
 matrix:
   allow_failures:
-    - go: tip
-
+  - go: tip
 git:
   submodules: false
-
 branches:
   only:
   - master
-
-before_install:
-    sudo apt-get install libssh2-1-dev -y
-
+before_install: sudo apt-get install libssh2-1-dev -y
+deploy:
+  provider: releases
+  api_key:
+    secure: XgnfscpDvxrFxWJuxEx5mcMZr25Wra2DVe185902cHDg7y3ei4aqGRTx7iadzaiSJrrYljFa2wrxUh+mAXgisjt5muQeQTd6kyfoydc++Pzo6nJe9Kevhv/zI+y0uFFl39JOXYH5Cwpo06VjGFp1Xd4tszwF2e1M6ylpfibUU55CVz38NFxUjVwDsjUqPOSqOKaPhP3/vM81T6ARBFFV0W32ljSUFsg6W4xhKuCmBQTKFp0CHlCypLXJjG9lsq6nwOlVgI7vIraNy05uZ+L3IfOpC5RmCBihR62RYUNdSXPj0WUSX3Ll/fgi6EoAO97uZf8iXugQsjpyIoZpCFwJXHdb4KvpkJ+/HOu0l+mm+ChjNqVaCCnyNIfgSPKSm5TyGtP6EM2ThuOtgwOYP3Nu+I2KDPbTHrjc+c5Bv7QZvcnU1GI9eisY/V67bWvpiuwxGx4G+803y01EdMWimAGodT4rbI0VazlRREVscbnmVdga6moDdlLUy5F802vtZS26/K8vL0FvvIR+o1fOHN2LpUW091Ua/skv76rZloM28Nj8r9NqPIWlpsTmZMBk+MBeT/FBVcMii/lSnoK3oR3XFRwZYZ4JaY87bpSpvOime3U2xOF4sjroJ1Uxh4WWfnirWlYQNHsC6Y1w5FMJneFdnu7MvvmQGe6wsIK9Aerpc0s=
+  file_glob: true
+  file: build/*
+  skip_cleanup: true
+  on:
+    repo: buddyspike/mbt

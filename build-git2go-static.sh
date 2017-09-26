@@ -5,6 +5,8 @@ set -ex
 DIR=$(pwd)
 GIT2GO_PATH=$GOPATH/src/github.com/libgit2/git2go
 GIT2GO_VENDOR_PATH=$GIT2GO_PATH/vendor/libgit2
+OS=$(uname -s | awk '{print tolower($0)}')
+ARCH=$(uname -a | rev | cut -d ' ' -f 1 | rev)
 
 go get github.com/libgit2/git2go || true &&
 
@@ -32,3 +34,9 @@ export CGO_LDFLAGS="$(pkg-config --libs --static $GOPATH/src/github.com/libgit2/
 go install -x github.com/libgit2/git2go &&
 
 cd $DIR
+
+OUT="mbt_${OS}_${ARCH}"
+
+go get
+go build -o "build/${OUT}"
+shasum -a 1 -p "build/${OUT}" | cut -d ' ' -f 1 > "build/${OUT}.sha1"
