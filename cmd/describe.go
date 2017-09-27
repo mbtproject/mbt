@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/buddyspike/mbt/lib"
 	"github.com/spf13/cobra"
@@ -85,8 +86,24 @@ var DescribeCommitCmd = &cobra.Command{
 	},
 }
 
+const COLUMN_WIDTH = 30
+
+func formatRow(args ...interface{}) string {
+	padded := make([]interface{}, len(args))
+	for i, a := range args {
+		requiredPadding := COLUMN_WIDTH - len(a.(string))
+		if requiredPadding > 0 {
+			padded[i] = fmt.Sprintf("%s%s", a, strings.Join(make([]string, requiredPadding), " "))
+		} else {
+			padded[i] = a
+		}
+	}
+	return fmt.Sprintf("%s\t\t%s\t\t%s\n", padded...)
+}
+
 func output(m *lib.Manifest) {
+	fmt.Print(formatRow("Name", "Path", "Version"))
 	for _, a := range m.Applications {
-		fmt.Printf("%s %s\n", a.Name, a.Version)
+		fmt.Printf(formatRow(a.Name, a.Path, a.Version))
 	}
 }
