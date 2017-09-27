@@ -155,6 +155,14 @@ func (r *TestRepository) SwitchToBranch(name string) error {
 	})
 }
 
+func (r *TestRepository) Remove(p string) error {
+	return os.RemoveAll(path.Join(r.Dir, p))
+}
+
+func (r *TestRepository) Rename(old, new string) error {
+	return os.Rename(path.Join(r.Dir, old), path.Join(r.Dir, new))
+}
+
 func createTestRepository(dir string) (*TestRepository, error) {
 	err := os.MkdirAll(dir, 0755)
 	if err != nil {
