@@ -5,6 +5,40 @@ Experimental and work in progress.
 
 ![build status](https://travis-ci.org/buddyspike/mbt.svg?branch=master)
 
+## Usage Examples
+```sh
+# Display manifest in default branch 
+mbt describe branch --in [path to repo]
+
+# Display manifest for a specific branch
+mbt describe branch [branch name] --in [path to repo]
+
+# Display manifest for a commit
+mbt describe commit [full commit sha] --in [path to repo]
+
+# Display manifest for a pull request
+mbt describe pr --src [source branch name] --dst [destination branch name] --in [path to repo]
+
+# Build default branch
+mbt build branch --in [path to repo]
+
+# Build specific branch 
+mbt build branch [branch name] --in .
+
+# Build a pull request
+mbt build pr --src [source branch name] --dst [destination branch name] --in [path to repo]
+
+# Apply the manifest from default branch over a go template
+# Template is read out from git storage. Therefore must be committed.
+mbt apply branch --to [relative path to template in tree] --in . 
+
+# Apply the manifest from a branch over a go template
+mbt apply branch [branch name] --to [relative path to template in tree] --in .
+
+# Apply the manifest and write the output to a file
+mbt apply branch --to [relative path to template in tree] --out [path to output file] --in .
+```
+
 ## Builds
 
 |OS               |Download|
