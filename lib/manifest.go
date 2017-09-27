@@ -33,9 +33,13 @@ type TemplateData struct {
 }
 
 func ManifestByPr(dir, src, dst string) (*Manifest, error) {
-	repo, err := git.OpenRepository(dir)
+	repo, m, err := openRepo(dir)
 	if err != nil {
 		return nil, err
+	}
+
+	if m != nil {
+		return m, nil
 	}
 
 	srcC, err := getBranchCommit(repo, src)
@@ -73,15 +77,19 @@ func ManifestByPr(dir, src, dst string) (*Manifest, error) {
 		return nil, err
 	}
 
-	m, err := fromBranch(repo, dir, src)
+	m, err = fromBranch(repo, dir, src)
 
 	return reduceToDiff(m, diff)
 }
 
 func ManifestBySha(dir, sha string) (*Manifest, error) {
-	repo, err := git.OpenRepository(dir)
+	repo, m, err := openRepo(dir)
 	if err != nil {
 		return nil, err
+	}
+
+	if m != nil {
+		return m, nil
 	}
 
 	bytes, err := hex.DecodeString(sha)
@@ -99,9 +107,13 @@ func ManifestBySha(dir, sha string) (*Manifest, error) {
 }
 
 func ManifestByBranch(dir, branch string) (*Manifest, error) {
-	repo, err := git.OpenRepository(dir)
+	repo, m, err := openRepo(dir)
 	if err != nil {
 		return nil, err
+	}
+
+	if m != nil {
+		return m, nil
 	}
 
 	return fromBranch(repo, dir, branch)
@@ -256,4 +268,21 @@ func reduceToDiff(manifest *Manifest, diff *git.Diff) (*Manifest, error) {
 		Sha:          manifest.Sha,
 		Applications: apps,
 	}, nil
+}
+
+func openRepo(dir string) (*git.Repository, *Manifest, error) {
+	repo, err := git.OpenRepository(dir)
+	if err != nil {
+		return nil, nil, err
+	}
+	empty, err := repo.IsEmpty()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if empty {
+		return nil, &Manifest{Applications: []*Application{}, Dir: dir, Sha: ""}, nil
+	}
+
+	return repo, nil, nil
 }
