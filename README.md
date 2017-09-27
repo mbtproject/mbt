@@ -5,6 +5,11 @@ Experimental and work in progress.
 
 ![build status](https://travis-ci.org/buddyspike/mbt.svg?branch=master)
 
+## Install
+```sh
+curl -L -o /usr/local/bin/mbt [get the url for your target from the links below]
+chmod +x /usr/local/bin/mbt
+```
 ## Format of appspec.yaml
 
 ```yaml
