@@ -4,6 +4,7 @@
 Experimental and work in progress.
 
 ![build status](https://travis-ci.org/buddyspike/mbt.svg?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/buddyspike/mbt)](https://goreportcard.com/report/github.com/buddyspike/mbt)
 
 ## Install
 ```sh
