@@ -28,7 +28,6 @@ var ApplyBranchCmd = &cobra.Command{
 	Use:   "branch <branch>",
 	Short: "Applies the manifest of specified branch over a given template",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		out := ""
 		branch := "master"
 		if len(args) > 0 {
 			branch = args[0]
