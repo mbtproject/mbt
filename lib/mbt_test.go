@@ -2,6 +2,7 @@ package lib
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -123,6 +124,35 @@ func (r *TestRepository) Commit(message string) error {
 	}
 
 	return nil
+}
+
+func (r *TestRepository) SwitchToBranch(name string) error {
+	_, err := r.Repo.LookupBranch(name, git.BranchAll)
+	if err != nil {
+		head, err := r.Repo.Head()
+		if err != nil {
+			return err
+		}
+
+		hc, err := r.Repo.LookupCommit(head.Target())
+		if err != nil {
+			return err
+		}
+
+		_, err = r.Repo.CreateBranch(name, hc, false)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = r.Repo.SetHead(fmt.Sprintf("refs/heads/%s", name))
+	if err != nil {
+		return err
+	}
+
+	return r.Repo.CheckoutHead(&git.CheckoutOpts{
+		Strategy: git.CheckoutForce | git.CheckoutRemoveUntracked | git.CheckoutDontWriteIndex,
+	})
 }
 
 func createTestRepository(dir string) (*TestRepository, error) {

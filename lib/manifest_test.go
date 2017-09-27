@@ -93,3 +93,55 @@ func TestEmptyRepo(t *testing.T) {
 
 	assert.Len(t, m.Applications, 0)
 }
+
+func TestDiffingTwoBranches(t *testing.T) {
+	clean()
+
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitApplication("app-a"))
+	check(t, repo.Commit("first"))
+	check(t, repo.SwitchToBranch("feature"))
+	check(t, repo.InitApplication("app-b"))
+	check(t, repo.Commit("second"))
+
+	m, err := ManifestByPr(".tmp/repo", "feature", "master")
+	check(t, err)
+
+	assert.Len(t, m.Applications, 1)
+	assert.Equal(t, "app-b", m.Applications[0].Name)
+
+	m, err = ManifestByPr(".tmp/repo", "master", "feature")
+	check(t, err)
+
+	assert.Len(t, m.Applications, 0)
+}
+
+func TestDiffingTwoProgressedBranches(t *testing.T) {
+	clean()
+
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitApplication("app-a"))
+	check(t, repo.Commit("first"))
+	check(t, repo.SwitchToBranch("feature"))
+	check(t, repo.InitApplication("app-b"))
+	check(t, repo.Commit("second"))
+	check(t, repo.SwitchToBranch("master"))
+	check(t, repo.InitApplication("app-c"))
+	check(t, repo.Commit("third"))
+
+	m, err := ManifestByPr(".tmp/repo", "feature", "master")
+	check(t, err)
+
+	assert.Len(t, m.Applications, 1)
+	assert.Equal(t, "app-b", m.Applications[0].Name)
+
+	m, err = ManifestByPr(".tmp/repo", "master", "feature")
+	check(t, err)
+
+	assert.Len(t, m.Applications, 1)
+	assert.Equal(t, "app-c", m.Applications[0].Name)
+}
