@@ -11,16 +11,16 @@ func TestSingleAppDir(t *testing.T) {
 	// defer clean()
 
 	repo, err := createTestRepository(".tmp/repo")
-	assert.NoError(t, err)
+	check(t, err)
 
 	err = repo.InitApplication("app-a")
-	assert.NoError(t, err)
+	check(t, err)
 
 	err = repo.Commit("first")
-	assert.NoError(t, err)
+	check(t, err)
 
 	m, err := ManifestByBranch(".tmp/repo", "master")
-	assert.NoError(t, err)
+	check(t, err)
 
 	assert.Len(t, m.Applications, 1)
 	assert.Equal(t, "app-a", m.Applications[0].Name)
@@ -29,19 +29,19 @@ func TestSingleAppDir(t *testing.T) {
 func TestNonAppContent(t *testing.T) {
 	clean()
 	repo, err := createTestRepository(".tmp/repo")
-	assert.NoError(t, err)
+	check(t, err)
 
 	err = repo.InitApplication("app-a")
-	assert.NoError(t, err)
+	check(t, err)
 
 	err = repo.WriteContent("content/index.html", "hello")
-	assert.NoError(t, err)
+	check(t, err)
 
 	err = repo.Commit("first")
-	assert.NoError(t, err)
+	check(t, err)
 
 	m, err := ManifestByBranch(".tmp/repo", "master")
-	assert.NoError(t, err)
+	check(t, err)
 
 	assert.Len(t, m.Applications, 1)
 }
@@ -49,13 +49,13 @@ func TestNonAppContent(t *testing.T) {
 func TestNestedAppDir(t *testing.T) {
 	clean()
 	repo, err := createTestRepository(".tmp/repo")
-	assert.NoError(t, err)
+	check(t, err)
 
-	assert.NoError(t, repo.InitApplication("a/b/c/app-a"))
-	assert.NoError(t, repo.Commit("first"))
+	check(t, repo.InitApplication("a/b/c/app-a"))
+	check(t, repo.Commit("first"))
 
 	m, err := ManifestByBranch(".tmp/repo", "master")
-	assert.NoError(t, err)
+	check(t, err)
 
 	assert.Len(t, m.Applications, 1)
 	assert.Equal(t, "a/b/c/app-a", m.Applications[0].Path)
@@ -64,14 +64,14 @@ func TestNestedAppDir(t *testing.T) {
 func TestAppsDirInAppDir(t *testing.T) {
 	clean()
 	repo, err := createTestRepository(".tmp/repo")
-	assert.NoError(t, err)
+	check(t, err)
 
-	assert.NoError(t, repo.InitApplication("app-a"))
-	assert.NoError(t, repo.InitApplication("app-a/app-b"))
-	assert.NoError(t, repo.Commit("first"))
+	check(t, repo.InitApplication("app-a"))
+	check(t, repo.InitApplication("app-a/app-b"))
+	check(t, repo.Commit("first"))
 
 	m, err := ManifestByBranch(".tmp/repo", "master")
-	assert.NoError(t, err)
+	check(t, err)
 
 	assert.Len(t, m.Applications, 2)
 	assert.Equal(t, "app-b", m.Applications[0].Name)
@@ -84,12 +84,12 @@ func TestEmptyRepo(t *testing.T) {
 	clean()
 
 	repo, err := createTestRepository(".tmp/repo")
-	assert.NoError(t, err)
+	check(t, err)
 
-	assert.NoError(t, repo.InitApplication("app-a"))
+	check(t, repo.InitApplication("app-a"))
 
 	m, err := ManifestByBranch(".tmp/repo", "master")
-	assert.NoError(t, err)
+	check(t, err)
 
 	assert.Len(t, m.Applications, 0)
 }

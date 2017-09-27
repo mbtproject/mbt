@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"testing"
 	"text/template"
 	"time"
 
@@ -140,4 +141,10 @@ func createTestRepository(dir string) (*TestRepository, error) {
 
 func clean() {
 	os.RemoveAll(".tmp")
+}
+
+func check(t *testing.T, err error) {
+	if err != nil {
+		t.Fatal(err)
+	}
 }
