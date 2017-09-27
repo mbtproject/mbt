@@ -5,6 +5,18 @@ Experimental and work in progress.
 
 ![build status](https://travis-ci.org/buddyspike/mbt.svg?branch=master)
 
+## Format of appspec.yaml
+
+```yaml
+name: my-cool-app   # name of the app
+buildPlaforms:      # list of supported build platforms
+  - linux
+  - darwin
+build: ./build.sh   # command to execute when running mbt build 
+properties:         # dict of arbitrary values that can be used in templates when running mbt apply
+  foo: bar
+```
+
 ## Usage Examples
 ```sh
 # Display manifest in default branch 
