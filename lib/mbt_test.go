@@ -115,6 +115,10 @@ func (r *TestRepository) Commit(message string) error {
 		}
 
 		bc, err := r.Repo.LookupCommit(currentBranch.Target())
+		if err != nil {
+			return err
+		}
+
 		parents = append(parents, bc)
 	}
 

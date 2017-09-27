@@ -78,6 +78,9 @@ func ManifestByPr(dir, src, dst string) (*Manifest, error) {
 	}
 
 	m, err = fromBranch(repo, dir, src)
+	if err != nil {
+		return nil, err
+	}
 
 	return reduceToDiff(m, diff)
 }
