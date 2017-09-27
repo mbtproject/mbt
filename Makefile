@@ -9,5 +9,9 @@ build: clean
 clean:
 	rm -rf build
 
+restore:
+	go get -t
+	go get github.com/stretchr/testify
+
 test:
 	go test ./...
