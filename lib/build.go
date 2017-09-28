@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path"
 	"runtime"
+	"strings"
 
 	git "github.com/libgit2/git2go"
 	"github.com/sirupsen/logrus"
@@ -58,9 +59,21 @@ func Build(m *Manifest, args []string) error {
 	return nil
 }
 
+func setupAppBuildEnvironment(app *Application) []string {
+	r := []string{
+		fmt.Sprintf("MBT_APP_VERSION=%s", app.Version),
+	}
+
+	for k, v := range app.Properties {
+		r = append(r, fmt.Sprintf("MBT_APP_PROPERTY_%s=%s", strings.ToUpper(k), v.(string)))
+	}
+
+	return r
+}
+
 func buildOne(dir string, app *Application, args []string) error {
 	cmd := exec.Command(app.Build)
-	cmd.Env = append(os.Environ(), fmt.Sprintf("MBT_VERSION=%s", app.Version))
+	cmd.Env = append(os.Environ(), setupAppBuildEnvironment(app)...)
 	cmd.Dir = path.Join(dir, app.Path)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
