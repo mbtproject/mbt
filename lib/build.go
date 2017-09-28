@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path"
@@ -59,12 +60,12 @@ func Build(m *Manifest, args []string) error {
 
 func buildOne(dir string, app *Application, args []string) error {
 	cmd := exec.Command(app.Build)
-	cmd.Env = os.Environ()
+	cmd.Env = append(os.Environ(), fmt.Sprintf("MBT_VERSION=%s", app.Version))
 	cmd.Dir = path.Join(dir, app.Path)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Args = append(cmd.Args, append(args, "--version", app.Version)...)
+	cmd.Args = append(cmd.Args, append(app.Args, args...)...)
 	err := cmd.Run()
 	return err
 }

@@ -12,6 +12,7 @@ import (
 type Application struct {
 	Name           string
 	Path           string
+	Args           []string `yaml:",flow"`
 	BuildPlatforms []string `yaml:"buildPlatforms,flow"`
 	Build          string
 	Version        string
@@ -193,6 +194,7 @@ func fromCommit(repo *git.Repository, dir string, commit *git.Commit) (*Manifest
 func newApplication(dir, version string, spec []byte) (*Application, error) {
 	a := &Application{
 		Properties: make(map[string]interface{}),
+		Args:       make([]string, 0),
 	}
 
 	err := yaml.Unmarshal(spec, a)
@@ -203,6 +205,10 @@ func newApplication(dir, version string, spec []byte) (*Application, error) {
 	a.Path = dir
 	a.Version = version
 	return a, nil
+}
+
+func newEmptyManifest(dir string) *Manifest {
+	return &Manifest{Applications: []*Application{}, Dir: dir, Sha: ""}
 }
 
 func getBranchCommit(repo *git.Repository, branch string) (*git.Commit, error) {
@@ -284,7 +290,7 @@ func openRepo(dir string) (*git.Repository, *Manifest, error) {
 	}
 
 	if empty {
-		return nil, &Manifest{Applications: []*Application{}, Dir: dir, Sha: ""}, nil
+		return nil, newEmptyManifest(dir), nil
 	}
 
 	return repo, nil, nil
