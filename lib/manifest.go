@@ -252,7 +252,7 @@ func reduceToDiff(manifest *Manifest, diff *git.Diff) (*Manifest, error) {
 	q := manifest.indexByPath()
 	filtered := make(map[string]*Application)
 	err := diff.ForEach(func(delta git.DiffDelta, num float64) (git.DiffForEachHunkCallback, error) {
-		for k, _ := range q {
+		for k := range q {
 			if _, ok := filtered[k]; ok {
 				continue
 			}
