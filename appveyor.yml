@@ -1,0 +1,39 @@
+version: '{build}'
+image:
+  - Visual Studio 2015
+branches:
+  only:
+  - master
+clone_folder: '%SYSTEMDRIVE%\gopath\src\github.com\buddyspike\mbt'
+before_build:
+  - cmd: mkdir %SYSTEMDRIVE%\downloads
+  - cmd: mkdir %SYSTEMDRIVE%\go386
+  - cmd: curl -L -o %SYSTEMDRIVE%\downloads\pkg-config_0.26-1_win32.zip http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/pkg-config_0.26-1_win32.zip
+  - cmd: curl -L -o %SYSTEMDRIVE%\downloads\glib_2.28.8-1_win32.zip http://ftp.gnome.org/pub/gnome/binaries/win32/glib/2.28/glib_2.28.8-1_win32.zip
+  - cmd: curl -L -o %SYSTEMDRIVE%\downloads\gettext-runtime_0.18.1.1-2_win32.zip http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/gettext-runtime_0.18.1.1-2_win32.zip
+  - cmd: curl -L -o %SYSTEMDRIVE%\downloads\go.zip https://storage.googleapis.com/golang/go1.9.windows-386.zip
+  - ps: Expand-Archive $ENV:SYSTEMDRIVE\downloads\pkg-config_0.26-1_win32.zip -DestinationPath $ENV:SYSTEMDRIVE/ -Force
+  - ps: Expand-Archive $ENV:SYSTEMDRIVE\downloads\glib_2.28.8-1_win32.zip -DestinationPath $ENV:SYSTEMDRIVE/ -Force 
+  - ps: Expand-Archive $ENV:SYSTEMDRIVE\downloads\gettext-runtime_0.18.1.1-2_win32.zip -DestinationPath $ENV:SYSTEMDRIVE/ -Force  
+  - ps: Expand-Archive $ENV:SYSTEMDRIVE\downloads\go.zip -DestinationPath $ENV:SYSTEMDRIVE/go386/ -Force  
+  - cmd: SET GOROOT=%SYSTEMDRIVE%\go386\go
+  - cmd: SET GOPATH=%SYSTEMDRIVE%\gopath
+  - cmd: SET PATH=%SYSTEMDRIVE%\bin;%SYSTEMDRIVE%\MinGW\bin;%SYSTEMDRIVE%\go386\go\bin;%PATH%
+build_script: 
+  - cmd: ./build_win.bat
+artifacts:
+  - path: build/mbt_windows_x86.zip
+    name: mbt
+deploy:
+- provider: BinTray
+  username: buddyspike
+  api_key:
+    secure: SRz0imDKwe+ssF9RgX+ZsOuoRpz88j57axQuMBUo/263Oqh1qRj39tNjN3NljrXD
+  subject: buddyspike
+  repo: bin
+  package: mbt_windows_x86
+  version: '1.0-alpha'
+  publish: true
+  override: true
+  explode: false
+  artifact: mbt
