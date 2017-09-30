@@ -2,6 +2,7 @@ package lib
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path"
@@ -16,7 +17,7 @@ var DefaultCheckoutOptions = &git.CheckoutOpts{
 	Strategy: git.CheckoutForce,
 }
 
-func Build(m *Manifest, args []string) error {
+func Build(m *Manifest, args []string, stdin io.Reader, stdout, stderr io.Writer) error {
 	repo, err := git.OpenRepository(m.Dir)
 	if err != nil {
 		return err
@@ -50,7 +51,7 @@ func Build(m *Manifest, args []string) error {
 			continue
 		}
 
-		err := buildOne(m.Dir, a, args)
+		err := buildOne(m.Dir, a, args, stdin, stdout, stderr)
 		if err != nil {
 			return err
 		}
@@ -73,13 +74,13 @@ func setupAppBuildEnvironment(app *Application) []string {
 	return r
 }
 
-func buildOne(dir string, app *Application, args []string) error {
+func buildOne(dir string, app *Application, args []string, stdin io.Reader, stdout io.Writer, stderr io.Writer) error {
 	cmd := exec.Command(app.Build)
 	cmd.Env = append(os.Environ(), setupAppBuildEnvironment(app)...)
 	cmd.Dir = path.Join(dir, app.Path)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdin = stdin
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
 	cmd.Args = append(cmd.Args, append(app.Args, args...)...)
 	err := cmd.Run()
 	return err

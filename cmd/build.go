@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"os"
 	"strings"
 
 	"github.com/buddyspike/mbt/lib"
@@ -47,8 +48,7 @@ var buildBranch = &cobra.Command{
 			return err
 		}
 
-		err = lib.Build(m, preparePipedArgs())
-		return err
+		return build(m)
 	},
 }
 
@@ -69,9 +69,12 @@ var buildPr = &cobra.Command{
 			return err
 		}
 
-		err = lib.Build(m, preparePipedArgs())
-		return err
+		return build(m)
 	},
+}
+
+func build(m *lib.Manifest) error {
+	return lib.Build(m, preparePipedArgs(), os.Stdin, os.Stdout, os.Stderr)
 }
 
 var buildCommand = &cobra.Command{
