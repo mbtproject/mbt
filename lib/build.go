@@ -65,7 +65,9 @@ func setupAppBuildEnvironment(app *Application) []string {
 	}
 
 	for k, v := range app.Properties {
-		r = append(r, fmt.Sprintf("MBT_APP_PROPERTY_%s=%s", strings.ToUpper(k), v.(string)))
+		if value, ok := v.(string); ok {
+			r = append(r, fmt.Sprintf("MBT_APP_PROPERTY_%s=%s", strings.ToUpper(k), value))
+		}
 	}
 
 	return r
