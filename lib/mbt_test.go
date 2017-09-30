@@ -21,25 +21,38 @@ type TestRepository struct {
 }
 
 type TestApplication struct {
-	Name string
+	Name           string
+	Build          string
+	BuildPlatforms []string
+	Properties     map[string]string
 }
 
 func (r *TestRepository) InitApplication(p string) error {
+	return r.InitApplicationWithOptions(p, &TestApplication{
+		Name:           path.Base(p),
+		Build:          "./build.sh",
+		BuildPlatforms: []string{"darwin", "linux"},
+		Properties:     map[string]string{"foo": "bar", "jar": "car"},
+	})
+}
+
+func (r *TestRepository) InitApplicationWithOptions(p string, app *TestApplication) error {
 	appDir := path.Join(r.Dir, p)
 	err := os.MkdirAll(appDir, 0755)
 	if err != nil {
 		return err
 	}
 
-	t, err := template.New("appspec").Parse(`
-name: {{ .Name }}
+	t, err := template.New("appspec").Parse(`name: {{ .Name }}
 buildPlatforms: 
-  - linux
-  - darwin
-build: ./build.sh
+  {{ range $p := .BuildPlatforms }}- {{ $p }}
+  {{ end }}
+build: {{ .Build }}
+{{ if .Properties }}
 properties: 
-  foo: "foo"
-  bar: "bar" 
+  {{ range $k, $v := .Properties }}{{ $k }}: {{ $v }}
+  {{ end }}
+{{ end }}
 `)
 
 	if err != nil {
@@ -47,7 +60,7 @@ properties:
 	}
 
 	buffer := new(bytes.Buffer)
-	err = t.Execute(buffer, &TestApplication{path.Base(p)})
+	err = t.Execute(buffer, app)
 	if err != nil {
 		return err
 	}
@@ -70,7 +83,7 @@ func (r *TestRepository) WriteContent(file, content string) error {
 		}
 	}
 
-	return ioutil.WriteFile(fpath, []byte(content), 0644)
+	return ioutil.WriteFile(fpath, []byte(content), 0744)
 }
 
 func (r *TestRepository) Commit(message string) error {
