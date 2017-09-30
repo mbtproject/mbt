@@ -3,35 +3,18 @@ package cmd
 import (
 	"errors"
 	"os"
-	"strings"
 
 	"github.com/buddyspike/mbt/lib"
 	"github.com/spf13/cobra"
 )
 
-var pipedArgs []string
-
 func init() {
 	buildPr.Flags().StringVar(&src, "src", "", "source branch")
 	buildPr.Flags().StringVar(&dst, "dst", "", "destination branch")
 
-	buildCommand.PersistentFlags().StringArrayVarP(&pipedArgs, "args", "a", []string{}, "arguments to be passed into build scripts")
 	buildCommand.AddCommand(buildBranch)
 	buildCommand.AddCommand(buildPr)
 	RootCmd.AddCommand(buildCommand)
-}
-
-func preparePipedArgs() []string {
-	a := []string{}
-	for _, i := range pipedArgs {
-		if strings.Contains(i, "=") {
-			k := strings.Split(i, "=")
-			a = append(a, k...)
-		} else {
-			a = append(a, i)
-		}
-	}
-	return a
 }
 
 var buildBranch = &cobra.Command{
@@ -74,7 +57,7 @@ var buildPr = &cobra.Command{
 }
 
 func build(m *lib.Manifest) error {
-	return lib.Build(m, preparePipedArgs(), os.Stdin, os.Stdout, os.Stderr)
+	return lib.Build(m, os.Stdin, os.Stdout, os.Stderr)
 }
 
 var buildCommand = &cobra.Command{
