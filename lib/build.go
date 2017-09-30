@@ -74,7 +74,7 @@ func setupAppBuildEnvironment(app *Application) []string {
 	return r
 }
 
-func buildOne(dir string, app *Application, stdin io.Reader, stdout io.Writer, stderr io.Writer) error {
+func buildOne(dir string, app *Application, stdin io.Reader, stdout, stderr io.Writer) error {
 	cmd := exec.Command(app.Build)
 	cmd.Env = append(os.Environ(), setupAppBuildEnvironment(app)...)
 	cmd.Dir = path.Join(dir, app.Path)
