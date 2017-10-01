@@ -62,9 +62,9 @@ func build(m *lib.Manifest) error {
 	return lib.Build(m, os.Stdin, os.Stdout, os.Stderr, func(a *lib.Application, s lib.BuildStage) {
 		switch s {
 		case lib.BUILD_STAGE_BEFORE_BUILD:
-			logrus.Infof("Building %s in %s", a.Name, a.Path)
+			logrus.Infof("BUILD %s in %s for %s", a.Name, a.Path, a.Version)
 		case lib.BUILD_STAGE_SKIP_BUILD:
-			logrus.Infof("Skipping build for %s in %s", a.Name, a.Path)
+			logrus.Infof("SKIP %s in %s for %s", a.Name, a.Path, a.Version)
 		}
 	})
 }
