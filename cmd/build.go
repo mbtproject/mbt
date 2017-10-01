@@ -60,8 +60,11 @@ var buildPr = &cobra.Command{
 
 func build(m *lib.Manifest) error {
 	return lib.Build(m, os.Stdin, os.Stdout, os.Stderr, func(a *lib.Application, s lib.BuildStage) {
-		if s == lib.BUILD_STAGE_SKIP_BUILD {
-			logrus.Info("Skipping build for %s", a.Name)
+		switch s {
+		case lib.BUILD_STAGE_BEFORE_BUILD:
+			logrus.Infof("Building %s in %s", a.Name, a.Path)
+		case lib.BUILD_STAGE_SKIP_BUILD:
+			logrus.Infof("Skipping build for %s in %s", a.Name, a.Path)
 		}
 	})
 }
