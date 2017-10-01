@@ -52,7 +52,7 @@ buildPlatforms:
   {{ end }}
 build: {{ .Build }}
 {{ if .Args }}
-  [{{ range $idx, $a := .Args }}{{ if $idx }},{{ end }}{{ $a }}{{ end }}]
+args: [{{ range $idx, $a := .Args }}{{ if $idx }},{{ end }}{{ $a }}{{ end }}]
 {{ end }}
 {{ if .Properties }}
 properties: 
