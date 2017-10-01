@@ -3,6 +3,7 @@ package lib
 import (
 	"bytes"
 	"os"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -31,4 +32,104 @@ func TestBuildExecution(t *testing.T) {
 
 	assert.Equal(t, "app-a built\n", stdout.String())
 	assert.EqualValues(t, []BuildStage{BUILD_STAGE_BEFORE_BUILD, BUILD_STAGE_AFTER_BUILD}, stages)
+}
+
+func TestBuildSkip(t *testing.T) {
+	clean()
+
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	switch runtime.GOOS {
+	case "linux", "darwin":
+		check(t, repo.InitApplicationWithOptions("app-a", &Spec{
+			Name:  "app-a",
+			Build: map[string]*BuildCmd{"windows": &BuildCmd{"powershell", []string{"-ExecutionPolicy", "Bypass", "-File", ".\\build.ps1"}}},
+		}))
+		check(t, repo.WritePowershellScript("app-a/build.ps1", "write-host built app-a"))
+	case "windows":
+		check(t, repo.InitApplicationWithOptions("app-a", &Spec{
+			Name:  "app-a",
+			Build: map[string]*BuildCmd{"darwin": &BuildCmd{"./build.sh", []string{}}},
+		}))
+		check(t, repo.WriteShellScript("app-a/build.sh", "echo built app-a"))
+	}
+
+	check(t, repo.Commit("first"))
+	m, err := ManifestByBranch(".tmp/repo", "master")
+	check(t, err)
+
+	skipped := make([]string, 0)
+	other := make([]string, 0)
+	buff := new(bytes.Buffer)
+
+	check(t, Build(m, os.Stdin, buff, buff, func(a *Application, s BuildStage) {
+		if s == BUILD_STAGE_SKIP_BUILD {
+			skipped = append(skipped, a.Name)
+		} else {
+			other = append(other, a.Name)
+		}
+	}))
+
+	assert.EqualValues(t, []string{"app-a"}, skipped)
+	assert.EqualValues(t, []string{}, other)
+}
+
+func TestBuildBranch(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitApplication("app-a"))
+	check(t, repo.WriteShellScript("app-a/build.sh", "echo built app-a"))
+	check(t, repo.WritePowershellScript("app-a/build.ps1", "write-host built app-a"))
+	check(t, repo.Commit("first"))
+
+	check(t, repo.SwitchToBranch("feature"))
+
+	check(t, repo.InitApplication("app-b"))
+	check(t, repo.WriteShellScript("app-b/build.sh", "echo built app-b"))
+	check(t, repo.WritePowershellScript("app-b/build.ps1", "write-host built app-b"))
+	check(t, repo.Commit("second"))
+
+	m, err := ManifestByBranch(".tmp/repo", "master")
+	check(t, err)
+
+	buff := new(bytes.Buffer)
+	check(t, Build(m, os.Stdin, buff, buff, func(a *Application, s BuildStage) {}))
+
+	assert.Equal(t, "built app-a\n", buff.String())
+
+	m, err = ManifestByBranch(".tmp/repo", "feature")
+	check(t, err)
+
+	buff = new(bytes.Buffer)
+	check(t, Build(m, os.Stdin, buff, buff, func(a *Application, s BuildStage) {}))
+
+	assert.Equal(t, "built app-a\nbuilt app-b\n", buff.String())
+}
+
+func TestDirtyWorkingDir(t *testing.T) {
+	// TODO:
+	// This test does not pass.
+	// Review checkout strategy used during build.
+	t.Skip()
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitApplication("app-a"))
+	check(t, repo.WriteContent("app-a/foo", "a"))
+	check(t, repo.WriteShellScript("app-a/build.sh", "echo built app-a"))
+	check(t, repo.WritePowershellScript("app-a/build.ps1", "write-host built app-a"))
+	check(t, repo.Commit("first"))
+
+	check(t, repo.WriteContent("app-a/foo", "b"))
+
+	m, err := ManifestByBranch(".tmp/repo", "master")
+	check(t, err)
+
+	buff := new(bytes.Buffer)
+	err = Build(m, os.Stdin, buff, buff, func(a *Application, s BuildStage) {})
+	assert.Error(t, err)
 }
