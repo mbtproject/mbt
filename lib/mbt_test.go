@@ -2,10 +2,12 @@ package lib
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
+	"runtime"
 	"testing"
 	"text/template"
 	"time"
@@ -23,6 +25,7 @@ type TestRepository struct {
 type TestApplication struct {
 	Name           string
 	Build          string
+	Args           []string
 	BuildPlatforms []string
 	Properties     map[string]string
 }
@@ -48,6 +51,9 @@ buildPlatforms:
   {{ range $p := .BuildPlatforms }}- {{ $p }}
   {{ end }}
 build: {{ .Build }}
+{{ if .Args }}
+  [{{ range $idx, $a := .Args }}{{ if $idx }},{{ end }}{{ $a }}{{ end }}]
+{{ end }}
 {{ if .Properties }}
 properties: 
   {{ range $k, $v := .Properties }}{{ $k }}: {{ $v }}
@@ -178,6 +184,53 @@ func (r *TestRepository) Remove(p string) error {
 
 func (r *TestRepository) Rename(old, new string) error {
 	return os.Rename(path.Join(r.Dir, old), path.Join(r.Dir, new))
+}
+
+func (r *TestRepository) InitApplicationWithScript(p, sh string, ps string) error {
+	config := &TestApplication{
+		BuildPlatforms: []string{"darwin", "linux", "windows"},
+	}
+
+	switch runtime.GOOS {
+	case "linux":
+	case "darwin":
+		config.Build = "./build.sh"
+	case "windows":
+		config.Build = "powershell"
+		config.Args = []string{"-ExecutionPolicy", "Bypass", "-File", ".\\build.ps1"}
+	}
+
+	err := r.InitApplicationWithOptions(p, config)
+	if err != nil {
+		return err
+	}
+
+	shTemplate, err := template.New("shTemplate").Parse(`#!/bin/sh
+{{.}}
+
+`)
+	if err != nil {
+		return err
+	}
+
+	psTemplate, err := template.New("psTemplate").Parse(`{{.}}`)
+	if err != nil {
+		return err
+	}
+
+	buff := new(bytes.Buffer)
+
+	switch runtime.GOOS {
+	case "linux":
+	case "darwin":
+		shTemplate.Execute(buff, sh)
+		return r.WriteContent("app-a/build.sh", buff.String())
+	case "windows":
+		psTemplate.Execute(buff, ps)
+		return r.WriteContent("app-a/build.ps1", buff.String())
+	}
+
+	return errors.New(fmt.Sprintf("unsupported os: %s", runtime.GOOS))
 }
 
 func createTestRepository(dir string) (*TestRepository, error) {
