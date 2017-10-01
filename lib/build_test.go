@@ -44,13 +44,13 @@ func TestBuildSkip(t *testing.T) {
 	case "linux", "darwin":
 		check(t, repo.InitApplicationWithOptions("app-a", &Spec{
 			Name:  "app-a",
-			Build: map[string]*BuildCmd{"windows": &BuildCmd{"powershell", []string{"-ExecutionPolicy", "Bypass", "-File", ".\\build.ps1"}}},
+			Build: map[string]*BuildCmd{"windows": {"powershell", []string{"-ExecutionPolicy", "Bypass", "-File", ".\\build.ps1"}}},
 		}))
 		check(t, repo.WritePowershellScript("app-a/build.ps1", "write-host built app-a"))
 	case "windows":
 		check(t, repo.InitApplicationWithOptions("app-a", &Spec{
 			Name:  "app-a",
-			Build: map[string]*BuildCmd{"darwin": &BuildCmd{"./build.sh", []string{}}},
+			Build: map[string]*BuildCmd{"darwin": {"./build.sh", []string{}}},
 		}))
 		check(t, repo.WriteShellScript("app-a/build.sh", "echo built app-a"))
 	}
