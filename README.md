@@ -15,10 +15,13 @@ chmod +x /usr/local/bin/mbt
 
 ```yaml
 name: my-cool-app   # name of the app
-buildPlaforms:      # list of supported build platforms
-  - linux
-  - darwin
-build: ./build.sh   # command to execute when running mbt build 
+build:              # list of build commands to execute in each platform
+  darwin:
+    cmd: ./build.sh # build command
+    args: [a, b]    # optional list of arguments to be passed when invoking the build command
+  linux:
+    cmd: ./build.sh
+    args: [a, b]
 properties:         # dict of arbitrary values that can be used in templates when running mbt apply
   foo: bar
 ```
