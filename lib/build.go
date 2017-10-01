@@ -104,7 +104,7 @@ func canBuildHere(app *Application) bool {
 }
 
 func checkoutHead(repo *git.Repository) {
-	err := repo.CheckoutHead(DefaultCheckoutOptions)
+	err := repo.CheckoutHead(&git.CheckoutOpts{Strategy: git.CheckoutForce})
 	if err != nil {
 		logrus.Warnf("failed to checkout head: %s", err)
 	}
