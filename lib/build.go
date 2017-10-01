@@ -14,7 +14,7 @@ import (
 )
 
 var DefaultCheckoutOptions = &git.CheckoutOpts{
-	Strategy: git.CheckoutForce,
+	Strategy: git.CheckoutSafe,
 }
 
 func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer) error {
@@ -75,25 +75,21 @@ func setupAppBuildEnvironment(app *Application) []string {
 }
 
 func buildOne(dir string, app *Application, stdin io.Reader, stdout, stderr io.Writer) error {
-	cmd := exec.Command(app.Build)
+	build := app.Build[runtime.GOOS]
+	cmd := exec.Command(build.Cmd)
 	cmd.Env = append(os.Environ(), setupAppBuildEnvironment(app)...)
 	cmd.Dir = path.Join(dir, app.Path)
 	cmd.Stdin = stdin
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
-	cmd.Args = append(cmd.Args, app.Args...)
+	cmd.Args = append(cmd.Args, build.Args...)
 	err := cmd.Run()
 	return err
 }
 
 func canBuildHere(app *Application) bool {
-	for _, p := range app.BuildPlatforms {
-		if p == runtime.GOOS {
-			return true
-		}
-	}
-
-	return false
+	_, ok := app.Build[runtime.GOOS]
+	return ok
 }
 
 func checkoutHead(repo *git.Repository) {

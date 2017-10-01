@@ -14,7 +14,9 @@ func TestBuildExecution(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplicationWithScript("app-a", "echo app-a built", "write-host \"app-a built\""))
+	check(t, repo.InitApplication("app-a"))
+	check(t, repo.WriteShellScript("app-a/build.sh", "echo app-a built"))
+	check(t, repo.WritePowershellScript("app-a/build.ps1", "write-host \"app-a built\""))
 	check(t, repo.Commit("first"))
 
 	m, err := ManifestByBranch(".tmp/repo", "master")

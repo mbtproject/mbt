@@ -1,18 +1,15 @@
 package lib
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
-	"runtime"
 	"testing"
-	"text/template"
 	"time"
 
 	git "github.com/libgit2/git2go"
+	yaml "gopkg.in/yaml.v2"
 )
 
 type TestRepository struct {
@@ -22,56 +19,31 @@ type TestRepository struct {
 	CurrentBranch string
 }
 
-type TestApplication struct {
-	Name           string
-	Build          string
-	Args           []string
-	BuildPlatforms []string
-	Properties     map[string]string
-}
-
 func (r *TestRepository) InitApplication(p string) error {
-	return r.InitApplicationWithOptions(p, &TestApplication{
-		Name:           path.Base(p),
-		Build:          "./build.sh",
-		BuildPlatforms: []string{"darwin", "linux"},
-		Properties:     map[string]string{"foo": "bar", "jar": "car"},
+	return r.InitApplicationWithOptions(p, &Spec{
+		Name: path.Base(p),
+		Build: map[string]*BuildCmd{
+			"darwin":  {"./build.sh", []string{}},
+			"linux":   {"./build.sh", []string{}},
+			"windows": {"powershell", []string{"-ExecutionPolicy", "Bypass", "-File", ".\\build.ps1"}},
+		},
+		Properties: map[string]interface{}{"foo": "bar", "jar": "car"},
 	})
 }
 
-func (r *TestRepository) InitApplicationWithOptions(p string, app *TestApplication) error {
+func (r *TestRepository) InitApplicationWithOptions(p string, app *Spec) error {
 	appDir := path.Join(r.Dir, p)
 	err := os.MkdirAll(appDir, 0755)
 	if err != nil {
 		return err
 	}
 
-	t, err := template.New("appspec").Parse(`name: {{ .Name }}
-buildPlatforms: 
-  {{ range $p := .BuildPlatforms }}- {{ $p }}
-  {{ end }}
-build: {{ .Build }}
-{{ if .Args }}
-args: [{{ range $idx, $a := .Args }}{{ if $idx }},{{ end }}{{ $a }}{{ end }}]
-{{ end }}
-{{ if .Properties }}
-properties: 
-  {{ range $k, $v := .Properties }}{{ $k }}: {{ $v }}
-  {{ end }}
-{{ end }}
-`)
-
+	buff, err := yaml.Marshal(app)
 	if err != nil {
 		return err
 	}
 
-	buffer := new(bytes.Buffer)
-	err = t.Execute(buffer, app)
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(path.Join(appDir, "appspec.yaml"), buffer.Bytes(), 0644)
+	err = ioutil.WriteFile(path.Join(appDir, ".mbt.yml"), buff, 0644)
 	if err != nil {
 		return err
 	}
@@ -101,6 +73,11 @@ func (r *TestRepository) Commit(message string) error {
 	err = idx.AddAll([]string{"."}, git.IndexAddCheckPathspec, func(p string, f string) int {
 		return 0
 	})
+	if err != nil {
+		return err
+	}
+
+	err = idx.Write()
 	if err != nil {
 		return err
 	}
@@ -186,49 +163,12 @@ func (r *TestRepository) Rename(old, new string) error {
 	return os.Rename(path.Join(r.Dir, old), path.Join(r.Dir, new))
 }
 
-func (r *TestRepository) InitApplicationWithScript(p, sh string, ps string) error {
-	config := &TestApplication{
-		BuildPlatforms: []string{"darwin", "linux", "windows"},
-	}
+func (r *TestRepository) WritePowershellScript(p, content string) error {
+	return r.WriteContent(p, content)
+}
 
-	switch runtime.GOOS {
-	case "linux", "darwin":
-		config.Build = "./build.sh"
-	case "windows":
-		config.Build = "powershell"
-		config.Args = []string{"-ExecutionPolicy", "Bypass", "-File", ".\\build.ps1"}
-	}
-
-	err := r.InitApplicationWithOptions(p, config)
-	if err != nil {
-		return err
-	}
-
-	shTemplate, err := template.New("shTemplate").Parse(`#!/bin/sh
-{{.}}
-
-`)
-	if err != nil {
-		return err
-	}
-
-	psTemplate, err := template.New("psTemplate").Parse(`{{.}}`)
-	if err != nil {
-		return err
-	}
-
-	buff := new(bytes.Buffer)
-
-	switch runtime.GOOS {
-	case "linux", "darwin":
-		shTemplate.Execute(buff, sh)
-		return r.WriteContent("app-a/build.sh", buff.String())
-	case "windows":
-		psTemplate.Execute(buff, ps)
-		return r.WriteContent("app-a/build.ps1", buff.String())
-	}
-
-	return errors.New(fmt.Sprintf("unsupported os: %s", runtime.GOOS))
+func (r *TestRepository) WriteShellScript(p, content string) error {
+	return r.WriteContent(p, fmt.Sprintf("#!/bin/sh\n%s", content))
 }
 
 func createTestRepository(dir string) (*TestRepository, error) {
