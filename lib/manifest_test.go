@@ -74,10 +74,10 @@ func TestAppsDirInAppDir(t *testing.T) {
 	check(t, err)
 
 	assert.Len(t, m.Applications, 2)
-	assert.Equal(t, "app-b", m.Applications[0].Name)
-	assert.Equal(t, "app-a/app-b", m.Applications[0].Path)
-	assert.Equal(t, "app-a", m.Applications[1].Name)
-	assert.Equal(t, "app-a", m.Applications[1].Path)
+	assert.Equal(t, "app-a", m.Applications[0].Name)
+	assert.Equal(t, "app-a", m.Applications[0].Path)
+	assert.Equal(t, "app-b", m.Applications[1].Name)
+	assert.Equal(t, "app-a/app-b", m.Applications[1].Path)
 }
 
 func TestEmptyRepo(t *testing.T) {

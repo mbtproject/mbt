@@ -3,20 +3,31 @@ package lib
 import (
 	"encoding/hex"
 	"fmt"
+	"sort"
 	"strings"
 
 	git "github.com/libgit2/git2go"
 	yaml "gopkg.in/yaml.v2"
 )
 
+type BuildCmd struct {
+	Cmd  string
+	Args []string `yaml:",flow"`
+}
+
+type Spec struct {
+	Version    string
+	Name       string
+	Build      map[string]*BuildCmd
+	Properties map[string]interface{}
+}
+
 type Application struct {
-	Name           string
-	Path           string
-	Args           []string `yaml:",flow"`
-	BuildPlatforms []string `yaml:"buildPlatforms,flow"`
-	Build          string
-	Version        string
-	Properties     map[string]interface{}
+	Name       string
+	Path       string
+	Build      map[string]*BuildCmd
+	Version    string
+	Properties map[string]interface{}
 }
 
 type Applications []*Application
@@ -158,10 +169,10 @@ func fromCommit(repo *git.Repository, dir string, commit *git.Commit) (*Manifest
 		return nil, err
 	}
 
-	vapps := []*Application{}
+	vapps := Applications{}
 
 	err = tree.Walk(func(path string, entry *git.TreeEntry) int {
-		if entry.Name == "appspec.yaml" && entry.Type == git.ObjectBlob {
+		if entry.Name == ".mbt.yml" && entry.Type == git.ObjectBlob {
 			blob, err := repo.LookupBlob(entry.Id)
 			if err != nil {
 				return 1
@@ -188,13 +199,14 @@ func fromCommit(repo *git.Repository, dir string, commit *git.Commit) (*Manifest
 		return nil, err
 	}
 
+	sort.Sort(vapps)
 	return &Manifest{dir, commit.Id().String(), vapps}, nil
 }
 
 func newApplication(dir, version string, spec []byte) (*Application, error) {
-	a := &Application{
+	a := &Spec{
 		Properties: make(map[string]interface{}),
-		Args:       make([]string, 0),
+		Build:      make(map[string]*BuildCmd),
 	}
 
 	err := yaml.Unmarshal(spec, a)
@@ -202,9 +214,13 @@ func newApplication(dir, version string, spec []byte) (*Application, error) {
 		return nil, err
 	}
 
-	a.Path = dir
-	a.Version = version
-	return a, nil
+	return &Application{
+		Build:      a.Build,
+		Name:       a.Name,
+		Properties: a.Properties,
+		Version:    version,
+		Path:       dir,
+	}, nil
 }
 
 func newEmptyManifest(dir string) *Manifest {
