@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -29,6 +30,11 @@ func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCal
 	repo, err := git.OpenRepository(m.Dir)
 	if err != nil {
 		return err
+	}
+
+	dirty, err := isWorkingDirDirty(repo)
+	if dirty {
+		return errors.New("dirty working dir")
 	}
 
 	oid, err := git.NewOid(m.Sha)

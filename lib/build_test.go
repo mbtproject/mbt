@@ -110,10 +110,6 @@ func TestBuildBranch(t *testing.T) {
 }
 
 func TestDirtyWorkingDir(t *testing.T) {
-	// TODO:
-	// This test does not pass.
-	// Review checkout strategy used during build.
-	t.Skip()
 	clean()
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
@@ -132,4 +128,5 @@ func TestDirtyWorkingDir(t *testing.T) {
 	buff := new(bytes.Buffer)
 	err = Build(m, os.Stdin, buff, buff, func(a *Application, s BuildStage) {})
 	assert.Error(t, err)
+	assert.Equal(t, "dirty working dir", err.Error())
 }
