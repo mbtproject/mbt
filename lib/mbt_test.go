@@ -192,8 +192,7 @@ func (r *TestRepository) InitApplicationWithScript(p, sh string, ps string) erro
 	}
 
 	switch runtime.GOOS {
-	case "linux":
-	case "darwin":
+	case "linux", "darwin":
 		config.Build = "./build.sh"
 	case "windows":
 		config.Build = "powershell"
@@ -221,8 +220,7 @@ func (r *TestRepository) InitApplicationWithScript(p, sh string, ps string) erro
 	buff := new(bytes.Buffer)
 
 	switch runtime.GOOS {
-	case "linux":
-	case "darwin":
+	case "linux", "darwin":
 		shTemplate.Execute(buff, sh)
 		return r.WriteContent("app-a/build.sh", buff.String())
 	case "windows":
