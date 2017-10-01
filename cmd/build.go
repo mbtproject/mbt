@@ -4,6 +4,8 @@ import (
 	"errors"
 	"os"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/buddyspike/mbt/lib"
 	"github.com/spf13/cobra"
 )
@@ -57,7 +59,11 @@ var buildPr = &cobra.Command{
 }
 
 func build(m *lib.Manifest) error {
-	return lib.Build(m, os.Stdin, os.Stdout, os.Stderr)
+	return lib.Build(m, os.Stdin, os.Stdout, os.Stderr, func(a *lib.Application, s lib.BuildStage) {
+		if s == lib.BUILD_STAGE_SKIP_BUILD {
+			logrus.Info("Skipping build for %s", a.Name)
+		}
+	})
 }
 
 var buildCommand = &cobra.Command{

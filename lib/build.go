@@ -13,11 +13,19 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type BuildStage = int
+
 var DefaultCheckoutOptions = &git.CheckoutOpts{
 	Strategy: git.CheckoutSafe,
 }
 
-func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer) error {
+const (
+	BUILD_STAGE_BEFORE_BUILD = iota
+	BUILD_STAGE_AFTER_BUILD
+	BUILD_STAGE_SKIP_BUILD
+)
+
+func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCallback func(app *Application, s BuildStage)) error {
 	repo, err := git.OpenRepository(m.Dir)
 	if err != nil {
 		return err
@@ -48,13 +56,16 @@ func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer) error {
 
 	for _, a := range m.Applications {
 		if !canBuildHere(a) {
+			buildStageCallback(a, BUILD_STAGE_SKIP_BUILD)
 			continue
 		}
 
+		buildStageCallback(a, BUILD_STAGE_BEFORE_BUILD)
 		err := buildOne(m.Dir, a, stdin, stdout, stderr)
 		if err != nil {
 			return err
 		}
+		buildStageCallback(a, BUILD_STAGE_AFTER_BUILD)
 	}
 
 	return nil

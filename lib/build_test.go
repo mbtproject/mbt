@@ -22,9 +22,13 @@ func TestBuildExecution(t *testing.T) {
 	m, err := ManifestByBranch(".tmp/repo", "master")
 	check(t, err)
 
+	stages := make([]BuildStage, 0)
 	stdout := new(bytes.Buffer)
 	stderr := new(bytes.Buffer)
-	check(t, Build(m, os.Stdin, stdout, stderr))
+	check(t, Build(m, os.Stdin, stdout, stderr, func(a *Application, s BuildStage) {
+		stages = append(stages, s)
+	}))
 
 	assert.Equal(t, "app-a built\n", stdout.String())
+	assert.EqualValues(t, []BuildStage{BUILD_STAGE_BEFORE_BUILD, BUILD_STAGE_AFTER_BUILD}, stages)
 }
