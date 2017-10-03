@@ -3,10 +3,18 @@ package lib
 import (
 	"io"
 	"os"
+	"strings"
 	"text/template"
 
 	git "github.com/libgit2/git2go"
 )
+
+type TemplateData struct {
+	Args         map[string]interface{}
+	Sha          string
+	Env          map[string]string
+	Applications map[string]*Application
+}
 
 func ApplyBranch(dir, templatePath, branch, output string) error {
 	repo, err := git.OpenRepository(dir)
@@ -49,8 +57,20 @@ func ApplyBranch(dir, templatePath, branch, output string) error {
 
 	data := &TemplateData{
 		Sha:          m.Sha,
+		Env:          getEnvMap(),
 		Applications: m.indexByName(),
 	}
 
 	return temp.Execute(writer, data)
+}
+
+func getEnvMap() map[string]string {
+	m := make(map[string]string)
+
+	for _, v := range os.Environ() {
+		p := strings.Split(v, "=")
+		m[p[0]] = p[1]
+	}
+
+	return m
 }

@@ -38,12 +38,6 @@ type Manifest struct {
 	Applications Applications
 }
 
-type TemplateData struct {
-	Args         map[string]interface{}
-	Sha          string
-	Applications map[string]*Application
-}
-
 func ManifestByPr(dir, src, dst string) (*Manifest, error) {
 	repo, m, err := openRepo(dir)
 	if err != nil {
