@@ -221,34 +221,6 @@ func newEmptyManifest(dir string) *Manifest {
 	return &Manifest{Applications: []*Application{}, Dir: dir, Sha: ""}
 }
 
-func getBranchCommit(repo *git.Repository, branch string) (*git.Commit, error) {
-	ref, err := repo.References.Dwim(branch)
-	if err != nil {
-		return nil, err
-	}
-
-	oid := ref.Target()
-	commit, err := repo.LookupCommit(oid)
-	if err != nil {
-		return nil, err
-	}
-
-	return commit, nil
-}
-
-func getBranchTree(repo *git.Repository, branch string) (*git.Tree, error) {
-	commit, err := getBranchCommit(repo, branch)
-	if err != nil {
-		return nil, err
-	}
-	tree, err := commit.Tree()
-	if err != nil {
-		return nil, err
-	}
-
-	return tree, nil
-}
-
 func fromBranch(repo *git.Repository, dir string, branch string) (*Manifest, error) {
 	commit, err := getBranchCommit(repo, branch)
 	if err != nil {
