@@ -80,6 +80,7 @@ func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCal
 func setupAppBuildEnvironment(app *Application) []string {
 	r := []string{
 		fmt.Sprintf("MBT_APP_VERSION=%s", app.Version),
+		fmt.Sprintf("MBT_APP_NAME=%s", app.Name),
 	}
 
 	for k, v := range app.Properties {
