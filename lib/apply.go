@@ -22,17 +22,40 @@ func ApplyBranch(dir, templatePath, branch, output string) error {
 		return err
 	}
 
-	m, err := fromBranch(repo, dir, branch)
+	commit, err := getBranchCommit(repo, branch)
 	if err != nil {
 		return err
 	}
 
-	t, err := getBranchTree(repo, branch)
+	return applyCore(repo, commit, dir, templatePath, output)
+}
+
+func ApplyCommit(dir, sha, templatePath, output string) error {
+	repo, err := git.OpenRepository(dir)
 	if err != nil {
 		return err
 	}
 
-	e, err := t.EntryByPath(templatePath)
+	shaOid, err := git.NewOid(sha)
+	if err != nil {
+		return err
+	}
+
+	commit, err := repo.LookupCommit(shaOid)
+	if err != nil {
+		return err
+	}
+
+	return applyCore(repo, commit, dir, templatePath, output)
+}
+
+func applyCore(repo *git.Repository, commit *git.Commit, dir, templatePath, output string) error {
+	tree, err := commit.Tree()
+	if err != nil {
+		return err
+	}
+
+	e, err := tree.EntryByPath(templatePath)
 	if err != nil {
 		return err
 	}
@@ -53,6 +76,11 @@ func ApplyBranch(dir, templatePath, branch, output string) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	m, err := fromCommit(repo, dir, commit)
+	if err != nil {
+		return err
 	}
 
 	data := &TemplateData{
