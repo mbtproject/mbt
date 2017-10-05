@@ -86,12 +86,12 @@ var DescribeCommitCmd = &cobra.Command{
 	},
 }
 
-const COLUMN_WIDTH = 30
+const ColumnWidth = 30
 
 func formatRow(args ...interface{}) string {
 	padded := make([]interface{}, len(args))
 	for i, a := range args {
-		requiredPadding := COLUMN_WIDTH - len(a.(string))
+		requiredPadding := ColumnWidth - len(a.(string))
 		if requiredPadding > 0 {
 			padded[i] = fmt.Sprintf("%s%s", a, strings.Join(make([]string, requiredPadding), " "))
 		} else {
