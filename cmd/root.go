@@ -22,7 +22,7 @@ var RootCmd = &cobra.Command{
 	Short: "Build utility for monorepos",
 	Long:  "Build utility for monorepos",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		if in == "" {
+		if cmd.Use != "version" && in == "" {
 			return errors.New("requires the path to repo")
 		}
 		return nil

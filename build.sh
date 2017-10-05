@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -ex
+set -e
 
 DIR=$(pwd)
 GIT2GO_PATH=$GOPATH/src/github.com/libgit2/git2go
@@ -37,18 +37,24 @@ go install -x github.com/libgit2/git2go &&
 
 cd $DIR
 
-OUT="mbt_${OS}_${ARCH}"
-
-make restore
-make test
-go build -o "build/${OUT}"
-shasum -a 1 -p "build/${OUT}" | cut -d ' ' -f 1 > "build/${OUT}.sha1"
-
 VERSION=$TRAVIS_COMMIT
 if [ -z $VERSION ]; then
   VERSION=$(git log --pretty=oneline -1 | awk '{print $1}')
 fi
-VERSION=$(echo $VERSION | awk '{print substr ($0, 0, 16)}')
+VERSION=$(echo $VERSION | head -c4)
+
+OUT="mbt_${OS}_${ARCH}"
+
+make restore
+
+# Apply version
+sed "s/#development#/$VERSION/" <./cmd/version.go >./cmd/v.go
+rm ./cmd/version.go
+mv ./cmd/v.go ./cmd/version.go
+
+make test
+go build -o "build/${OUT}"
+shasum -a 1 -p "build/${OUT}" | cut -d ' ' -f 1 > "build/${OUT}.sha1"
 
 cat >build/bintray.json << EOL
 {
