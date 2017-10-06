@@ -203,3 +203,20 @@ func TestDiffingForRenames(t *testing.T) {
 	assert.Len(t, m.Applications, 1)
 	assert.Equal(t, "app-a", m.Applications[0].Name)
 }
+
+func TestAppOnRoot(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitApplicationWithOptions("", &Spec{Name: "root-app"}))
+	check(t, repo.Commit("first"))
+
+	m, err := ManifestByBranch(".tmp/repo", "master")
+	check(t, err)
+
+	assert.Len(t, m.Applications, 1)
+	assert.Equal(t, "root-app", m.Applications[0].Name)
+	assert.Equal(t, "", m.Applications[0].Path)
+	assert.Equal(t, repo.LastCommit.String(), m.Applications[0].Version)
+}

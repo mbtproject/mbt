@@ -172,13 +172,22 @@ func fromCommit(repo *git.Repository, dir string, commit *git.Commit) (*Manifest
 				return 1
 			}
 
+			version := ""
+
 			p := strings.TrimRight(path, "/")
-			dirEntry, err := tree.EntryByPath(p)
-			if err != nil {
-				return 1
+			if p != "" {
+				// We are not on the root, take the git sha for parent tree object.
+				dirEntry, err := tree.EntryByPath(p)
+				if err != nil {
+					return 1
+				}
+				version = dirEntry.Id.String()
+			} else {
+				// We are on the root, take the commit sha.
+				version = commit.Id().String()
 			}
 
-			a, err := newApplication(p, dirEntry.Id.String(), blob.Contents())
+			a, err := newApplication(p, version, blob.Contents())
 			if err != nil {
 				// TODO log this or fail
 				return 1
