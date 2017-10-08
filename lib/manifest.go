@@ -58,27 +58,7 @@ func ManifestByPr(dir, src, dst string) (*Manifest, error) {
 		return nil, err
 	}
 
-	base, err := repo.MergeBase(srcC.Id(), dstC.Id())
-	if err != nil {
-		return nil, err
-	}
-
-	baseC, err := repo.LookupCommit(base)
-	if err != nil {
-		return nil, err
-	}
-
-	baseTree, err := baseC.Tree()
-	if err != nil {
-		return nil, err
-	}
-
-	srcTree, err := getBranchTree(repo, src)
-	if err != nil {
-		return nil, err
-	}
-
-	diff, err := repo.DiffTreeToTree(baseTree, srcTree, &git.DiffOptions{})
+	diff, err := getDiffFromMergeBase(repo, srcC, dstC)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +108,7 @@ func ManifestByBranch(dir, branch string) (*Manifest, error) {
 	return fromBranch(repo, dir, branch)
 }
 
-func ManifestByDiff(dir, src, dst string) (*Manifest, error) {
+func ManifestByDiff(dir, from, to string) (*Manifest, error) {
 	repo, m, err := openRepo(dir)
 	if err != nil {
 		return nil, err
@@ -138,47 +118,32 @@ func ManifestByDiff(dir, src, dst string) (*Manifest, error) {
 		return m, nil
 	}
 
-	srcOid, err := git.NewOid(src)
+	fromOid, err := git.NewOid(from)
 	if err != nil {
 		return nil, err
 	}
 
-	dstOid, err := git.NewOid(dst)
+	toOid, err := git.NewOid(to)
 	if err != nil {
 		return nil, err
 	}
 
-	baseOid, err := repo.MergeBase(srcOid, dstOid)
+	fromC, err := repo.LookupCommit(fromOid)
 	if err != nil {
 		return nil, err
 	}
 
-	baseC, err := repo.LookupCommit(baseOid)
+	toC, err := repo.LookupCommit(toOid)
 	if err != nil {
 		return nil, err
 	}
 
-	dstC, err := repo.LookupCommit(dstOid)
+	diff, err := getDiffFromMergeBase(repo, toC, fromC)
 	if err != nil {
 		return nil, err
 	}
 
-	baseTree, err := baseC.Tree()
-	if err != nil {
-		return nil, err
-	}
-
-	dstTree, err := dstC.Tree()
-	if err != nil {
-		return nil, err
-	}
-
-	diff, err := repo.DiffTreeToTree(baseTree, dstTree, &git.DiffOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	m, err = fromCommit(repo, dir, dstC)
+	m, err = fromCommit(repo, dir, fromC)
 	if err != nil {
 		return nil, err
 	}

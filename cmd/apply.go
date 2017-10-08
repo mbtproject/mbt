@@ -8,7 +8,6 @@ import (
 )
 
 var (
-	to  string
 	out string
 )
 

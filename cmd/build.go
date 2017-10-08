@@ -14,8 +14,8 @@ func init() {
 	buildPr.Flags().StringVar(&src, "src", "", "source branch")
 	buildPr.Flags().StringVar(&dst, "dst", "", "destination branch")
 
-	buildDiff.Flags().StringVar(&src, "src", "", "source branch")
-	buildDiff.Flags().StringVar(&dst, "dst", "", "destination branch")
+	buildDiff.Flags().StringVar(&from, "from", "", "from commit")
+	buildDiff.Flags().StringVar(&to, "to", "", "to commit")
 
 	buildCommand.AddCommand(buildBranch)
 	buildCommand.AddCommand(buildPr)
@@ -63,18 +63,18 @@ var buildPr = &cobra.Command{
 }
 
 var buildDiff = &cobra.Command{
-	Use:   "diff --src <sha> --dst <sha>",
+	Use:   "diff --from <sha> --to <sha>",
 	Short: "Builds the diff between src and dst commit shas",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if src == "" {
-			return errors.New("requires source")
+		if from == "" {
+			return errors.New("requires from commit")
 		}
 
-		if dst == "" {
-			return errors.New("requires dest")
+		if to == "" {
+			return errors.New("requires to commit")
 		}
 
-		m, err := lib.ManifestByDiff(in, src, dst)
+		m, err := lib.ManifestByDiff(in, from, to)
 		if err != nil {
 			return err
 		}

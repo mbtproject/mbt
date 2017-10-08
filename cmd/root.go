@@ -8,9 +8,11 @@ import (
 
 // Flags available to all commands.
 var (
-	in  string
-	src string
-	dst string
+	in   string
+	src  string
+	dst  string
+	from string
+	to   string
 )
 
 func init() {

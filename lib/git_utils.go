@@ -48,3 +48,32 @@ func getBranchTree(repo *git.Repository, branch string) (*git.Tree, error) {
 
 	return tree, nil
 }
+
+func getDiffFromMergeBase(repo *git.Repository, srcC, dstC *git.Commit) (*git.Diff, error) {
+	baseOid, err := repo.MergeBase(srcC.Id(), dstC.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	baseC, err := repo.LookupCommit(baseOid)
+	if err != nil {
+		return nil, err
+	}
+
+	baseTree, err := baseC.Tree()
+	if err != nil {
+		return nil, err
+	}
+
+	srcTree, err := srcC.Tree()
+	if err != nil {
+		return nil, err
+	}
+
+	diff, err := repo.DiffTreeToTree(baseTree, srcTree, &git.DiffOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return diff, err
+}
