@@ -8,6 +8,8 @@ Have a git repository with source for multiple applications?
 mbt is a simple utility to produce predictable, versioned 
 build artifacts out of your git source tree.
 
+For more information on [motivations](https://buddyspike.github.io/blog/post/building-moduler-systems-with-mbt/) of mbt.
+
 ## How it works
 mbt reads your git tree looking for directories with a spec file. The 
 spec file must be named `.mbt.yml`. It is used to 
