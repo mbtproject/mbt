@@ -128,6 +128,64 @@ func ManifestByBranch(dir, branch string) (*Manifest, error) {
 	return fromBranch(repo, dir, branch)
 }
 
+func ManifestByDiff(dir, src, dst string) (*Manifest, error) {
+	repo, m, err := openRepo(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	if m != nil {
+		return m, nil
+	}
+
+	srcOid, err := git.NewOid(src)
+	if err != nil {
+		return nil, err
+	}
+
+	dstOid, err := git.NewOid(dst)
+	if err != nil {
+		return nil, err
+	}
+
+	baseOid, err := repo.MergeBase(srcOid, dstOid)
+	if err != nil {
+		return nil, err
+	}
+
+	baseC, err := repo.LookupCommit(baseOid)
+	if err != nil {
+		return nil, err
+	}
+
+	dstC, err := repo.LookupCommit(dstOid)
+	if err != nil {
+		return nil, err
+	}
+
+	baseTree, err := baseC.Tree()
+	if err != nil {
+		return nil, err
+	}
+
+	dstTree, err := dstC.Tree()
+	if err != nil {
+		return nil, err
+	}
+
+	diff, err := repo.DiffTreeToTree(baseTree, dstTree, &git.DiffOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	m, err = fromCommit(repo, dir, dstC)
+	if err != nil {
+		return nil, err
+	}
+
+	return reduceToDiff(m, diff)
+}
+
 // Sort interface to sort applications by path
 func (a Applications) Len() int {
 	return len(a)

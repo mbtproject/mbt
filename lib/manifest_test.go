@@ -220,3 +220,27 @@ func TestAppOnRoot(t *testing.T) {
 	assert.Equal(t, "", m.Applications[0].Path)
 	assert.Equal(t, repo.LastCommit.String(), m.Applications[0].Version)
 }
+
+func TestManifestByDiff(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitApplication("app-a"))
+	check(t, repo.InitApplication("app-b"))
+	check(t, repo.Commit("first"))
+	c1 := repo.LastCommit
+
+	check(t, repo.WriteContent("app-a/foo", "hello"))
+	check(t, repo.Commit("second"))
+	c2 := repo.LastCommit
+
+	m, err := ManifestByDiff(".tmp/repo", c1.String(), c2.String())
+
+	assert.Len(t, m.Applications, 1)
+	assert.Equal(t, "app-a", m.Applications[0].Name)
+
+	m, err = ManifestByDiff(".tmp/repo", c2.String(), c1.String())
+
+	assert.Len(t, m.Applications, 0)
+}
