@@ -12,7 +12,7 @@ TestPackage() {
   package=$1
   go test -v -covermode=count -coverprofile=coverage.out $package
 
-  if [ ! -z $COVERALLS_TOKEN ]; then 
+  if [ ! -z $COVERALLS_TOKEN ] && [ -f ./coverage.out ]; then 
     $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
   fi
 }
