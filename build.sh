@@ -8,7 +8,7 @@ GIT2GO_VENDOR_PATH=$GIT2GO_PATH/vendor/libgit2
 OS=$(uname -s | awk '{print tolower($0)}')
 ARCH=$(uname -m)
 
-function TestPackage {
+TestPackage() {
   package=$1
   go test -v -covermode=count -coverprofile=coverage.out $package
 
