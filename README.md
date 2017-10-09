@@ -4,6 +4,7 @@
 ![build status](https://travis-ci.org/buddyspike/mbt.svg?branch=master)
 [![Build status](https://ci.appveyor.com/api/projects/status/vm1lat73uo80ckoj?svg=true)](https://ci.appveyor.com/project/buddyspike/mbt)
 [![Go Report Card](https://goreportcard.com/badge/github.com/buddyspike/mbt)](https://goreportcard.com/report/github.com/buddyspike/mbt)
+[![Coverage Status](https://coveralls.io/repos/github/buddyspike/mbt/badge.svg?branch=master)](https://coveralls.io/github/buddyspike/mbt?branch=master)
 
 Have a git repository with source for multiple applications? 
 mbt is a simple utility to produce predictable, versioned 
