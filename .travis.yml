@@ -13,7 +13,9 @@ git:
 branches:
   only:
   - master
+  - release
 deploy:
+  on: release
   provider: bintray
   user: buddyspike
   key:

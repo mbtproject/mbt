@@ -4,6 +4,7 @@ image:
 branches:
   only:
   - master
+  - release
 clone_folder: '%SYSTEMDRIVE%\gopath\src\github.com\buddyspike\mbt'
 before_build:
   - cmd: mkdir %SYSTEMDRIVE%\downloads
@@ -26,6 +27,8 @@ artifacts:
     name: mbt
 deploy:
 - provider: BinTray
+  on:
+    branch: release
   username: buddyspike
   api_key:
     secure: SRz0imDKwe+ssF9RgX+ZsOuoRpz88j57axQuMBUo/263Oqh1qRj39tNjN3NljrXD
