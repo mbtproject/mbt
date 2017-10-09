@@ -8,7 +8,18 @@ GIT2GO_VENDOR_PATH=$GIT2GO_PATH/vendor/libgit2
 OS=$(uname -s | awk '{print tolower($0)}')
 ARCH=$(uname -m)
 
+function TestPackage {
+  package=$1
+  go test -v -covermode=count -coverprofile=coverage.out $package
+
+  if [[ ! -z $COVERALLS_TOKEN ]]; then 
+    $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
+  fi
+}
+
 go get github.com/libgit2/git2go || true &&
+go get golang.org/x/tools/cmd/cover
+go get github.com/mattn/goveralls
 
 cd $GIT2GO_PATH &&
 git checkout v26 &&
@@ -52,7 +63,10 @@ sed "s/#development#/$VERSION/" <./cmd/version.go >./cmd/v.go
 rm ./cmd/version.go
 mv ./cmd/v.go ./cmd/version.go
 
-make test
+TestPackage .
+TestPackage ./lib
+TestPackage ./cmd
+
 go build -o "build/${OUT}"
 shasum -a 1 -p "build/${OUT}" | cut -d ' ' -f 1 > "build/${OUT}.sha1"
 
