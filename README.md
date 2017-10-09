@@ -2,13 +2,14 @@
 >> Build utility for monorepos
 
 ![build status](https://travis-ci.org/buddyspike/mbt.svg?branch=master)
-[![Go Report Card](https://goreportcard.com/badge/github.com/buddyspike/mbt)](https://goreportcard.com/report/github.com/buddyspike/mbt)
+[![Go Report Card](https://goreportcard.com/badge/github.com/buddyspike/mbt)](https://goreportcard.com/report/github.com/buddyspike/mbt) 
+[![Build status](https://ci.appveyor.com/api/projects/status/vm1lat73uo80ckoj?svg=true)](https://ci.appveyor.com/project/buddyspike/mbt)
 
 Have a git repository with source for multiple applications? 
 mbt is a simple utility to produce predictable, versioned 
 build artifacts out of your git source tree.
 
-[This blog post](https://buddyspike.github.io/blog/post/building-modular-systems-with-mbt/) covers some initial thinking behind mbt.
+[This blog post](https://buddyspike.github.io/blog/post/building-modular-systems-with-mbt/) covers some initial thinking behind the tool.
 
 ## How it works
 mbt reads your git tree looking for directories with a spec file. The 
