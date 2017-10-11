@@ -67,7 +67,7 @@ func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCal
 		}
 
 		buildStageCallback(a, BUILD_STAGE_BEFORE_BUILD)
-		err := buildOne(m.Dir, a, stdin, stdout, stderr)
+		err := buildOne(m, a, stdin, stdout, stderr)
 		if err != nil {
 			return err
 		}
@@ -77,8 +77,9 @@ func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCal
 	return nil
 }
 
-func setupAppBuildEnvironment(app *Application) []string {
+func setupAppBuildEnvironment(manifest *Manifest, app *Application) []string {
 	r := []string{
+		fmt.Sprintf("MBT_BUILD_COMMIT=%s", manifest.Sha),
 		fmt.Sprintf("MBT_APP_VERSION=%s", app.Version),
 		fmt.Sprintf("MBT_APP_NAME=%s", app.Name),
 	}
@@ -92,11 +93,11 @@ func setupAppBuildEnvironment(app *Application) []string {
 	return r
 }
 
-func buildOne(dir string, app *Application, stdin io.Reader, stdout, stderr io.Writer) error {
+func buildOne(manifest *Manifest, app *Application, stdin io.Reader, stdout, stderr io.Writer) error {
 	build := app.Build[runtime.GOOS]
 	cmd := exec.Command(build.Cmd)
-	cmd.Env = append(os.Environ(), setupAppBuildEnvironment(app)...)
-	cmd.Dir = path.Join(dir, app.Path)
+	cmd.Env = append(os.Environ(), setupAppBuildEnvironment(manifest, app)...)
+	cmd.Dir = path.Join(manifest.Dir, app.Path)
 	cmd.Stdin = stdin
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr

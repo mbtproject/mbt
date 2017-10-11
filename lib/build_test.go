@@ -2,6 +2,7 @@ package lib
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"runtime"
 	"testing"
@@ -129,4 +130,34 @@ func TestDirtyWorkingDir(t *testing.T) {
 	err = Build(m, os.Stdin, buff, buff, func(a *Application, s BuildStage) {})
 	assert.Error(t, err)
 	assert.Equal(t, "dirty working dir", err.Error())
+}
+
+func TestBuildEnvironment(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitApplicationWithOptions("app-a", &Spec{
+		Name: "app-a",
+		Build: map[string]*BuildCmd{
+			"linux":   {Cmd: "./build.sh"},
+			"darwin":  {Cmd: "./build.sh"},
+			"windows": {Cmd: ".\\build.ps1", Args: []string{"-ExecutionPolicy", "Bypass", "-File", ".\\build.ps1"}},
+		},
+		Properties: map[string]interface{}{"foo": "bar"},
+	}))
+
+	check(t, repo.WriteShellScript("app-a/build.sh", "echo $MBT_BUILD_COMMIT-$MBT_APP_VERSION-$MBT_APP_NAME-$MBT_APP_PROPERTY_FOO"))
+	check(t, repo.WritePowershellScript("app-a/build.ps1", "write-host $Env:MBT_BUILD_COMMIT-$Env:MBT_APP_VERSION-$Env:MBT_APP_NAME-$Env:MBT_APP_PROPERTY_FOO"))
+	check(t, repo.Commit("first"))
+
+	m, err := ManifestByBranch(".tmp/repo", "master")
+	check(t, err)
+
+	buff := new(bytes.Buffer)
+	err = Build(m, os.Stdin, buff, buff, func(a *Application, s BuildStage) {})
+	check(t, err)
+
+	out := buff.String()
+	assert.Equal(t, fmt.Sprintf("%s-%s-%s-%s\n", m.Sha, m.Applications[0].Version, m.Applications[0].Name, m.Applications[0].Properties["foo"]), out)
 }
