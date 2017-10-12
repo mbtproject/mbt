@@ -143,7 +143,7 @@ func ManifestByDiff(dir, from, to string) (*Manifest, error) {
 		return nil, err
 	}
 
-	m, err = fromCommit(repo, dir, fromC)
+	m, err = fromCommit(repo, dir, toC)
 	if err != nil {
 		return nil, err
 	}
