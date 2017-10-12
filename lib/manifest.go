@@ -2,7 +2,6 @@ package lib
 
 import (
 	"encoding/hex"
-	"fmt"
 	"sort"
 	"strings"
 
@@ -21,16 +20,6 @@ type Spec struct {
 	Build      map[string]*BuildCmd
 	Properties map[string]interface{}
 }
-
-type Application struct {
-	Name       string
-	Path       string
-	Build      map[string]*BuildCmd
-	Version    string
-	Properties map[string]interface{}
-}
-
-type Applications []*Application
 
 type Manifest struct {
 	Dir          string
@@ -151,33 +140,12 @@ func ManifestByDiff(dir, from, to string) (*Manifest, error) {
 	return reduceToDiff(m, diff)
 }
 
-// Sort interface to sort applications by path
-func (a Applications) Len() int {
-	return len(a)
-}
-
-func (a Applications) Less(i, j int) bool {
-	return a[i].Path < a[j].Path
-}
-
-func (a Applications) Swap(i, j int) {
-	a[i], a[j] = a[j], a[i]
-}
-
 func (m *Manifest) indexByName() map[string]*Application {
-	q := make(map[string]*Application)
-	for _, a := range m.Applications {
-		q[a.Name] = a
-	}
-	return q
+	return m.Applications.indexByName()
 }
 
 func (m *Manifest) indexByPath() map[string]*Application {
-	q := make(map[string]*Application)
-	for _, a := range m.Applications {
-		q[fmt.Sprintf("%s/", a.Path)] = a
-	}
-	return q
+	return m.Applications.indexByPath()
 }
 
 func fromCommit(repo *git.Repository, dir string, commit *git.Commit) (*Manifest, error) {
