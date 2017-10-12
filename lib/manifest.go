@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	git "github.com/libgit2/git2go"
-	yaml "gopkg.in/yaml.v2"
 )
 
 type BuildCmd struct {
@@ -195,26 +194,6 @@ func fromCommit(repo *git.Repository, dir string, commit *git.Commit) (*Manifest
 
 	sort.Sort(vapps)
 	return &Manifest{dir, commit.Id().String(), vapps}, nil
-}
-
-func newApplication(dir, version string, spec []byte) (*Application, error) {
-	a := &Spec{
-		Properties: make(map[string]interface{}),
-		Build:      make(map[string]*BuildCmd),
-	}
-
-	err := yaml.Unmarshal(spec, a)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Application{
-		Build:      a.Build,
-		Name:       a.Name,
-		Properties: a.Properties,
-		Version:    version,
-		Path:       dir,
-	}, nil
 }
 
 func newEmptyManifest(dir string) *Manifest {

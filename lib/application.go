@@ -1,6 +1,10 @@
 package lib
 
-import "fmt"
+import (
+	"fmt"
+
+	yaml "gopkg.in/yaml.v2"
+)
 
 type Application struct {
 	Name       string
@@ -23,6 +27,26 @@ func (l Applications) Less(i, j int) bool {
 
 func (l Applications) Swap(i, j int) {
 	l[i], l[j] = l[j], l[i]
+}
+
+func newApplication(dir, version string, spec []byte) (*Application, error) {
+	a := &Spec{
+		Properties: make(map[string]interface{}),
+		Build:      make(map[string]*BuildCmd),
+	}
+
+	err := yaml.Unmarshal(spec, a)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Application{
+		Build:      a.Build,
+		Name:       a.Name,
+		Properties: a.Properties,
+		Version:    version,
+		Path:       dir,
+	}, nil
 }
 
 func (l Applications) indexByName() map[string]*Application {
