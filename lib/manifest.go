@@ -142,12 +142,10 @@ func fromCommit(repo *git.Repository, dir string, commit *git.Commit) (*Manifest
 		return nil, err
 	}
 
-	vapps, err := metadataSet.toApplications()
+	vapps, err := metadataSet.toApplications(true)
 	if err != nil {
 		return nil, err
 	}
-
-	vapps.computeVersion(false)
 
 	sort.Sort(vapps)
 	return &Manifest{dir, commit.Id().String(), vapps}, nil

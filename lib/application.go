@@ -101,9 +101,3 @@ func (l Applications) indexByPath() map[string]*Application {
 	}
 	return q
 }
-
-func (l Applications) computeVersion(includeDependencies bool) {
-	for _, a := range l {
-		a.version = a.hash
-	}
-}

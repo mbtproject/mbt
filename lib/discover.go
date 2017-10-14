@@ -1,7 +1,10 @@
 package lib
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/buddyspike/graph"
@@ -83,7 +86,7 @@ func (n *applicationMetadataNode) GetChildren() ([]graph.Node, error) {
 	return c, nil
 }
 
-func (a applicationMetadataSet) toApplications() (Applications, error) {
+func (a applicationMetadataSet) toApplications(withDependencies bool) (Applications, error) {
 	m := make(map[string]*applicationMetadata)
 
 	for _, meta := range a {
@@ -124,7 +127,25 @@ func (a applicationMetadataSet) toApplications() (Applications, error) {
 		mApplications[app.Name()] = app
 	}
 
-	return applications, nil
+	return calculateVersion(applications, withDependencies), nil
+}
+
+func calculateVersion(topSorted Applications, withDependencies bool) Applications {
+	for _, a := range topSorted {
+		if !withDependencies || len(a.Requires()) == 0 {
+			a.version = a.hash
+		} else {
+			h := sha1.New()
+
+			io.WriteString(h, a.hash)
+			for _, r := range a.Requires() {
+				io.WriteString(h, r.version)
+			}
+			a.version = hex.EncodeToString(h.Sum(nil))
+		}
+	}
+
+	return topSorted
 }
 
 // discoverMetadata returns an ApplicationMetadataSet prepared from
