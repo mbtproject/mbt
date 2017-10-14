@@ -2,19 +2,57 @@ package lib
 
 import (
 	"fmt"
-
-	yaml "gopkg.in/yaml.v2"
 )
 
+// Application represents a single application in the repository.
 type Application struct {
-	Name       string
-	Path       string
-	Build      map[string]*BuildCmd
-	Version    string
-	Properties map[string]interface{}
+	name       string
+	path       string
+	build      map[string]*BuildCmd
+	hash       string
+	version    string
+	properties map[string]interface{}
+	requires   Applications
+	requiredBy Applications
 }
 
+// Applications is an array of Application.
 type Applications []*Application
+
+// Name returns the name of the application.
+func (a *Application) Name() string {
+	return a.name
+}
+
+// Path returns the relative path to application.
+func (a *Application) Path() string {
+	return a.path
+}
+
+// Build returns the build configuration for the application.
+func (a *Application) Build() map[string]*BuildCmd {
+	return a.build
+}
+
+// Properties returns the custom properties in the configuration.
+func (a *Application) Properties() map[string]interface{} {
+	return a.properties
+}
+
+// Requires returns an array of applications required by this application.
+func (a *Application) Requires() Applications {
+	return a.requires
+}
+
+// RequiredBy returns an array of applications requires this application.
+func (a *Application) RequiredBy() Applications {
+	return a.requiredBy
+}
+
+// Version returns the content based version SHA for the application.
+func (a *Application) Version() string {
+	return a.version
+}
 
 // Sort interface to sort applications by path
 func (l Applications) Len() int {
@@ -22,37 +60,36 @@ func (l Applications) Len() int {
 }
 
 func (l Applications) Less(i, j int) bool {
-	return l[i].Path < l[j].Path
+	return l[i].path < l[j].path
 }
 
 func (l Applications) Swap(i, j int) {
 	l[i], l[j] = l[j], l[i]
 }
 
-func newApplication(dir, version string, spec []byte) (*Application, error) {
-	a := &Spec{
-		Properties: make(map[string]interface{}),
-		Build:      make(map[string]*BuildCmd),
+func newApplication(metadata *applicationMetadata, requires Applications) *Application {
+	spec := metadata.spec
+	app := &Application{
+		build:      spec.Build,
+		name:       spec.Name,
+		properties: spec.Properties,
+		hash:       metadata.hash,
+		path:       metadata.dir,
+		requires:   make(Applications, 0),
+		requiredBy: make(Applications, 0),
 	}
 
-	err := yaml.Unmarshal(spec, a)
-	if err != nil {
-		return nil, err
+	if requires != nil {
+		app.requires = requires
 	}
 
-	return &Application{
-		Build:      a.Build,
-		Name:       a.Name,
-		Properties: a.Properties,
-		Version:    version,
-		Path:       dir,
-	}, nil
+	return app
 }
 
 func (l Applications) indexByName() map[string]*Application {
 	q := make(map[string]*Application)
 	for _, a := range l {
-		q[a.Name] = a
+		q[a.Name()] = a
 	}
 	return q
 }
@@ -60,7 +97,13 @@ func (l Applications) indexByName() map[string]*Application {
 func (l Applications) indexByPath() map[string]*Application {
 	q := make(map[string]*Application)
 	for _, a := range l {
-		q[fmt.Sprintf("%s/", a.Path)] = a
+		q[fmt.Sprintf("%s/", a.Path())] = a
 	}
 	return q
+}
+
+func (l Applications) computeVersion(includeDependencies bool) {
+	for _, a := range l {
+		a.version = a.hash
+	}
 }

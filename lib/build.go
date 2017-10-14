@@ -14,18 +14,20 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// BuildStage is an enum to indicate various stages of the build.
 type BuildStage = int
 
-var DefaultCheckoutOptions = &git.CheckoutOpts{
+var defaultCheckoutOptions = &git.CheckoutOpts{
 	Strategy: git.CheckoutSafe,
 }
 
 const (
-	BUILD_STAGE_BEFORE_BUILD = iota
-	BUILD_STAGE_AFTER_BUILD
-	BUILD_STAGE_SKIP_BUILD
+	BuildStageBeforeBuild = iota
+	BuildStageAfterBuild
+	BuildStageSkipBuild
 )
 
+// Build runs the build for the applications in specified manifest.
 func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCallback func(app *Application, s BuildStage)) error {
 	repo, err := git.OpenRepository(m.Dir)
 	if err != nil {
@@ -53,7 +55,7 @@ func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCal
 	}
 
 	// TODO: Confirm the strategy is correct
-	err = repo.CheckoutTree(tree, DefaultCheckoutOptions)
+	err = repo.CheckoutTree(tree, defaultCheckoutOptions)
 	if err != nil {
 		return err
 	}
@@ -61,17 +63,18 @@ func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCal
 	defer checkoutHead(repo)
 
 	for _, a := range m.Applications {
+		println("Building", a.Name(), "now")
 		if !canBuildHere(a) {
-			buildStageCallback(a, BUILD_STAGE_SKIP_BUILD)
+			buildStageCallback(a, BuildStageSkipBuild)
 			continue
 		}
 
-		buildStageCallback(a, BUILD_STAGE_BEFORE_BUILD)
+		buildStageCallback(a, BuildStageBeforeBuild)
 		err := buildOne(m, a, stdin, stdout, stderr)
 		if err != nil {
 			return err
 		}
-		buildStageCallback(a, BUILD_STAGE_AFTER_BUILD)
+		buildStageCallback(a, BuildStageAfterBuild)
 	}
 
 	return nil
@@ -80,11 +83,11 @@ func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCal
 func setupAppBuildEnvironment(manifest *Manifest, app *Application) []string {
 	r := []string{
 		fmt.Sprintf("MBT_BUILD_COMMIT=%s", manifest.Sha),
-		fmt.Sprintf("MBT_APP_VERSION=%s", app.Version),
-		fmt.Sprintf("MBT_APP_NAME=%s", app.Name),
+		fmt.Sprintf("MBT_APP_VERSION=%s", app.Version()),
+		fmt.Sprintf("MBT_APP_NAME=%s", app.Name()),
 	}
 
-	for k, v := range app.Properties {
+	for k, v := range app.Properties() {
 		if value, ok := v.(string); ok {
 			r = append(r, fmt.Sprintf("MBT_APP_PROPERTY_%s=%s", strings.ToUpper(k), value))
 		}
@@ -94,10 +97,10 @@ func setupAppBuildEnvironment(manifest *Manifest, app *Application) []string {
 }
 
 func buildOne(manifest *Manifest, app *Application, stdin io.Reader, stdout, stderr io.Writer) error {
-	build := app.Build[runtime.GOOS]
+	build := app.Build()[runtime.GOOS]
 	cmd := exec.Command(build.Cmd)
 	cmd.Env = append(os.Environ(), setupAppBuildEnvironment(manifest, app)...)
-	cmd.Dir = path.Join(manifest.Dir, app.Path)
+	cmd.Dir = path.Join(manifest.Dir, app.Path())
 	cmd.Stdin = stdin
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
@@ -107,7 +110,7 @@ func buildOne(manifest *Manifest, app *Application, stdin io.Reader, stdout, std
 }
 
 func canBuildHere(app *Application) bool {
-	_, ok := app.Build[runtime.GOOS]
+	_, ok := app.Build()[runtime.GOOS]
 	return ok
 }
 

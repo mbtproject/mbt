@@ -6,15 +6,16 @@
     "language": "en",
     // words - list of words to be always considered correct
     "words": [
+        "deps",
         "Dwim",
-        "Infof",
-        "Untracked",
-        "Warnf",
         "fpath",
         "fsutil",
+        "Infof",
         "logrus",
         "repo",
-        "vapps"
+        "Untracked",
+        "vapps",
+        "Warnf"
     ],
     // flagWords - list of words to be always considered incorrect
     // This is useful for offensive words and common spelling errors.

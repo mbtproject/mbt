@@ -104,6 +104,6 @@ func formatRow(args ...interface{}) string {
 func output(m *lib.Manifest) {
 	fmt.Print(formatRow("Name", "Path", "Version"))
 	for _, a := range m.Applications {
-		fmt.Printf(formatRow(a.Name, a.Path, a.Version))
+		fmt.Printf(formatRow(a.Name(), a.Path(), a.Version()))
 	}
 }

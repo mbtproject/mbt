@@ -23,7 +23,7 @@ func TestSingleAppDir(t *testing.T) {
 	check(t, err)
 
 	assert.Len(t, m.Applications, 1)
-	assert.Equal(t, "app-a", m.Applications[0].Name)
+	assert.Equal(t, "app-a", m.Applications[0].Name())
 }
 
 func TestNonAppContent(t *testing.T) {
@@ -58,7 +58,7 @@ func TestNestedAppDir(t *testing.T) {
 	check(t, err)
 
 	assert.Len(t, m.Applications, 1)
-	assert.Equal(t, "a/b/c/app-a", m.Applications[0].Path)
+	assert.Equal(t, "a/b/c/app-a", m.Applications[0].Path())
 }
 
 func TestAppsDirInAppDir(t *testing.T) {
@@ -74,10 +74,10 @@ func TestAppsDirInAppDir(t *testing.T) {
 	check(t, err)
 
 	assert.Len(t, m.Applications, 2)
-	assert.Equal(t, "app-a", m.Applications[0].Name)
-	assert.Equal(t, "app-a", m.Applications[0].Path)
-	assert.Equal(t, "app-b", m.Applications[1].Name)
-	assert.Equal(t, "app-a/app-b", m.Applications[1].Path)
+	assert.Equal(t, "app-a", m.Applications[0].Name())
+	assert.Equal(t, "app-a", m.Applications[0].Path())
+	assert.Equal(t, "app-b", m.Applications[1].Name())
+	assert.Equal(t, "app-a/app-b", m.Applications[1].Path())
 }
 
 func TestEmptyRepo(t *testing.T) {
@@ -110,7 +110,7 @@ func TestDiffingTwoBranches(t *testing.T) {
 	check(t, err)
 
 	assert.Len(t, m.Applications, 1)
-	assert.Equal(t, "app-b", m.Applications[0].Name)
+	assert.Equal(t, "app-b", m.Applications[0].Name())
 
 	m, err = ManifestByPr(".tmp/repo", "master", "feature")
 	check(t, err)
@@ -137,13 +137,13 @@ func TestDiffingTwoProgressedBranches(t *testing.T) {
 	check(t, err)
 
 	assert.Len(t, m.Applications, 1)
-	assert.Equal(t, "app-b", m.Applications[0].Name)
+	assert.Equal(t, "app-b", m.Applications[0].Name())
 
 	m, err = ManifestByPr(".tmp/repo", "master", "feature")
 	check(t, err)
 
 	assert.Len(t, m.Applications, 1)
-	assert.Equal(t, "app-c", m.Applications[0].Name)
+	assert.Equal(t, "app-c", m.Applications[0].Name())
 }
 
 func TestDiffingWithMultipleChangesToSameApp(t *testing.T) {
@@ -163,7 +163,7 @@ func TestDiffingWithMultipleChangesToSameApp(t *testing.T) {
 	check(t, err)
 
 	assert.Len(t, m.Applications, 1)
-	assert.Equal(t, "app-a", m.Applications[0].Name)
+	assert.Equal(t, "app-a", m.Applications[0].Name())
 }
 
 func TestDiffingForDeletes(t *testing.T) {
@@ -182,7 +182,7 @@ func TestDiffingForDeletes(t *testing.T) {
 	check(t, err)
 
 	assert.Len(t, m.Applications, 1)
-	assert.Equal(t, "app-a", m.Applications[0].Name)
+	assert.Equal(t, "app-a", m.Applications[0].Name())
 }
 
 func TestDiffingForRenames(t *testing.T) {
@@ -201,7 +201,7 @@ func TestDiffingForRenames(t *testing.T) {
 	check(t, err)
 
 	assert.Len(t, m.Applications, 1)
-	assert.Equal(t, "app-a", m.Applications[0].Name)
+	assert.Equal(t, "app-a", m.Applications[0].Name())
 }
 
 func TestAppOnRoot(t *testing.T) {
@@ -216,9 +216,9 @@ func TestAppOnRoot(t *testing.T) {
 	check(t, err)
 
 	assert.Len(t, m.Applications, 1)
-	assert.Equal(t, "root-app", m.Applications[0].Name)
-	assert.Equal(t, "", m.Applications[0].Path)
-	assert.Equal(t, repo.LastCommit.String(), m.Applications[0].Version)
+	assert.Equal(t, "root-app", m.Applications[0].Name())
+	assert.Equal(t, "", m.Applications[0].Path())
+	assert.Equal(t, repo.LastCommit.String(), m.Applications[0].Version())
 }
 
 func TestManifestByDiff(t *testing.T) {
@@ -238,7 +238,7 @@ func TestManifestByDiff(t *testing.T) {
 	m, err := ManifestByDiff(".tmp/repo", c1.String(), c2.String())
 
 	assert.Len(t, m.Applications, 1)
-	assert.Equal(t, "app-a", m.Applications[0].Name)
+	assert.Equal(t, "app-a", m.Applications[0].Name())
 
 	m, err = ManifestByDiff(".tmp/repo", c2.String(), c1.String())
 

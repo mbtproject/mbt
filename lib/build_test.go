@@ -32,7 +32,7 @@ func TestBuildExecution(t *testing.T) {
 	}))
 
 	assert.Equal(t, "app-a built\n", stdout.String())
-	assert.EqualValues(t, []BuildStage{BUILD_STAGE_BEFORE_BUILD, BUILD_STAGE_AFTER_BUILD}, stages)
+	assert.EqualValues(t, []BuildStage{BuildStageBeforeBuild, BuildStageAfterBuild}, stages)
 }
 
 func TestBuildSkip(t *testing.T) {
@@ -65,10 +65,10 @@ func TestBuildSkip(t *testing.T) {
 	buff := new(bytes.Buffer)
 
 	check(t, Build(m, os.Stdin, buff, buff, func(a *Application, s BuildStage) {
-		if s == BUILD_STAGE_SKIP_BUILD {
-			skipped = append(skipped, a.Name)
+		if s == BuildStageSkipBuild {
+			skipped = append(skipped, a.Name())
 		} else {
-			other = append(other, a.Name)
+			other = append(other, a.Name())
 		}
 	}))
 
@@ -159,5 +159,5 @@ func TestBuildEnvironment(t *testing.T) {
 	check(t, err)
 
 	out := buff.String()
-	assert.Equal(t, fmt.Sprintf("%s-%s-%s-%s\n", m.Sha, m.Applications[0].Version, m.Applications[0].Name, m.Applications[0].Properties["foo"]), out)
+	assert.Equal(t, fmt.Sprintf("%s-%s-%s-%s\n", m.Sha, m.Applications[0].Version(), m.Applications[0].Name(), m.Applications[0].Properties()["foo"]), out)
 }

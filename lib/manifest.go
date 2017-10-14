@@ -8,18 +8,7 @@ import (
 	git "github.com/libgit2/git2go"
 )
 
-type BuildCmd struct {
-	Cmd  string
-	Args []string `yaml:",flow"`
-}
-
-type Spec struct {
-	Version    string
-	Name       string
-	Build      map[string]*BuildCmd
-	Properties map[string]interface{}
-}
-
+// Manifest represents a collection applications in the repository.
 type Manifest struct {
 	Dir          string
 	Sha          string
@@ -148,49 +137,17 @@ func (m *Manifest) indexByPath() map[string]*Application {
 }
 
 func fromCommit(repo *git.Repository, dir string, commit *git.Commit) (*Manifest, error) {
-	tree, err := commit.Tree()
+	metadataSet, err := discoverMetadata(repo, commit)
 	if err != nil {
 		return nil, err
 	}
 
-	vapps := Applications{}
-
-	err = tree.Walk(func(path string, entry *git.TreeEntry) int {
-		if entry.Name == ".mbt.yml" && entry.Type == git.ObjectBlob {
-			blob, err := repo.LookupBlob(entry.Id)
-			if err != nil {
-				return 1
-			}
-
-			version := ""
-
-			p := strings.TrimRight(path, "/")
-			if p != "" {
-				// We are not on the root, take the git sha for parent tree object.
-				dirEntry, err := tree.EntryByPath(p)
-				if err != nil {
-					return 1
-				}
-				version = dirEntry.Id.String()
-			} else {
-				// We are on the root, take the commit sha.
-				version = commit.Id().String()
-			}
-
-			a, err := newApplication(p, version, blob.Contents())
-			if err != nil {
-				// TODO log this or fail
-				return 1
-			}
-
-			vapps = append(vapps, a)
-		}
-		return 0
-	})
-
+	vapps, err := metadataSet.toApplications()
 	if err != nil {
 		return nil, err
 	}
+
+	vapps.computeVersion(false)
 
 	sort.Sort(vapps)
 	return &Manifest{dir, commit.Id().String(), vapps}, nil
