@@ -14,4 +14,9 @@ restore:
 	go get github.com/stretchr/testify
 
 test:
-	go test ./...
+	go test -coverprofile=coverage.out ./lib
+	go test -coverprofile=coverage.out ./cmd
+	go test -coverprofile=coverage.out .
+
+showcover:
+	go tool cover -html=coverage.out

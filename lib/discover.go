@@ -130,7 +130,7 @@ func calculateVersion(topSorted Applications, withDependencies bool) Application
 }
 
 // applicationMetadataNode is an auxiliary type used to build the dependency
-// graph. Ats as an implementation of graph.Node interface (We use graph
+// graph. Acts as an implementation of graph.Node interface (We use graph
 // library for topological sort).
 type applicationMetadataNode struct {
 	metadata *applicationMetadata
