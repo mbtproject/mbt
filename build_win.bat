@@ -37,7 +37,7 @@ copy %GIT2GO_VENDOR_PATH%\install\bin\git2.dll lib\git2.dll
 
 powershell -ExecutionPolicy Bypass -File .\apply_version.ps1
 
-go test ./...
+go test -v ./...
 
 go build -o "build/%OUT%"
 copy %GIT2GO_VENDOR_PATH%\install\bin\git2.dll build\git2.dll
