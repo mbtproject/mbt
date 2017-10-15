@@ -14,11 +14,11 @@ func TestDependencyLinks(t *testing.T) {
 	m := apps.indexByName()
 
 	assert.Len(t, apps, 3)
-	assert.Equal(t, m["app-b"], m["app-a"].Requires()[0])
-	assert.Equal(t, m["app-c"], m["app-b"].Requires()[0])
-	assert.Len(t, m["app-c"].Requires(), 0)
-	assert.Equal(t, m["app-b"], m["app-c"].RequiredBy()[0])
-	assert.Equal(t, m["app-a"], m["app-b"].RequiredBy()[0])
+	assert.Equal(t, m["app-b"], m["app-a"].Requires().Front().Value)
+	assert.Equal(t, m["app-c"], m["app-b"].Requires().Front().Value)
+	assert.Equal(t, 0, m["app-c"].Requires().Len())
+	assert.Equal(t, m["app-b"], m["app-c"].RequiredBy().Front().Value)
+	assert.Equal(t, m["app-a"], m["app-b"].RequiredBy().Front().Value)
 }
 
 func TestVersionCalculation(t *testing.T) {

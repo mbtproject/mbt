@@ -84,14 +84,15 @@ func (a applicationMetadataSet) toApplications(withDependencies bool) (Applicati
 	// Now that we have the topologically sorted applicationMetadataNodes
 	// create Application instances with dependency links.
 	mApplications := make(map[string]*Application)
-	applications := make(Applications, len(sortedNodes))
-	for i, n := range sortedNodes {
-		metadata := n.(*applicationMetadata)
+	applications := make(Applications, sortedNodes.Len())
+	i := 0
+	for n := sortedNodes.Front(); n != nil; n = n.Next() {
+		metadata := n.Value.(*applicationMetadata)
 		spec := metadata.spec
-		deps := make(Applications, len(spec.Dependencies))
-		for i, d := range spec.Dependencies {
+		deps := new(list.List)
+		for _, d := range spec.Dependencies {
 			if depApp, ok := mApplications[d]; ok {
-				deps[i] = depApp
+				deps.PushBack(depApp)
 			} else {
 				panic("topsort is inconsistent")
 			}
@@ -99,9 +100,10 @@ func (a applicationMetadataSet) toApplications(withDependencies bool) (Applicati
 
 		app := newApplication(metadata, deps)
 		applications[i] = app
+		i++
 
-		for _, d := range deps {
-			d.requiredBy = append(d.requiredBy, app)
+		for e := deps.Front(); e != nil; e = e.Next() {
+			e.Value.(*Application).requiredBy.PushBack(app)
 		}
 
 		mApplications[app.Name()] = app
@@ -114,14 +116,14 @@ func (a applicationMetadataSet) toApplications(withDependencies bool) (Applicati
 // initialises their version field.
 func calculateVersion(topSorted Applications, withDependencies bool) Applications {
 	for _, a := range topSorted {
-		if !withDependencies || len(a.Requires()) == 0 {
+		if !withDependencies || a.Requires().Len() == 0 {
 			a.version = a.hash
 		} else {
 			h := sha1.New()
 
 			io.WriteString(h, a.hash)
-			for _, r := range a.Requires() {
-				io.WriteString(h, r.version)
+			for e := a.Requires().Front(); e != nil; e = e.Next() {
+				io.WriteString(h, e.Value.(*Application).Version())
 			}
 			a.version = hex.EncodeToString(h.Sum(nil))
 		}

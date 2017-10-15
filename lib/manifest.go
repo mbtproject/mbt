@@ -183,15 +183,20 @@ func reduceToDiff(manifest *Manifest, diff *git.Diff) (*Manifest, error) {
 		return nil, err
 	}
 
-	apps := []*Application{}
+	apps := Applications{}
 	for _, v := range filtered {
 		apps = append(apps, v)
+	}
+
+	expandedApps, err := apps.expandRequiredByDependencies()
+	if err != nil {
+		return nil, err
 	}
 
 	return &Manifest{
 		Dir:          manifest.Dir,
 		Sha:          manifest.Sha,
-		Applications: apps,
+		Applications: expandedApps,
 	}, nil
 }
 

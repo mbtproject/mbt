@@ -236,11 +236,38 @@ func TestManifestByDiff(t *testing.T) {
 	c2 := repo.LastCommit
 
 	m, err := ManifestByDiff(".tmp/repo", c1.String(), c2.String())
+	check(t, err)
 
 	assert.Len(t, m.Applications, 1)
 	assert.Equal(t, "app-a", m.Applications[0].Name())
 
 	m, err = ManifestByDiff(".tmp/repo", c2.String(), c1.String())
+	check(t, err)
 
 	assert.Len(t, m.Applications, 0)
+}
+
+func TestDependency(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitApplication("app-a"))
+	check(t, repo.InitApplicationWithOptions("app-b", &Spec{
+		Name:         "app-b",
+		Dependencies: []string{"app-a"},
+	}))
+	check(t, repo.Commit("first"))
+	c1 := repo.LastCommit
+
+	check(t, repo.WriteContent("app-a/foo", "hello"))
+	check(t, repo.Commit("second"))
+	c2 := repo.LastCommit
+
+	m, err := ManifestByDiff(".tmp/repo", c1.String(), c2.String())
+	check(t, err)
+
+	assert.Len(t, m.Applications, 2)
+	assert.Equal(t, "app-a", m.Applications[0].Name())
+	assert.Equal(t, "app-b", m.Applications[1].Name())
 }

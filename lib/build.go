@@ -63,7 +63,6 @@ func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCal
 	defer checkoutHead(repo)
 
 	for _, a := range m.Applications {
-		println("Building", a.Name(), "now")
 		if !canBuildHere(a) {
 			buildStageCallback(a, BuildStageSkipBuild)
 			continue

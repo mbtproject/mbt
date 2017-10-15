@@ -1,7 +1,10 @@
 package lib
 
 import (
+	"container/list"
 	"fmt"
+
+	"github.com/buddyspike/graph"
 )
 
 // Application represents a single application in the repository.
@@ -12,8 +15,8 @@ type Application struct {
 	hash       string
 	version    string
 	properties map[string]interface{}
-	requires   Applications
-	requiredBy Applications
+	requires   *list.List
+	requiredBy *list.List
 }
 
 // Applications is an array of Application.
@@ -40,12 +43,12 @@ func (a *Application) Properties() map[string]interface{} {
 }
 
 // Requires returns an array of applications required by this application.
-func (a *Application) Requires() Applications {
+func (a *Application) Requires() *list.List {
 	return a.requires
 }
 
 // RequiredBy returns an array of applications requires this application.
-func (a *Application) RequiredBy() Applications {
+func (a *Application) RequiredBy() *list.List {
 	return a.requiredBy
 }
 
@@ -67,7 +70,45 @@ func (l Applications) Swap(i, j int) {
 	l[i], l[j] = l[j], l[i]
 }
 
-func newApplication(metadata *applicationMetadata, requires Applications) *Application {
+type requiredByNodeProvider struct{}
+
+func (p *requiredByNodeProvider) ID(vertex interface{}) interface{} {
+	return vertex.(*Application).Name()
+}
+
+func (p *requiredByNodeProvider) ChildCount(vertex interface{}) int {
+	return vertex.(*Application).RequiredBy().Len()
+}
+
+func (p *requiredByNodeProvider) Child(vertex interface{}, index int) (interface{}, error) {
+	head := vertex.(*Application).RequiredBy().Front()
+	for i := 0; i < index; i++ {
+		head = head.Next()
+	}
+
+	return head.Value, nil
+}
+
+type requiresNodeProvider struct{}
+
+func (p *requiresNodeProvider) ID(vertex interface{}) interface{} {
+	return vertex.(*Application).Name()
+}
+
+func (p *requiresNodeProvider) ChildCount(vertex interface{}) int {
+	return vertex.(*Application).Requires().Len()
+}
+
+func (p *requiresNodeProvider) Child(vertex interface{}, index int) (interface{}, error) {
+	head := vertex.(*Application).Requires().Front()
+	for i := 0; i < index; i++ {
+		head = head.Next()
+	}
+
+	return head.Value, nil
+}
+
+func newApplication(metadata *applicationMetadata, requires *list.List) *Application {
 	spec := metadata.spec
 	app := &Application{
 		build:      spec.Build,
@@ -75,12 +116,12 @@ func newApplication(metadata *applicationMetadata, requires Applications) *Appli
 		properties: spec.Properties,
 		hash:       metadata.hash,
 		path:       metadata.dir,
-		requires:   make(Applications, 0),
-		requiredBy: make(Applications, 0),
+		requires:   new(list.List),
+		requiredBy: new(list.List),
 	}
 
 	if requires != nil {
-		app.requires = requires
+		app.requires.PushBackList(requires)
 	}
 
 	return app
@@ -100,4 +141,29 @@ func (l Applications) indexByPath() map[string]*Application {
 		q[fmt.Sprintf("%s/", a.Path())] = a
 	}
 	return q
+}
+
+func (l Applications) expandRequiredByDependencies() (Applications, error) {
+	g := new(list.List)
+	for _, a := range l {
+		g.PushBack(a)
+	}
+	allItems, err := graph.GetVertices(g, &requiredByNodeProvider{})
+	if err != nil {
+		return nil, err
+	}
+
+	sorted, err := graph.TopSort(allItems, &requiresNodeProvider{})
+	if err != nil {
+		return nil, err
+	}
+
+	r := make([]*Application, allItems.Len())
+	i := 0
+	for e := sorted.Front(); e != nil; e = e.Next() {
+		r[i] = e.Value.(*Application)
+		i++
+	}
+
+	return r, nil
 }
