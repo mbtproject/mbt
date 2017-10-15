@@ -142,7 +142,7 @@ func TestBuildEnvironment(t *testing.T) {
 		Build: map[string]*BuildCmd{
 			"linux":   {Cmd: "./build.sh"},
 			"darwin":  {Cmd: "./build.sh"},
-			"windows": {Cmd: ".\\build.ps1", Args: []string{"-ExecutionPolicy", "Bypass", "-File", ".\\build.ps1"}},
+			"windows": {Cmd: "powershell", Args: []string{"-ExecutionPolicy", "Bypass", "-File", ".\\build.ps1"}},
 		},
 		Properties: map[string]interface{}{"foo": "bar"},
 	}))
