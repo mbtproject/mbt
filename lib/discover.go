@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"container/list"
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
@@ -62,31 +63,31 @@ type applicationMetadataSet []*applicationMetadata
 // toApplications transforms an applicationMetadataSet to Applications structure
 // while establishing the dependency links.
 func (a applicationMetadataSet) toApplications(withDependencies bool) (Applications, error) {
+	// Step 1
+	// Transform each applicationMetadatadata into applicationMetadataNode for sorting.
 	m := make(map[string]*applicationMetadata)
-
-	// 1. Transform each applicationMetadatadata into applicationMetadataNode for sorting.
+	g := new(list.List)
 	for _, meta := range a {
 		m[meta.spec.Name] = meta
+		g.PushBack(meta)
 	}
+	provider := newApplicationMetadataNode(m)
 
-	nodes := make([]graph.Node, len(a))
-	for i, meta := range a {
-		nodes[i] = newApplicationMetadataNode(meta, m)
-	}
-
-	// 2. Sort
-	sortedNodes, err := graph.TopSort(nodes)
+	// Step 2
+	// Topological sort
+	sortedNodes, err := graph.TopSort(g, provider)
 	if err != nil {
 		return nil, err
 	}
 
-	// 3. Now that we have the topologically sorted applicationMetadataNodes
-	// 		create Application instances with dependency links.
+	// Step 3
+	// Now that we have the topologically sorted applicationMetadataNodes
+	// create Application instances with dependency links.
 	mApplications := make(map[string]*Application)
 	applications := make(Applications, len(sortedNodes))
 	for i, n := range sortedNodes {
-		metadataNode := n.(*applicationMetadataNode)
-		spec := metadataNode.metadata.spec
+		metadata := n.(*applicationMetadata)
+		spec := metadata.spec
 		deps := make(Applications, len(spec.Dependencies))
 		for i, d := range spec.Dependencies {
 			if depApp, ok := mApplications[d]; ok {
@@ -96,7 +97,7 @@ func (a applicationMetadataSet) toApplications(withDependencies bool) (Applicati
 			}
 		}
 
-		app := newApplication(metadataNode.metadata, deps)
+		app := newApplication(metadata, deps)
 		applications[i] = app
 
 		for _, d := range deps {
@@ -129,34 +130,33 @@ func calculateVersion(topSorted Applications, withDependencies bool) Application
 	return topSorted
 }
 
-// applicationMetadataNode is an auxiliary type used to build the dependency
-// graph. Acts as an implementation of graph.Node interface (We use graph
+// applicationMetadataNodeProvider is an auxiliary type used to build the dependency
+// graph. Acts as an implementation of graph.NodeProvider interface (We use graph
 // library for topological sort).
-type applicationMetadataNode struct {
-	metadata *applicationMetadata
-	set      map[string]*applicationMetadata
+type applicationMetadataNodeProvider struct {
+	set map[string]*applicationMetadata
 }
 
-func newApplicationMetadataNode(metadata *applicationMetadata, set map[string]*applicationMetadata) *applicationMetadataNode {
-	return &applicationMetadataNode{metadata, set}
+func newApplicationMetadataNode(set map[string]*applicationMetadata) *applicationMetadataNodeProvider {
+	return &applicationMetadataNodeProvider{set}
 }
 
-func (n *applicationMetadataNode) GetID() interface{} {
-	return n.metadata.spec.Name
+func (n *applicationMetadataNodeProvider) ID(vertex interface{}) interface{} {
+	return vertex.(*applicationMetadata).spec.Name
 }
 
-func (n *applicationMetadataNode) GetChildren() ([]graph.Node, error) {
-	c := []graph.Node{}
+func (n *applicationMetadataNodeProvider) ChildCount(vertex interface{}) int {
+	return len(vertex.(*applicationMetadata).spec.Dependencies)
+}
 
-	for _, d := range n.metadata.spec.Dependencies {
-		if s, ok := n.set[d]; ok {
-			c = append(c, newApplicationMetadataNode(s, n.set))
-		} else {
-			return nil, fmt.Errorf("dependency not found %s -> %s", n.metadata.spec.Name, d)
-		}
+func (n *applicationMetadataNodeProvider) Child(vertex interface{}, index int) (interface{}, error) {
+	spec := vertex.(*applicationMetadata).spec
+	d := spec.Dependencies[index]
+	if s, ok := n.set[d]; ok {
+		return s, nil
 	}
 
-	return c, nil
+	return nil, fmt.Errorf("dependency not found %s -> %s", spec.Name, d)
 }
 
 // discoverMetadata walks the git tree at a specific commit looking for
