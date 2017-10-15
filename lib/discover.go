@@ -13,7 +13,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-// applicationMetadata represents the infomation about applications
+// applicationMetadata represents the information about applications
 // found during discovery phase.
 type applicationMetadata struct {
 	dir  string
