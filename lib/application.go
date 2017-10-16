@@ -153,14 +153,9 @@ func (l Applications) expandRequiredByDependencies() (Applications, error) {
 		return nil, err
 	}
 
-	sorted, err := graph.TopSort(allItems, &requiresNodeProvider{})
-	if err != nil {
-		return nil, err
-	}
-
 	r := make([]*Application, allItems.Len())
 	i := 0
-	for e := sorted.Front(); e != nil; e = e.Next() {
+	for e := allItems.Front(); e != nil; e = e.Next() {
 		r[i] = e.Value.(*Application)
 		i++
 	}
