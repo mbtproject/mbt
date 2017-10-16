@@ -143,21 +143,35 @@ func (l Applications) indexByPath() map[string]*Application {
 	return q
 }
 
+// expandRequiredByDependencies takes a list of Applications and
+// returns a new list of Applications including the ones in their
+// requiredBy (see below) dependency chain.
+// requiredBy dependency
+// Application dependencies are described in two forms requires and requiredBy.
+// If A needs B, then, A requires B and B is requiredBy A.
 func (l Applications) expandRequiredByDependencies() (Applications, error) {
+	// Step 1
+	// Create the new list with all nodes
 	g := new(list.List)
 	for _, a := range l {
 		g.PushBack(a)
 	}
-	allItems, err := graph.GetVertices(g, &requiredByNodeProvider{})
+
+	// Step 2
+	// Top sort it by requiredBy chain.
+	allItems, err := graph.TopSort(g, &requiredByNodeProvider{})
 	if err != nil {
 		return nil, err
 	}
 
+	// Step 3
+	// Copy resulting array in the reverse order
+	// because we top sorted by requiredBy chain.
 	r := make([]*Application, allItems.Len())
-	i := 0
+	i := allItems.Len() - 1
 	for e := allItems.Front(); e != nil; e = e.Next() {
 		r[i] = e.Value.(*Application)
-		i++
+		i--
 	}
 
 	return r, nil

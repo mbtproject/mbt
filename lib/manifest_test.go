@@ -268,8 +268,8 @@ func TestDependencyChange(t *testing.T) {
 	check(t, err)
 
 	assert.Len(t, m.Applications, 2)
-	assert.Equal(t, "app-b", m.Applications[0].Name())
-	assert.Equal(t, "app-a", m.Applications[1].Name())
+	assert.Equal(t, "app-a", m.Applications[0].Name())
+	assert.Equal(t, "app-b", m.Applications[1].Name())
 }
 
 func TestDependentChange(t *testing.T) {
