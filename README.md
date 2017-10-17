@@ -104,7 +104,7 @@ chmod +x /usr/local/bin/mbt
 ### mbt is powered by these cool libraries
 - [git2go](https://github.com/libgit2/git2go)
 - [libgit2](https://github.com/libgit2/libgit2) 
-- [yaml] (https://github.com/go-yaml/yaml)
+- [yaml](https://github.com/go-yaml/yaml)
 - [cobra](https://github.com/spf13/cobra)
 - [logrus](https://github.com/sirupsen/logrus)
 
