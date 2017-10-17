@@ -1,3 +1,4 @@
+![mbt](assets/logo-m.png)
 # mbt
 >> Build utility for monorepos
 
@@ -98,3 +99,13 @@ chmod +x /usr/local/bin/mbt
 |darwin x86_64    |[![Download](https://api.bintray.com/packages/buddyspike/bin/mbt_darwin_x86_64/images/download.svg)](https://bintray.com/buddyspike/bin/mbt_darwin_x86_64/_latestVersion)|
 |linux x86_64     |[![Download](https://api.bintray.com/packages/buddyspike/bin/mbt_linux_x86_64/images/download.svg)](https://bintray.com/buddyspike/bin/mbt_linux_x86_64/_latestVersion)|
 |windows          |[ ![Download](https://api.bintray.com/packages/buddyspike/bin/mbt_windows_x86/images/download.svg) ](https://bintray.com/buddyspike/bin/mbt_windows_x86/_latestVersion)|
+
+## Credits
+### mbt is powered by these cool libraries
+- [git2go](https://github.com/libgit2/git2go)
+- [libgit2](https://github.com/libgit2/libgit2) 
+- [yaml] (https://github.com/go-yaml/yaml)
+- [cobra](https://github.com/spf13/cobra)
+- [logrus](https://github.com/sirupsen/logrus)
+
+Icons made by [Freepik](http://www.freepik.com) from [www.flaticon.com](https://www.flaticon.com/) is licensed by [CC 3.0 BY](http://creativecommons.org/licenses/by/3.0/)
