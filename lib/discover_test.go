@@ -33,3 +33,18 @@ func TestVersionCalculation(t *testing.T) {
 	assert.Equal(t, "b", m["app-b"].Version())
 	assert.Equal(t, "da23614e02469a0d7c7bd1bdab5c9c474b1904dc", m["app-a"].Version())
 }
+
+func TestMalformedSpec(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitApplication("app-a"))
+	check(t, repo.WriteContent("app-a/.mbt.yml", "blah:blah\nblah::"))
+	check(t, repo.Commit("first"))
+
+	commit, err := repo.Repo.LookupCommit(repo.LastCommit)
+	metadata, err := discoverMetadata(repo.Repo, commit)
+	assert.Nil(t, metadata)
+	assert.EqualError(t, err, "discover: error while parsing the spec at app-a/.mbt.yml - yaml: line 1: mapping values are not allowed in this context")
+}
