@@ -170,13 +170,18 @@ func discoverMetadata(repo *git.Repository, commit *git.Commit) (applicationMeta
 		return nil, err
 	}
 
+	var walkErr error
 	metadataSet := applicationMetadataSet{}
 
 	err = tree.Walk(func(path string, entry *git.TreeEntry) int {
+		if walkErr != nil {
+			return 1
+		}
+
 		if entry.Name == ".mbt.yml" && entry.Type == git.ObjectBlob {
 			blob, err := repo.LookupBlob(entry.Id)
 			if err != nil {
-				return 1
+				panic(err)
 			}
 
 			hash := ""
@@ -186,7 +191,7 @@ func discoverMetadata(repo *git.Repository, commit *git.Commit) (applicationMeta
 				// We are not on the root, take the git sha for parent tree object.
 				dirEntry, err := tree.EntryByPath(p)
 				if err != nil {
-					return 1
+					panic(err)
 				}
 				hash = dirEntry.Id.String()
 			} else {
@@ -196,7 +201,7 @@ func discoverMetadata(repo *git.Repository, commit *git.Commit) (applicationMeta
 
 			spec, err := newSpec(blob.Contents())
 			if err != nil {
-				// TODO log this or fail
+				walkErr = fmt.Errorf("discover: error while parsing the spec at %s%s - %s", path, entry.Name, err)
 				return 1
 			}
 
@@ -207,6 +212,10 @@ func discoverMetadata(repo *git.Repository, commit *git.Commit) (applicationMeta
 
 	if err != nil {
 		return nil, err
+	}
+
+	if walkErr != nil {
+		return nil, walkErr
 	}
 
 	return metadataSet, nil
