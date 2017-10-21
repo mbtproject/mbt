@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func noopCb(a *Application, s BuildStage) {}
 func TestBuildExecution(t *testing.T) {
 	clean()
 
@@ -129,7 +130,7 @@ func TestDirtyWorkingDir(t *testing.T) {
 	buff := new(bytes.Buffer)
 	err = Build(m, os.Stdin, buff, buff, func(a *Application, s BuildStage) {})
 	assert.Error(t, err)
-	assert.Equal(t, "dirty working dir", err.Error())
+	assert.Equal(t, "mbt build: dirty working dir", err.Error())
 }
 
 func TestBuildEnvironment(t *testing.T) {
@@ -155,9 +156,49 @@ func TestBuildEnvironment(t *testing.T) {
 	check(t, err)
 
 	buff := new(bytes.Buffer)
-	err = Build(m, os.Stdin, buff, buff, func(a *Application, s BuildStage) {})
+	err = Build(m, os.Stdin, buff, buff, noopCb)
 	check(t, err)
 
 	out := buff.String()
 	assert.Equal(t, fmt.Sprintf("%s-%s-%s-%s\n", m.Sha, m.Applications[0].Version(), m.Applications[0].Name(), m.Applications[0].Properties()["foo"]), out)
+}
+
+func TestNonGitRepo(t *testing.T) {
+	clean()
+	check(t, os.MkdirAll(".tmp/repo", 0755))
+	m := &Manifest{Dir: ".tmp/repo", Applications: []*Application{}, Sha: "a"}
+
+	err := Build(m, os.Stdin, os.Stdout, os.Stderr, noopCb)
+
+	assert.EqualError(t, err, "mbt build: could not find repository from '.tmp/repo'")
+}
+
+func TestBadSha(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitApplication("app-a"))
+	check(t, repo.Commit("first"))
+
+	m := &Manifest{Dir: ".tmp/repo", Applications: []*Application{}, Sha: "a"}
+
+	err = Build(m, os.Stdin, os.Stdout, os.Stderr, noopCb)
+
+	assert.EqualError(t, err, "mbt build: encoding/hex: odd length hex string")
+}
+
+func TestMissingSha(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitApplication("app-a"))
+	check(t, repo.Commit("first"))
+
+	m := &Manifest{Dir: ".tmp/repo", Applications: []*Application{}, Sha: "22221c5e56794a2af5f59f94512df4c669c77a49"}
+
+	err = Build(m, os.Stdin, os.Stdout, os.Stderr, noopCb)
+
+	assert.EqualError(t, err, "mbt build: object not found - no match for id (22221c5e56794a2af5f59f94512df4c669c77a49)")
 }
