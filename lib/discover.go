@@ -4,7 +4,6 @@ import (
 	"container/list"
 	"crypto/sha1"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"strings"
 
@@ -158,30 +157,32 @@ func (n *applicationMetadataNodeProvider) Child(vertex interface{}, index int) (
 		return s, nil
 	}
 
-	return nil, fmt.Errorf("dependency not found %s -> %s", spec.Name, d)
+	return nil, newError("discover", "dependency not found %s -> %s", nil, spec.Name, d)
 }
 
 // discoverMetadata walks the git tree at a specific commit looking for
 // directories with .mbt.yml file. Returns an applicationMetadataSet representing
 // the applications found.
-func discoverMetadata(repo *git.Repository, commit *git.Commit) (applicationMetadataSet, error) {
+func discoverMetadata(repo *git.Repository, commit *git.Commit) (a applicationMetadataSet, outErr error) {
+	// Setup the panic handler to trap potential panics while walking the tree
+	defer func() {
+		if r := recover(); r != nil {
+			outErr = r.(error)
+		}
+	}()
+
 	tree, err := commit.Tree()
 	if err != nil {
-		return nil, err
+		panicMbt("discover", "failed to fetch commit tree for %s", err, commit.Id())
 	}
 
-	var walkErr error
 	metadataSet := applicationMetadataSet{}
 
 	err = tree.Walk(func(path string, entry *git.TreeEntry) int {
-		if walkErr != nil {
-			return 1
-		}
-
 		if entry.Name == ".mbt.yml" && entry.Type == git.ObjectBlob {
 			blob, err := repo.LookupBlob(entry.Id)
 			if err != nil {
-				panic(err)
+				panicMbt("discover", "error while fetching the blob object for %s%s", err, path, entry.Name)
 			}
 
 			hash := ""
@@ -191,7 +192,7 @@ func discoverMetadata(repo *git.Repository, commit *git.Commit) (applicationMeta
 				// We are not on the root, take the git sha for parent tree object.
 				dirEntry, err := tree.EntryByPath(p)
 				if err != nil {
-					panic(err)
+					panicMbt("discover", "error while fetching the tree entry for %s", err, p)
 				}
 				hash = dirEntry.Id.String()
 			} else {
@@ -201,8 +202,7 @@ func discoverMetadata(repo *git.Repository, commit *git.Commit) (applicationMeta
 
 			spec, err := newSpec(blob.Contents())
 			if err != nil {
-				walkErr = fmt.Errorf("discover: error while parsing the spec at %s%s - %s", path, entry.Name, err)
-				return 1
+				panicMbt("discover", "error while parsing the spec at %s%s", err, path, entry.Name)
 			}
 
 			metadataSet = append(metadataSet, newApplicationMetadata(p, hash, spec))
@@ -211,11 +211,7 @@ func discoverMetadata(repo *git.Repository, commit *git.Commit) (applicationMeta
 	})
 
 	if err != nil {
-		return nil, err
-	}
-
-	if walkErr != nil {
-		return nil, walkErr
+		panicMbt("discover", "failed to walk the tree object", err)
 	}
 
 	return metadataSet, nil
