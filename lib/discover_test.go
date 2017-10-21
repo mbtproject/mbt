@@ -1,7 +1,13 @@
 package lib
 
-import "testing"
-import "github.com/stretchr/testify/assert"
+import (
+	"os"
+	"testing"
+
+	"github.com/libgit2/git2go"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestDependencyLinks(t *testing.T) {
 	a := newApplicationMetadata("app-a", "a", &Spec{Name: "app-a", Dependencies: []string{"app-b"}})
@@ -44,7 +50,65 @@ func TestMalformedSpec(t *testing.T) {
 	check(t, repo.Commit("first"))
 
 	commit, err := repo.Repo.LookupCommit(repo.LastCommit)
+	check(t, err)
+
 	metadata, err := discoverMetadata(repo.Repo, commit)
 	assert.Nil(t, metadata)
 	assert.EqualError(t, err, "discover: error while parsing the spec at app-a/.mbt.yml - yaml: line 1: mapping values are not allowed in this context")
+}
+
+func TestMissingBlobs(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitApplication("app-a"))
+	check(t, repo.Commit("first"))
+
+	commit, err := repo.Repo.LookupCommit(repo.LastCommit)
+	check(t, err)
+
+	check(t, os.RemoveAll(".tmp/repo/.git/objects"))
+	check(t, os.Mkdir(".tmp/repo/.git/objects", 0755))
+
+	metadata, err := discoverMetadata(repo.Repo, commit)
+
+	assert.Nil(t, metadata)
+	assert.EqualError(t, err, "discover: error while fetching the blob object for app-a/.mbt.yml - object not found - no match for id (5ed8e79fc340352ac6b4655390b78d12d03a4462)")
+}
+
+func TestMissingTreeObject(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitApplication("app-a"))
+	check(t, repo.Commit("first"))
+	check(t, os.RemoveAll(".tmp/repo/.git/objects/30"))
+
+	r, err := git.OpenRepository(".tmp/repo")
+	check(t, err)
+	commit, err := r.LookupCommit(repo.LastCommit)
+	check(t, err)
+
+	metadata, err := discoverMetadata(r, commit)
+
+	assert.Nil(t, metadata)
+	assert.EqualError(t, err, "discover: failed to walk the tree object - object not found - no match for id (308607113d927f0f2dc511a05c0efb5c96260d08)")
+}
+
+func TestMissingDependencies(t *testing.T) {
+	s := applicationMetadataSet{&applicationMetadata{
+		dir:  "app-a",
+		hash: "a",
+		spec: &Spec{
+			Name:         "app-a",
+			Dependencies: []string{"app-b"},
+		},
+	}}
+
+	apps, err := s.toApplications(true)
+
+	assert.Nil(t, apps)
+	assert.EqualError(t, err, "discover: dependency not found app-a -> app-b")
 }
