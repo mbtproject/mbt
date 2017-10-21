@@ -15,6 +15,7 @@ type Manifest struct {
 	Applications Applications
 }
 
+// ManifestByPr returns the manifest of pull request.
 func ManifestByPr(dir, src, dst string) (*Manifest, error) {
 	repo, m, err := openRepo(dir)
 	if err != nil {
@@ -48,6 +49,7 @@ func ManifestByPr(dir, src, dst string) (*Manifest, error) {
 	return reduceToDiff(m, diff)
 }
 
+// ManifestBySha returns the manifest as of the specified commit sha.
 func ManifestBySha(dir, sha string) (*Manifest, error) {
 	repo, m, err := openRepo(dir)
 	if err != nil {
@@ -60,18 +62,19 @@ func ManifestBySha(dir, sha string) (*Manifest, error) {
 
 	bytes, err := hex.DecodeString(sha)
 	if err != nil {
-		return nil, err
+		return nil, wrap("manifest", err)
 	}
 
 	oid := git.NewOidFromBytes(bytes)
 	commit, err := repo.LookupCommit(oid)
 	if err != nil {
-		return nil, err
+		return nil, wrap("manifest", err)
 	}
 
 	return fromCommit(repo, dir, commit)
 }
 
+// ManifestByBranch returns the manifest as of the tip of the specified branch.
 func ManifestByBranch(dir, branch string) (*Manifest, error) {
 	repo, m, err := openRepo(dir)
 	if err != nil {
@@ -85,6 +88,7 @@ func ManifestByBranch(dir, branch string) (*Manifest, error) {
 	return fromBranch(repo, dir, branch)
 }
 
+// ManifestByDiff returns the manifest for the diff between given two commits.
 func ManifestByDiff(dir, from, to string) (*Manifest, error) {
 	repo, m, err := openRepo(dir)
 	if err != nil {
@@ -97,22 +101,22 @@ func ManifestByDiff(dir, from, to string) (*Manifest, error) {
 
 	fromOid, err := git.NewOid(from)
 	if err != nil {
-		return nil, err
+		return nil, wrap("manifest", err)
 	}
 
 	toOid, err := git.NewOid(to)
 	if err != nil {
-		return nil, err
+		return nil, wrap("manifest", err)
 	}
 
 	fromC, err := repo.LookupCommit(fromOid)
 	if err != nil {
-		return nil, err
+		return nil, wrap("manifest", err)
 	}
 
 	toC, err := repo.LookupCommit(toOid)
 	if err != nil {
-		return nil, err
+		return nil, wrap("manifest", err)
 	}
 
 	diff, err := getDiffFromMergeBase(repo, toC, fromC)
@@ -180,7 +184,7 @@ func reduceToDiff(manifest *Manifest, diff *git.Diff) (*Manifest, error) {
 	}, git.DiffDetailFiles)
 
 	if err != nil {
-		return nil, err
+		return nil, wrap("manifest", err)
 	}
 
 	apps := Applications{}
@@ -203,11 +207,11 @@ func reduceToDiff(manifest *Manifest, diff *git.Diff) (*Manifest, error) {
 func openRepo(dir string) (*git.Repository, *Manifest, error) {
 	repo, err := git.OpenRepository(dir)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, wrap("manifest", err)
 	}
 	empty, err := repo.IsEmpty()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, wrap("manifest", err)
 	}
 
 	if empty {

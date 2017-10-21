@@ -8,7 +8,7 @@ func statusCount(repo *git.Repository) (int, error) {
 	})
 
 	if err != nil {
-		return 0, err
+		return 0, wrap("git_utils", err)
 	}
 
 	defer status.Free()
@@ -24,13 +24,13 @@ func isWorkingDirDirty(repo *git.Repository) (bool, error) {
 func getBranchCommit(repo *git.Repository, branch string) (*git.Commit, error) {
 	ref, err := repo.References.Dwim(branch)
 	if err != nil {
-		return nil, err
+		return nil, wrap("git_utils", err)
 	}
 
 	oid := ref.Target()
 	commit, err := repo.LookupCommit(oid)
 	if err != nil {
-		return nil, err
+		return nil, wrap("git_utils", err)
 	}
 
 	return commit, nil
@@ -43,7 +43,7 @@ func getBranchTree(repo *git.Repository, branch string) (*git.Tree, error) {
 	}
 	tree, err := commit.Tree()
 	if err != nil {
-		return nil, err
+		return nil, wrap("git_utils", err)
 	}
 
 	return tree, nil
@@ -52,27 +52,27 @@ func getBranchTree(repo *git.Repository, branch string) (*git.Tree, error) {
 func getDiffFromMergeBase(repo *git.Repository, srcC, dstC *git.Commit) (*git.Diff, error) {
 	baseOid, err := repo.MergeBase(srcC.Id(), dstC.Id())
 	if err != nil {
-		return nil, err
+		return nil, wrap("git_utils", err)
 	}
 
 	baseC, err := repo.LookupCommit(baseOid)
 	if err != nil {
-		return nil, err
+		return nil, wrap("git_utils", err)
 	}
 
 	baseTree, err := baseC.Tree()
 	if err != nil {
-		return nil, err
+		return nil, wrap("git_utils", err)
 	}
 
 	srcTree, err := srcC.Tree()
 	if err != nil {
-		return nil, err
+		return nil, wrap("git_utils", err)
 	}
 
 	diff, err := repo.DiffTreeToTree(baseTree, srcTree, &git.DiffOptions{})
 	if err != nil {
-		return nil, err
+		return nil, wrap("git_utils", err)
 	}
 
 	return diff, err

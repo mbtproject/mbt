@@ -166,11 +166,7 @@ func (n *applicationMetadataNodeProvider) Child(vertex interface{}, index int) (
 // the applications found.
 func discoverMetadata(repo *git.Repository, commit *git.Commit) (a applicationMetadataSet, outErr error) {
 	// Setup the panic handler to trap potential panics while walking the tree
-	defer func() {
-		if r := recover(); r != nil {
-			outErr = r.(error)
-		}
-	}()
+	defer handlePanic(&outErr)
 
 	tree, err := commit.Tree()
 	if err != nil {

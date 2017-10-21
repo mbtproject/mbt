@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -294,4 +295,45 @@ func TestDependentChange(t *testing.T) {
 
 	assert.Len(t, m.Applications, 1)
 	assert.Equal(t, "app-b", m.Applications[0].Name())
+}
+
+func TestManifestBySha(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitApplication("app-a"))
+	check(t, repo.Commit("first"))
+
+	c1 := repo.LastCommit
+
+	check(t, repo.InitApplication("app-b"))
+	check(t, repo.Commit("second"))
+
+	c2 := repo.LastCommit
+
+	m, err := ManifestBySha(".tmp/repo", c1.String())
+	check(t, err)
+
+	assert.Len(t, m.Applications, 1)
+	assert.Equal(t, c1.String(), m.Sha)
+	assert.Equal(t, "app-a", m.Applications[0].Name())
+
+	m, err = ManifestBySha(".tmp/repo", c2.String())
+	check(t, err)
+
+	assert.Len(t, m.Applications, 2)
+	assert.Equal(t, c2.String(), m.Sha)
+	assert.Equal(t, "app-a", m.Applications[0].Name())
+	assert.Equal(t, "app-b", m.Applications[1].Name())
+}
+
+func TestNonRepository(t *testing.T) {
+	clean()
+	check(t, os.MkdirAll(".tmp/repo", 0755))
+
+	m, err := ManifestByBranch(".tmp/repo", "master")
+
+	assert.Nil(t, m)
+	assert.EqualError(t, err, "mbt manifest: could not find repository from '.tmp/repo'")
 }

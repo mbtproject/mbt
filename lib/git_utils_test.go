@@ -53,3 +53,17 @@ func TestStatusCountOnRename(t *testing.T) {
 
 	assert.Equal(t, 2, count)
 }
+
+func TestInvalidBranch(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitApplication("app-a"))
+	check(t, repo.Commit("first"))
+
+	c, err := getBranchCommit(repo.Repo, "foo")
+
+	assert.Nil(t, c)
+	assert.EqualError(t, err, "mbt git_utils: no reference found for shorthand 'foo'")
+}

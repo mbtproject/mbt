@@ -34,6 +34,10 @@ func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCal
 	}
 
 	dirty, err := isWorkingDirDirty(repo)
+	if err != nil {
+		return err
+	}
+
 	if dirty {
 		return newError("build", "dirty working dir")
 	}

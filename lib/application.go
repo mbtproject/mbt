@@ -161,7 +161,7 @@ func (l Applications) expandRequiredByDependencies() (Applications, error) {
 	// Top sort it by requiredBy chain.
 	allItems, err := graph.TopSort(g, &requiredByNodeProvider{})
 	if err != nil {
-		return nil, err
+		return nil, wrap("application", err)
 	}
 
 	// Step 3

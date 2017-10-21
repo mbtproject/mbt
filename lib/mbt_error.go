@@ -40,3 +40,13 @@ func wrapm(component string, innerError error, message string, args ...interface
 func failf(component string, innerError error, message string, args ...interface{}) {
 	panic(wrapm(component, innerError, message, args...))
 }
+
+func handlePanic(err *error) {
+	if r := recover(); r != nil {
+		if _, ok := r.(*MbtError); ok {
+			*err = r.(error)
+		} else {
+			panic(r)
+		}
+	}
+}
