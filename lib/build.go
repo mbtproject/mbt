@@ -30,7 +30,7 @@ const (
 func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCallback func(app *Application, s BuildStage)) error {
 	repo, err := git.OpenRepository(m.Dir)
 	if err != nil {
-		return wrap("build", err)
+		return wrap(err)
 	}
 
 	dirty, err := isWorkingDirDirty(repo)
@@ -39,28 +39,28 @@ func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCal
 	}
 
 	if dirty {
-		return newError("build", "dirty working dir")
+		return newError("dirty working dir")
 	}
 
 	oid, err := git.NewOid(m.Sha)
 	if err != nil {
-		return wrap("build", err)
+		return wrap(err)
 	}
 
 	commit, err := repo.LookupCommit(oid)
 	if err != nil {
-		return wrap("build", err)
+		return wrap(err)
 	}
 
 	tree, err := commit.Tree()
 	if err != nil {
-		return wrap("build", err)
+		return wrap(err)
 	}
 
 	// TODO: Confirm the strategy is correct
 	err = repo.CheckoutTree(tree, defaultCheckoutOptions)
 	if err != nil {
-		return wrap("build", err)
+		return wrap(err)
 	}
 
 	defer checkoutHead(repo)
@@ -74,7 +74,7 @@ func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCal
 		buildStageCallback(a, BuildStageBeforeBuild)
 		err := buildOne(m, a, stdin, stdout, stderr)
 		if err != nil {
-			return wrap("build", err)
+			return wrap(err)
 		}
 		buildStageCallback(a, BuildStageAfterBuild)
 	}

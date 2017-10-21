@@ -335,5 +335,5 @@ func TestNonRepository(t *testing.T) {
 	m, err := ManifestByBranch(".tmp/repo", "master")
 
 	assert.Nil(t, m)
-	assert.EqualError(t, err, "mbt manifest: could not find repository from '.tmp/repo'")
+	assert.EqualError(t, err, "mbt: could not find repository from '.tmp/repo'")
 }

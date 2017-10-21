@@ -8,21 +8,36 @@ import (
 )
 
 func TestSimpleError(t *testing.T) {
-	e := newError("a", "b")
-	assert.EqualError(t, e, "mbt a: b")
+	e := newError("a")
+	assert.EqualError(t, e, "mbt: a")
 }
 
 func TestSimpleErrorWithFormat(t *testing.T) {
-	e := newErrorf("a", "b%s", "c")
-	assert.EqualError(t, e, "mbt a: bc")
+	e := newErrorf("a%s", "b")
+	assert.EqualError(t, e, "mbt: ab")
 }
 
 func TestWrappedErrorWithMessage(t *testing.T) {
-	e := wrapm("a", errors.New("c"), "b")
-	assert.EqualError(t, e, "mbt a: b - c")
+	e := wrapm(errors.New("a"), "b")
+	assert.EqualError(t, e, "mbt: b - a")
 }
 
 func TestWrappedError(t *testing.T) {
-	e := wrap("a", errors.New("c"))
-	assert.EqualError(t, e, "mbt a: c")
+	e := wrap(errors.New("a"))
+	assert.EqualError(t, e, "mbt: a")
+}
+
+func TestLine(t *testing.T) {
+	e := newError("a")
+	assert.Equal(t, 31, e.Line())
+}
+
+func TestFile(t *testing.T) {
+	e := newError("a")
+	assert.Equal(t, "mbt_error_test.go", e.File())
+}
+
+func TestLocation(t *testing.T) {
+	e := newError("a").WithLocation()
+	assert.EqualError(t, e, "mbt (mbt_error_test.go,41): a")
 }

@@ -54,7 +54,7 @@ func TestMalformedSpec(t *testing.T) {
 
 	metadata, err := discoverMetadata(repo.Repo, commit)
 	assert.Nil(t, metadata)
-	assert.EqualError(t, err, "mbt discover: error while parsing the spec at app-a/.mbt.yml - yaml: line 1: mapping values are not allowed in this context")
+	assert.EqualError(t, err, "mbt: error while parsing the spec at app-a/.mbt.yml - yaml: line 1: mapping values are not allowed in this context")
 }
 
 func TestMissingBlobs(t *testing.T) {
@@ -74,7 +74,7 @@ func TestMissingBlobs(t *testing.T) {
 	metadata, err := discoverMetadata(repo.Repo, commit)
 
 	assert.Nil(t, metadata)
-	assert.EqualError(t, err, "mbt discover: error while fetching the blob object for app-a/.mbt.yml - object not found - no match for id (5ed8e79fc340352ac6b4655390b78d12d03a4462)")
+	assert.EqualError(t, err, "mbt: error while fetching the blob object for app-a/.mbt.yml - object not found - no match for id (5ed8e79fc340352ac6b4655390b78d12d03a4462)")
 }
 
 func TestMissingTreeObject(t *testing.T) {
@@ -94,7 +94,7 @@ func TestMissingTreeObject(t *testing.T) {
 	metadata, err := discoverMetadata(r, commit)
 
 	assert.Nil(t, metadata)
-	assert.EqualError(t, err, "mbt discover: failed to walk the tree object - object not found - no match for id (308607113d927f0f2dc511a05c0efb5c96260d08)")
+	assert.EqualError(t, err, "mbt: failed to walk the tree object - object not found - no match for id (308607113d927f0f2dc511a05c0efb5c96260d08)")
 }
 
 func TestMissingDependencies(t *testing.T) {
@@ -110,5 +110,5 @@ func TestMissingDependencies(t *testing.T) {
 	apps, err := s.toApplications(true)
 
 	assert.Nil(t, apps)
-	assert.EqualError(t, err, "mbt discover: dependency not found app-a -> app-b")
+	assert.EqualError(t, err, "mbt: dependency not found app-a -> app-b")
 }

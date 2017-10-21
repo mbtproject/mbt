@@ -62,13 +62,13 @@ func ManifestBySha(dir, sha string) (*Manifest, error) {
 
 	bytes, err := hex.DecodeString(sha)
 	if err != nil {
-		return nil, wrap("manifest", err)
+		return nil, wrap(err)
 	}
 
 	oid := git.NewOidFromBytes(bytes)
 	commit, err := repo.LookupCommit(oid)
 	if err != nil {
-		return nil, wrap("manifest", err)
+		return nil, wrap(err)
 	}
 
 	return fromCommit(repo, dir, commit)
@@ -101,22 +101,22 @@ func ManifestByDiff(dir, from, to string) (*Manifest, error) {
 
 	fromOid, err := git.NewOid(from)
 	if err != nil {
-		return nil, wrap("manifest", err)
+		return nil, wrap(err)
 	}
 
 	toOid, err := git.NewOid(to)
 	if err != nil {
-		return nil, wrap("manifest", err)
+		return nil, wrap(err)
 	}
 
 	fromC, err := repo.LookupCommit(fromOid)
 	if err != nil {
-		return nil, wrap("manifest", err)
+		return nil, wrap(err)
 	}
 
 	toC, err := repo.LookupCommit(toOid)
 	if err != nil {
-		return nil, wrap("manifest", err)
+		return nil, wrap(err)
 	}
 
 	diff, err := getDiffFromMergeBase(repo, toC, fromC)
@@ -184,7 +184,7 @@ func reduceToDiff(manifest *Manifest, diff *git.Diff) (*Manifest, error) {
 	}, git.DiffDetailFiles)
 
 	if err != nil {
-		return nil, wrap("manifest", err)
+		return nil, wrap(err)
 	}
 
 	apps := Applications{}
@@ -207,11 +207,11 @@ func reduceToDiff(manifest *Manifest, diff *git.Diff) (*Manifest, error) {
 func openRepo(dir string) (*git.Repository, *Manifest, error) {
 	repo, err := git.OpenRepository(dir)
 	if err != nil {
-		return nil, nil, wrap("manifest", err)
+		return nil, nil, wrap(err)
 	}
 	empty, err := repo.IsEmpty()
 	if err != nil {
-		return nil, nil, wrap("manifest", err)
+		return nil, nil, wrap(err)
 	}
 
 	if empty {

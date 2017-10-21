@@ -65,5 +65,5 @@ func TestInvalidBranch(t *testing.T) {
 	c, err := getBranchCommit(repo.Repo, "foo")
 
 	assert.Nil(t, c)
-	assert.EqualError(t, err, "mbt git_utils: no reference found for shorthand 'foo'")
+	assert.EqualError(t, err, "mbt: no reference found for shorthand 'foo'")
 }

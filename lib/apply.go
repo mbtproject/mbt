@@ -21,7 +21,7 @@ type TemplateData struct {
 func ApplyBranch(dir, templatePath, branch, output string) error {
 	repo, err := git.OpenRepository(dir)
 	if err != nil {
-		return wrap("apply", err)
+		return wrap(err)
 	}
 
 	commit, err := getBranchCommit(repo, branch)
@@ -36,17 +36,17 @@ func ApplyBranch(dir, templatePath, branch, output string) error {
 func ApplyCommit(dir, sha, templatePath, output string) error {
 	repo, err := git.OpenRepository(dir)
 	if err != nil {
-		return wrap("apply", err)
+		return wrap(err)
 	}
 
 	shaOid, err := git.NewOid(sha)
 	if err != nil {
-		return wrap("apply", err)
+		return wrap(err)
 	}
 
 	commit, err := repo.LookupCommit(shaOid)
 	if err != nil {
-		return wrap("apply", err)
+		return wrap(err)
 	}
 
 	return applyCore(repo, commit, dir, templatePath, output)
@@ -55,29 +55,29 @@ func ApplyCommit(dir, sha, templatePath, output string) error {
 func applyCore(repo *git.Repository, commit *git.Commit, dir, templatePath, output string) error {
 	tree, err := commit.Tree()
 	if err != nil {
-		return wrap("apply", err)
+		return wrap(err)
 	}
 
 	e, err := tree.EntryByPath(templatePath)
 	if err != nil {
-		return wrap("apply", err)
+		return wrap(err)
 	}
 
 	b, err := repo.LookupBlob(e.Id)
 	if err != nil {
-		return wrap("apply", err)
+		return wrap(err)
 	}
 
 	temp, err := template.New("template").Parse(string(b.Contents()))
 	if err != nil {
-		return wrap("apply", err)
+		return wrap(err)
 	}
 
 	var writer io.Writer = os.Stdout
 	if output != "" {
 		writer, err = os.Create(output)
 		if err != nil {
-			return wrap("apply", err)
+			return wrap(err)
 		}
 	}
 
