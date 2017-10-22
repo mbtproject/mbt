@@ -19,6 +19,7 @@ func init() {
 	RootCmd.PersistentFlags().StringVar(&in, "in", "", "path to repo")
 }
 
+// RootCmd is the main command.
 var RootCmd = &cobra.Command{
 	Use:   "mbt",
 	Short: "Build utility for monorepos",

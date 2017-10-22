@@ -3,6 +3,7 @@
     "deps",
     "failf",
     "initialises",
+    "monorepos",
     "wrapm"
   ]
 }

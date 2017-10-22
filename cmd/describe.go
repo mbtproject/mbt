@@ -10,21 +10,21 @@ import (
 )
 
 func init() {
-	DescribePrCmd.Flags().StringVar(&src, "src", "", "source branch")
-	DescribePrCmd.Flags().StringVar(&dst, "dst", "", "destination branch")
+	describePrCmd.Flags().StringVar(&src, "src", "", "source branch")
+	describePrCmd.Flags().StringVar(&dst, "dst", "", "destination branch")
 
-	DescribeCmd.AddCommand(DescribeCommitCmd)
-	DescribeCmd.AddCommand(DescribeBranchCmd)
-	DescribeCmd.AddCommand(DescribePrCmd)
-	RootCmd.AddCommand(DescribeCmd)
+	describeCmd.AddCommand(describeCommitCmd)
+	describeCmd.AddCommand(describeBranchCmd)
+	describeCmd.AddCommand(describePrCmd)
+	RootCmd.AddCommand(describeCmd)
 }
 
-var DescribeCmd = &cobra.Command{
+var describeCmd = &cobra.Command{
 	Use:   "describe",
 	Short: "Describes the manifest of a repo",
 }
 
-var DescribeBranchCmd = &cobra.Command{
+var describeBranchCmd = &cobra.Command{
 	Use:   "branch <branch>",
 	Short: "Describes the manifest for the given branch",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -34,7 +34,7 @@ var DescribeBranchCmd = &cobra.Command{
 		}
 		m, err := lib.ManifestByBranch(in, branch)
 		if err != nil {
-			return err
+			return handle(err)
 		}
 
 		output(m)
@@ -42,7 +42,7 @@ var DescribeBranchCmd = &cobra.Command{
 	},
 }
 
-var DescribePrCmd = &cobra.Command{
+var describePrCmd = &cobra.Command{
 	Use:   "pr --src <branch> --dst <branch>",
 	Short: "Describes the manifest for a given pr",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -56,7 +56,7 @@ var DescribePrCmd = &cobra.Command{
 
 		m, err := lib.ManifestByPr(in, src, dst)
 		if err != nil {
-			return err
+			return handle(err)
 		}
 
 		output(m)
@@ -65,7 +65,7 @@ var DescribePrCmd = &cobra.Command{
 	},
 }
 
-var DescribeCommitCmd = &cobra.Command{
+var describeCommitCmd = &cobra.Command{
 	Use:   "commit <sha>",
 	Short: "Describes the manifest for a given commit",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -77,7 +77,7 @@ var DescribeCommitCmd = &cobra.Command{
 
 		m, err := lib.ManifestBySha(in, commit)
 		if err != nil {
-			return err
+			return handle(err)
 		}
 
 		output(m)
@@ -86,12 +86,12 @@ var DescribeCommitCmd = &cobra.Command{
 	},
 }
 
-const ColumnWidth = 30
+const columnWidth = 30
 
 func formatRow(args ...interface{}) string {
 	padded := make([]interface{}, len(args))
 	for i, a := range args {
-		requiredPadding := ColumnWidth - len(a.(string))
+		requiredPadding := columnWidth - len(a.(string))
 		if requiredPadding > 0 {
 			padded[i] = fmt.Sprintf("%s%s", a, strings.Join(make([]string, requiredPadding), " "))
 		} else {

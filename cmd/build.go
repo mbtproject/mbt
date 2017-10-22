@@ -34,7 +34,7 @@ var buildBranch = &cobra.Command{
 
 		m, err := lib.ManifestByBranch(in, branch)
 		if err != nil {
-			return err
+			return handle(err)
 		}
 
 		return build(m)
@@ -55,7 +55,7 @@ var buildPr = &cobra.Command{
 
 		m, err := lib.ManifestByPr(in, src, dst)
 		if err != nil {
-			return err
+			return handle(err)
 		}
 
 		return build(m)
@@ -76,7 +76,7 @@ var buildDiff = &cobra.Command{
 
 		m, err := lib.ManifestByDiff(in, from, to)
 		if err != nil {
-			return err
+			return handle(err)
 		}
 
 		return build(m)

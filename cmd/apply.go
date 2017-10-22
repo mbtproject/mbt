@@ -12,19 +12,19 @@ var (
 )
 
 func init() {
-	ApplyCmd.PersistentFlags().StringVar(&to, "to", "", "template to apply")
-	ApplyCmd.PersistentFlags().StringVar(&out, "out", "", "output path")
-	ApplyCmd.AddCommand(ApplyBranchCmd)
-	ApplyCmd.AddCommand(ApplyCommitCmd)
-	RootCmd.AddCommand(ApplyCmd)
+	applyCmd.PersistentFlags().StringVar(&to, "to", "", "template to apply")
+	applyCmd.PersistentFlags().StringVar(&out, "out", "", "output path")
+	applyCmd.AddCommand(applyBranchCmd)
+	applyCmd.AddCommand(applyCommitCmd)
+	RootCmd.AddCommand(applyCmd)
 }
 
-var ApplyCmd = &cobra.Command{
+var applyCmd = &cobra.Command{
 	Use:   "apply",
 	Short: "Applies a manifest over a template",
 }
 
-var ApplyBranchCmd = &cobra.Command{
+var applyBranchCmd = &cobra.Command{
 	Use:   "branch <branch>",
 	Short: "Applies the manifest of specified branch over a template",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -37,11 +37,11 @@ var ApplyBranchCmd = &cobra.Command{
 			return errors.New("requires the path to template")
 		}
 
-		return lib.ApplyBranch(in, to, branch, out)
+		return handle(lib.ApplyBranch(in, to, branch, out))
 	},
 }
 
-var ApplyCommitCmd = &cobra.Command{
+var applyCommitCmd = &cobra.Command{
 	Use:   "commit <sha>",
 	Short: "Applies the manifest of specified commit over a template",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -51,6 +51,6 @@ var ApplyCommitCmd = &cobra.Command{
 
 		commit := args[0]
 
-		return lib.ApplyCommit(in, commit, to, out)
+		return handle(lib.ApplyCommit(in, commit, to, out))
 	},
 }
