@@ -14,6 +14,7 @@
         "Infof",
         "initialises",
         "logrus",
+        "mbtproject",
         "monorepos",
         "repo",
         "Untracked",

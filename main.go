@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/buddyspike/mbt/cmd"
+	"github.com/mbtproject/mbt/cmd"
 )
 
 func main() {

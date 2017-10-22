@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/buddyspike/mbt/lib"
+	"github.com/mbtproject/mbt/lib"
 	"github.com/spf13/cobra"
 )
 
