@@ -70,6 +70,8 @@ TestPackage ./cmd
 
 go build -o "build/${OUT}"
 shasum -a 1 -p "build/${OUT}" | cut -d ' ' -f 1 > "build/${OUT}.sha1"
+echo "testing the bin"
+"./build/${OUT}" version
 
 cat >build/bintray.json << EOL
 {
