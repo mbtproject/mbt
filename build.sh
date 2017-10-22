@@ -62,6 +62,7 @@ make restore
 sed "s/#development#/$VERSION/" <./cmd/version.go >./cmd/v.go
 rm ./cmd/version.go
 mv ./cmd/v.go ./cmd/version.go
+cat ./cmd/version.go
 
 TestPackage .
 TestPackage ./lib
