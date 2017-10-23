@@ -77,3 +77,12 @@ func getDiffFromMergeBase(repo *git.Repository, srcC, dstC *git.Commit) (*git.Di
 
 	return diff, err
 }
+
+func getCommit(repo *git.Repository, commitSha string) (*git.Commit, error) {
+	commitOid, err := git.NewOid(commitSha)
+	if err != nil {
+		return nil, wrap(err)
+	}
+
+	return repo.LookupCommit(commitOid)
+}

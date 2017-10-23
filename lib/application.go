@@ -3,8 +3,11 @@ package lib
 import (
 	"container/list"
 	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/buddyspike/graph"
+	git "github.com/libgit2/git2go"
 )
 
 // Application represents a single application in the repository.
@@ -175,4 +178,65 @@ func (l Applications) expandRequiredByDependencies() (Applications, error) {
 	}
 
 	return r, nil
+}
+
+func applicationsInCommit(repo *git.Repository, commit *git.Commit) (Applications, error) {
+	metadataSet, err := discoverMetadata(repo, commit)
+	if err != nil {
+		return nil, err
+	}
+
+	vapps, err := metadataSet.toApplications(true)
+	if err != nil {
+		return nil, err
+	}
+
+	sort.Sort(vapps)
+	return vapps, nil
+}
+
+func applicationsInDiff(repo *git.Repository, to, from *git.Commit) (Applications, error) {
+	diff, err := getDiffFromMergeBase(repo, to, from)
+	if err != nil {
+		return nil, err
+	}
+
+	a, err := applicationsInCommit(repo, to)
+	if err != nil {
+		return nil, err
+	}
+
+	return reduceToDiff(a, diff)
+}
+
+func reduceToDiff(applications Applications, diff *git.Diff) (Applications, error) {
+	q := applications.indexByPath()
+	filtered := make(map[string]*Application)
+	err := diff.ForEach(func(delta git.DiffDelta, num float64) (git.DiffForEachHunkCallback, error) {
+		for k := range q {
+			if _, ok := filtered[k]; ok {
+				continue
+			}
+			if strings.HasPrefix(delta.NewFile.Path, k) {
+				filtered[k] = q[k]
+			}
+		}
+		return nil, nil
+	}, git.DiffDetailFiles)
+
+	if err != nil {
+		return nil, wrap(err)
+	}
+
+	apps := Applications{}
+	for _, v := range filtered {
+		apps = append(apps, v)
+	}
+
+	expandedApps, err := apps.expandRequiredByDependencies()
+	if err != nil {
+		return nil, err
+	}
+
+	return expandedApps, nil
 }

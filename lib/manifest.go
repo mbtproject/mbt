@@ -3,7 +3,6 @@ package lib
 import (
 	"encoding/hex"
 	"sort"
-	"strings"
 
 	git "github.com/libgit2/git2go"
 )
@@ -36,17 +35,12 @@ func ManifestByPr(dir, src, dst string) (*Manifest, error) {
 		return nil, err
 	}
 
-	diff, err := getDiffFromMergeBase(repo, srcC, dstC)
+	a, err := applicationsInDiff(repo, srcC, dstC)
 	if err != nil {
 		return nil, err
 	}
 
-	m, err = fromBranch(repo, dir, src)
-	if err != nil {
-		return nil, err
-	}
-
-	return reduceToDiff(m, diff)
+	return &Manifest{Applications: a, Dir: dir, Sha: dstC.Id().String()}, nil
 }
 
 // ManifestBySha returns the manifest as of the specified commit sha.
@@ -119,17 +113,12 @@ func ManifestByDiff(dir, from, to string) (*Manifest, error) {
 		return nil, wrap(err)
 	}
 
-	diff, err := getDiffFromMergeBase(repo, toC, fromC)
+	a, err := applicationsInDiff(repo, toC, fromC)
 	if err != nil {
 		return nil, err
 	}
 
-	m, err = fromCommit(repo, dir, toC)
-	if err != nil {
-		return nil, err
-	}
-
-	return reduceToDiff(m, diff)
+	return &Manifest{Applications: a, Dir: dir, Sha: to}, nil
 }
 
 func (m *Manifest) indexByName() map[string]*Application {
@@ -166,42 +155,6 @@ func fromBranch(repo *git.Repository, dir string, branch string) (*Manifest, err
 	}
 
 	return fromCommit(repo, dir, commit)
-}
-
-func reduceToDiff(manifest *Manifest, diff *git.Diff) (*Manifest, error) {
-	q := manifest.indexByPath()
-	filtered := make(map[string]*Application)
-	err := diff.ForEach(func(delta git.DiffDelta, num float64) (git.DiffForEachHunkCallback, error) {
-		for k := range q {
-			if _, ok := filtered[k]; ok {
-				continue
-			}
-			if strings.HasPrefix(delta.NewFile.Path, k) {
-				filtered[k] = q[k]
-			}
-		}
-		return nil, nil
-	}, git.DiffDetailFiles)
-
-	if err != nil {
-		return nil, wrap(err)
-	}
-
-	apps := Applications{}
-	for _, v := range filtered {
-		apps = append(apps, v)
-	}
-
-	expandedApps, err := apps.expandRequiredByDependencies()
-	if err != nil {
-		return nil, err
-	}
-
-	return &Manifest{
-		Dir:          manifest.Dir,
-		Sha:          manifest.Sha,
-		Applications: expandedApps,
-	}, nil
 }
 
 func openRepo(dir string) (*git.Repository, *Manifest, error) {

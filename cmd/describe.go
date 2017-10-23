@@ -13,9 +13,15 @@ func init() {
 	describePrCmd.Flags().StringVar(&src, "src", "", "source branch")
 	describePrCmd.Flags().StringVar(&dst, "dst", "", "destination branch")
 
+	describeIntersectionCmd.Flags().StringVar(&kind, "kind", "", "kind of input for first and second args (available options are 'branch' and 'commit')")
+	describeIntersectionCmd.Flags().StringVar(&first, "first", "", "first item")
+	describeIntersectionCmd.Flags().StringVar(&second, "second", "", "second item")
+
 	describeCmd.AddCommand(describeCommitCmd)
 	describeCmd.AddCommand(describeBranchCmd)
 	describeCmd.AddCommand(describePrCmd)
+	describeCmd.AddCommand(describeIntersectionCmd)
+
 	RootCmd.AddCommand(describeCmd)
 }
 
@@ -37,7 +43,7 @@ var describeBranchCmd = &cobra.Command{
 			return handle(err)
 		}
 
-		output(m)
+		output(m.Applications)
 		return nil
 	},
 }
@@ -59,7 +65,7 @@ var describePrCmd = &cobra.Command{
 			return handle(err)
 		}
 
-		output(m)
+		output(m.Applications)
 
 		return nil
 	},
@@ -80,9 +86,45 @@ var describeCommitCmd = &cobra.Command{
 			return handle(err)
 		}
 
-		output(m)
+		output(m.Applications)
 
 		return nil
+	},
+}
+
+var describeIntersectionCmd = &cobra.Command{
+	Use:   "intersection --kind <branch|commit> --first <first> --second <second>",
+	Short: "Describes the intersection between two trees",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if kind == "" {
+			return errors.New("requires the kind argument")
+		}
+
+		if first == "" {
+			return errors.New("requires the first argument")
+		}
+
+		if second == "" {
+			return errors.New("requires the second argument")
+		}
+
+		var apps lib.Applications
+		var err error
+
+		switch kind {
+		case "branch":
+			apps, err = lib.IntersectionByBranch(in, first, second)
+		case "commit":
+			apps, err = lib.IntersectionByCommit(in, first, second)
+		default:
+			err = errors.New("not a valid kind - available options are 'branch' and 'commit'")
+		}
+
+		if err == nil {
+			output(apps)
+		}
+
+		return err
 	},
 }
 
@@ -101,9 +143,9 @@ func formatRow(args ...interface{}) string {
 	return fmt.Sprintf("%s\t\t%s\t\t%s\n", padded...)
 }
 
-func output(m *lib.Manifest) {
-	fmt.Print(formatRow("Name", "Path", "Version"))
-	for _, a := range m.Applications {
+func output(apps lib.Applications) {
+	fmt.Print(formatRow("NAME", "PATH", "VERSION"))
+	for _, a := range apps {
 		fmt.Printf(formatRow(a.Name(), a.Path(), a.Version()))
 	}
 }
