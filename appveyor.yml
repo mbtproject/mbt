@@ -5,7 +5,7 @@ branches:
   only:
   - master
   - release
-clone_folder: '%SYSTEMDRIVE%\gopath\src\github.com\buddyspike\mbt'
+clone_folder: '%SYSTEMDRIVE%\gopath\src\github.com\mbtproject\mbt'
 before_build:
   - cmd: mkdir %SYSTEMDRIVE%\downloads
   - cmd: mkdir %SYSTEMDRIVE%\go386
