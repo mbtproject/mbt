@@ -40,7 +40,7 @@ func ManifestByPr(dir, src, dst string) (*Manifest, error) {
 		return nil, err
 	}
 
-	return &Manifest{Applications: a, Dir: dir, Sha: dstC.Id().String()}, nil
+	return &Manifest{Applications: a, Dir: dir, Sha: srcC.Id().String()}, nil
 }
 
 // ManifestBySha returns the manifest as of the specified commit sha.

@@ -103,20 +103,26 @@ func TestDiffingTwoBranches(t *testing.T) {
 
 	check(t, repo.InitApplication("app-a"))
 	check(t, repo.Commit("first"))
+	masterTip := repo.LastCommit
+
 	check(t, repo.SwitchToBranch("feature"))
 	check(t, repo.InitApplication("app-b"))
 	check(t, repo.Commit("second"))
+
+	featureTip := repo.LastCommit
 
 	m, err := ManifestByPr(".tmp/repo", "feature", "master")
 	check(t, err)
 
 	assert.Len(t, m.Applications, 1)
+	assert.Equal(t, featureTip.String(), m.Sha)
 	assert.Equal(t, "app-b", m.Applications[0].Name())
 
 	m, err = ManifestByPr(".tmp/repo", "master", "feature")
 	check(t, err)
 
 	assert.Len(t, m.Applications, 0)
+	assert.Equal(t, masterTip.String(), m.Sha)
 }
 
 func TestDiffingTwoProgressedBranches(t *testing.T) {
