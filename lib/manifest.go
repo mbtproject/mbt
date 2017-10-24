@@ -35,7 +35,7 @@ func ManifestByPr(dir, src, dst string) (*Manifest, error) {
 		return nil, err
 	}
 
-	a, err := applicationsInDiff(repo, srcC, dstC)
+	a, err := applicationsInDiffWithDependents(repo, srcC, dstC)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func ManifestByDiff(dir, from, to string) (*Manifest, error) {
 		return nil, wrap(err)
 	}
 
-	a, err := applicationsInDiff(repo, toC, fromC)
+	a, err := applicationsInDiffWithDependents(repo, toC, fromC)
 	if err != nil {
 		return nil, err
 	}

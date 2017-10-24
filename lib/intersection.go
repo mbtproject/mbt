@@ -61,12 +61,12 @@ func intersectionCore(repo *git.Repository, first, second *git.Commit) (Applicat
 		return nil, wrap(err)
 	}
 
-	firstSet, err := applicationsInDiff(repo, first, base)
+	firstSet, err := applicationsInDiffWithDependencies(repo, first, base)
 	if err != nil {
 		return nil, err
 	}
 
-	secondSet, err := applicationsInDiff(repo, second, base)
+	secondSet, err := applicationsInDiffWithDependencies(repo, second, base)
 	if err != nil {
 		return nil, err
 	}

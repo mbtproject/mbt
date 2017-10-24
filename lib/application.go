@@ -180,6 +180,27 @@ func (l Applications) expandRequiredByDependencies() (Applications, error) {
 	return r, nil
 }
 
+func (l Applications) expandRequiresDependencies() (Applications, error) {
+	g := new(list.List)
+	for _, a := range l {
+		g.PushBack(a)
+	}
+
+	items, err := graph.TopSort(g, &requiresNodeProvider{})
+	if err != nil {
+		return nil, wrap(err)
+	}
+
+	r := make([]*Application, items.Len())
+	i := 0
+	for e := items.Front(); e != nil; e = e.Next() {
+		r[i] = e.Value.(*Application)
+		i++
+	}
+
+	return r, nil
+}
+
 func applicationsInCommit(repo *git.Repository, commit *git.Commit) (Applications, error) {
 	metadataSet, err := discoverMetadata(repo, commit)
 	if err != nil {
@@ -209,6 +230,32 @@ func applicationsInDiff(repo *git.Repository, to, from *git.Commit) (Application
 	return reduceToDiff(a, diff)
 }
 
+func applicationsInDiffWithDepGraph(repo *git.Repository, to, from *git.Commit, reversed bool) (Applications, error) {
+	apps, err := applicationsInDiff(repo, to, from)
+	if err != nil {
+		return nil, err
+	}
+
+	if reversed {
+		apps, err = apps.expandRequiredByDependencies()
+	} else {
+		apps, err = apps.expandRequiresDependencies()
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return apps, nil
+}
+
+func applicationsInDiffWithDependents(repo *git.Repository, to, from *git.Commit) (Applications, error) {
+	return applicationsInDiffWithDepGraph(repo, to, from, true)
+}
+
+func applicationsInDiffWithDependencies(repo *git.Repository, to, from *git.Commit) (Applications, error) {
+	return applicationsInDiffWithDepGraph(repo, to, from, false)
+}
+
 func reduceToDiff(applications Applications, diff *git.Diff) (Applications, error) {
 	q := applications.indexByPath()
 	filtered := make(map[string]*Application)
@@ -233,10 +280,5 @@ func reduceToDiff(applications Applications, diff *git.Diff) (Applications, erro
 		apps = append(apps, v)
 	}
 
-	expandedApps, err := apps.expandRequiredByDependencies()
-	if err != nil {
-		return nil, err
-	}
-
-	return expandedApps, nil
+	return apps, nil
 }
