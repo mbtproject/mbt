@@ -2,7 +2,7 @@ package lib
 
 import git "github.com/libgit2/git2go"
 
-// Intersection returns the manifest of intersection of applications modified
+// IntersectionByCommit returns the manifest of intersection of applications modified
 // between two commits.
 // If we consider M as the merge base of first and second commits,
 // intersection contains the applications that have been changed
@@ -26,6 +26,11 @@ func IntersectionByCommit(dir, first, second string) (Applications, error) {
 	return intersectionCore(repo, fc, sc)
 }
 
+// IntersectionByBranch returns the manifest of intersection of applications modified
+// between two branches.
+// If we consider M as the merge base of first and second branches,
+// intersection contains the applications that have been changed
+// between M and first and M and second.
 func IntersectionByBranch(dir, first, second string) (Applications, error) {
 	repo, err := git.OpenRepository(dir)
 	if err != nil {
