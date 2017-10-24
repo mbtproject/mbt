@@ -120,11 +120,12 @@ var describeIntersectionCmd = &cobra.Command{
 			err = errors.New("not a valid kind - available options are 'branch' and 'commit'")
 		}
 
-		if err == nil {
-			output(apps)
+		if err != nil {
+			return handle(err)
 		}
 
-		return err
+		output(apps)
+		return nil
 	},
 }
 
