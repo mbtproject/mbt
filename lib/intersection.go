@@ -61,23 +61,46 @@ func intersectionCore(repo *git.Repository, first, second *git.Commit) (Applicat
 		return nil, wrap(err)
 	}
 
-	firstSet, err := applicationsInDiffWithDependencies(repo, first, base)
+	firstSet, err := applicationsInDiff(repo, first, base)
 	if err != nil {
 		return nil, err
 	}
 
-	secondSet, err := applicationsInDiffWithDependencies(repo, second, base)
+	firstSetWithDeps, err := applicationsInDiffWithDependencies(repo, first, base)
 	if err != nil {
 		return nil, err
 	}
 
-	result := Applications{}
+	secondSet, err := applicationsInDiff(repo, second, base)
+	if err != nil {
+		return nil, err
+	}
+
+	secondSetWithDeps, err := applicationsInDiffWithDependencies(repo, second, base)
+	if err != nil {
+		return nil, err
+	}
+
+	intersection := make(map[string]*Application)
 	firstMap := firstSet.indexByName()
+	secondMap := secondSet.indexByName()
 
-	for _, app := range secondSet {
-		if _, ok := firstMap[app.Name()]; ok {
-			result = append(result, app)
+	merge := func(changesWithDependencies Applications, otherChanges map[string]*Application, intersection map[string]*Application) {
+		for _, app := range changesWithDependencies {
+			if _, ok := otherChanges[app.Name()]; ok {
+				intersection[app.Name()] = app
+			}
 		}
+	}
+
+	merge(firstSetWithDeps, secondMap, intersection)
+	merge(secondSetWithDeps, firstMap, intersection)
+
+	result := make([]*Application, len(intersection))
+	i := 0
+	for _, v := range intersection {
+		result[i] = v
+		i++
 	}
 
 	return result, nil

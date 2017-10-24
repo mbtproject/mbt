@@ -142,3 +142,34 @@ func TestIntersectionWithDependencies(t *testing.T) {
 	assert.Len(t, apps, 1)
 	assert.Equal(t, "app-c", apps[0].Name())
 }
+
+func TestIntersctionOfTwoChangesWithSharedDependency(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitApplicationWithOptions("app-a", &Spec{Name: "app-a", Dependencies: []string{"app-c"}}))
+	check(t, repo.InitApplicationWithOptions("app-b", &Spec{Name: "app-b", Dependencies: []string{"app-c"}}))
+	check(t, repo.InitApplicationWithOptions("app-c", &Spec{Name: "app-c"}))
+	check(t, repo.Commit("first"))
+
+	check(t, repo.SwitchToBranch("feature-a"))
+	check(t, repo.WriteContent("app-a/foo", "hello"))
+	check(t, repo.Commit("second"))
+
+	check(t, repo.SwitchToBranch("master"))
+	check(t, repo.SwitchToBranch("feature-b"))
+	check(t, repo.WriteContent("app-b/bar", "hello"))
+	check(t, repo.Commit("third"))
+
+	apps, err := IntersectionByBranch(".tmp/repo", "feature-a", "feature-b")
+	check(t, err)
+
+	assert.Len(t, apps, 0)
+
+	// This operation should be commutative
+	apps, err = IntersectionByBranch(".tmp/repo", "feature-b", "feature-a")
+	check(t, err)
+
+	assert.Len(t, apps, 0)
+}
