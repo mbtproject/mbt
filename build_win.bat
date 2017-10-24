@@ -1,4 +1,4 @@
-SET MBT=%GOPATH%\src\github.com\buddyspike\mbt
+SET MBT=%GOPATH%\src\github.com\mbtproject\mbt
 SET GIT2GO_PATH=%GOPATH%\src\github.com\libgit2\git2go
 SET GIT2GO_VENDOR_PATH=%GIT2GO_PATH%\vendor\libgit2
 SET OS=windows
