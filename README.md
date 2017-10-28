@@ -3,7 +3,7 @@
 >> Build utility for monorepos
 
 [![Build Status](https://travis-ci.org/mbtproject/mbt.svg?branch=release)](https://travis-ci.org/mbtproject/mbt)
-[![Build status](https://ci.appveyor.com/api/projects/status/vm1lat73uo80ckoj?svg=true)](https://ci.appveyor.com/project/buddyspike/mbt)
+[![Build status](https://ci.appveyor.com/api/projects/status/wy8rhr188t3phqvk?svg=true)](https://ci.appveyor.com/project/mbtproject/mbt)
 [![Go Report Card](https://goreportcard.com/badge/github.com/mbtproject/mbt)](https://goreportcard.com/report/github.com/mbtproject/mbt)
 [![Coverage Status](https://coveralls.io/repos/github/mbtproject/mbt/badge.svg)](https://coveralls.io/github/mbtproject/mbt)
 
