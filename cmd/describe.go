@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -8,6 +9,16 @@ import (
 	"github.com/mbtproject/mbt/lib"
 	"github.com/spf13/cobra"
 )
+
+var (
+	formatAsJson bool
+)
+
+type applicationView struct {
+	Name    string
+	Path    string
+	Version string
+}
 
 func init() {
 	describePrCmd.Flags().StringVar(&src, "src", "", "source branch")
@@ -17,6 +28,7 @@ func init() {
 	describeIntersectionCmd.Flags().StringVar(&first, "first", "", "first item")
 	describeIntersectionCmd.Flags().StringVar(&second, "second", "", "second item")
 
+	describeCmd.PersistentFlags().BoolVar(&formatAsJson, "json", false, "format output as json")
 	describeCmd.AddCommand(describeCommitCmd)
 	describeCmd.AddCommand(describeBranchCmd)
 	describeCmd.AddCommand(describePrCmd)
@@ -124,8 +136,7 @@ var describeIntersectionCmd = &cobra.Command{
 			return handle(err)
 		}
 
-		output(apps)
-		return nil
+		return handle(output(apps))
 	},
 }
 
@@ -144,9 +155,27 @@ func formatRow(args ...interface{}) string {
 	return fmt.Sprintf("%s\t\t%s\t\t%s\n", padded...)
 }
 
-func output(apps lib.Applications) {
-	fmt.Print(formatRow("NAME", "PATH", "VERSION"))
-	for _, a := range apps {
-		fmt.Printf(formatRow(a.Name(), a.Path(), a.Version()))
+func output(apps lib.Applications) error {
+	if formatAsJson {
+		v := make([]applicationView, len(apps))
+		for i, a := range apps {
+			v[i] = applicationView{
+				Name:    a.Name(),
+				Path:    a.Path(),
+				Version: a.Version(),
+			}
+		}
+		buff, err := json.MarshalIndent(v, "", "  ")
+		if err != nil {
+			return err
+		}
+		fmt.Println(string(buff))
+	} else {
+		fmt.Print(formatRow("NAME", "PATH", "VERSION"))
+		for _, a := range apps {
+			fmt.Printf(formatRow(a.Name(), a.Path(), a.Version()))
+		}
 	}
+
+	return nil
 }
