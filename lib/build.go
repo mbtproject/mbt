@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	git "github.com/libgit2/git2go"
-	"github.com/sirupsen/logrus"
+	"gopkg.in/sirupsen/logrus.v1"
 )
 
 // BuildStage is an enum to indicate various stages of the build.

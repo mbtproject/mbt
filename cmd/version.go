@@ -1,6 +1,6 @@
 package cmd
 
-import "github.com/spf13/cobra"
+import "gopkg.in/spf13/cobra.v0"
 
 func init() {
 	RootCmd.AddCommand(versionCmd)

@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/mbtproject/mbt/lib"
-	"github.com/spf13/cobra"
+	"gopkg.in/spf13/cobra.v0"
 )
 
 var (

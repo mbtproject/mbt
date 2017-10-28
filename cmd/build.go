@@ -4,10 +4,10 @@ import (
 	"errors"
 	"os"
 
-	"github.com/sirupsen/logrus"
+	"gopkg.in/sirupsen/logrus.v1"
 
 	"github.com/mbtproject/mbt/lib"
-	"github.com/spf13/cobra"
+	"gopkg.in/spf13/cobra.v0"
 )
 
 func init() {
