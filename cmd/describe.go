@@ -14,12 +14,6 @@ var (
 	formatAsJson bool
 )
 
-type applicationView struct {
-	Name    string
-	Path    string
-	Version string
-}
-
 func init() {
 	describePrCmd.Flags().StringVar(&src, "src", "", "source branch")
 	describePrCmd.Flags().StringVar(&dst, "dst", "", "destination branch")
@@ -157,13 +151,12 @@ func formatRow(args ...interface{}) string {
 
 func output(apps lib.Applications) error {
 	if formatAsJson {
-		v := make([]applicationView, len(apps))
-		for i, a := range apps {
-			v[i] = applicationView{
-				Name:    a.Name(),
-				Path:    a.Path(),
-				Version: a.Version(),
-			}
+		v := make(map[string]interface{})
+		for _, a := range apps {
+			v["Name"] = a.Name()
+			v["Path"] = a.Path()
+			v["Version"] = a.Version()
+			v["Properties"] = a.Properties()
 		}
 		buff, err := json.MarshalIndent(v, "", "  ")
 		if err != nil {
