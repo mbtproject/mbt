@@ -151,14 +151,16 @@ func formatRow(args ...interface{}) string {
 
 func output(apps lib.Applications) error {
 	if formatAsJson {
-		v := make(map[string]interface{})
+		m := make(map[string]map[string]interface{})
 		for _, a := range apps {
+			v := make(map[string]interface{})
 			v["Name"] = a.Name()
 			v["Path"] = a.Path()
 			v["Version"] = a.Version()
 			v["Properties"] = a.Properties()
+			m[a.Name()] = v
 		}
-		buff, err := json.MarshalIndent(v, "", "  ")
+		buff, err := json.MarshalIndent(m, "", "  ")
 		if err != nil {
 			return err
 		}
