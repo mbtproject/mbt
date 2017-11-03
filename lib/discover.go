@@ -54,6 +54,11 @@ func newSpec(content []byte) (*Spec, error) {
 		return nil, err
 	}
 
+	a.Properties, err = transformProps(a.Properties)
+	if err != nil {
+		return nil, err
+	}
+
 	return a, nil
 }
 

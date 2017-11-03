@@ -49,8 +49,7 @@ var describeBranchCmd = &cobra.Command{
 			return handle(err)
 		}
 
-		output(m.Applications)
-		return nil
+		return handle(output(m.Applications))
 	},
 }
 
@@ -71,9 +70,7 @@ var describePrCmd = &cobra.Command{
 			return handle(err)
 		}
 
-		output(m.Applications)
-
-		return nil
+		return handle(output(m.Applications))
 	},
 }
 
@@ -92,9 +89,7 @@ var describeCommitCmd = &cobra.Command{
 			return handle(err)
 		}
 
-		output(m.Applications)
-
-		return nil
+		return handle(output(m.Applications))
 	},
 }
 
