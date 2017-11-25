@@ -43,7 +43,6 @@ can be built by running `npm run build` on OSX, Linux and Windows. With
 this committed to the repository, we can start using `mbt` cli to build in 
 several ways as shown below.
 
-### Various Ways to Invoke `mbt`
 ```
 # Build the current branch 
 mbt build branch --in .
@@ -93,13 +92,13 @@ be used by the actual build tools in the process.
 |---|---|
 |MBT_APP_NAME |Name of the module |
 |MBT_APP_VERSION |SHA1 hash calculated based on the content of the module directory and the content of any of its dependencies (recursively) |
-|MBT_BUILD_COMMIT |Git commit SHA for the commit which is resolved for the build |
+|MBT_BUILD_COMMIT |Git commit SHA of the commit being built |
 
 In addition to the variables listed above, module properties (arbitrary list of 
 key/value pairs described below) is also populated in the form of `MBT_PROPERTY_XXX`
 where `XXX` denotes the key.
 
-One useful scenario of these variables would be a build command that produces a 
+One useful scenario of these variables would be, a build command that produces a 
 docker image. In that case, we could tag it with `MBT_APP_VERSION` so that the 
 image produced as of a particular Git commit SHA can be identified accurately. 
 (We will also discuss how this information can be used to automatically produce 
@@ -109,7 +108,7 @@ deployment artifacts later in this document)
 When working in a dense, modular codebase it is sometimes important to assess 
 the impact of your changes to the overall system. Each `mbt build` command 
 variation has a `mbt describe` counterpart to see what modules are going to 
-to be built. For example, to list modules affected between two git branches we 
+to be built. For example, to list modules affected between two git branches, we 
 could run:
 
 ```
