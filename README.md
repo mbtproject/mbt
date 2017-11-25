@@ -154,6 +154,38 @@ mbt apply commit <git-commit-sha> --to <path to the template> --in <path to repo
 Output of above commands written to `stdout` by default but can be directed to a 
 file using `--out` argument.
 
+It's hard to imagine useful template transformation scenarios with just the basic 
+information about modules. To make it little bit more flexible, we add a couple 
+user-defined properties the data structure used in template transformation. 
+First one of them is called, `.Env`. This is a map of key/value pairs containing 
+arbitrary environment variables provisioned for `mbt` command.
+
+For example, running mbt command with an environment variable as shown below would 
+make the key `TARGET` available with value `PRODUCTION` in  `.Env` property.
+
+```
+TARGET=PRODUCTION mbt apply branch --in .
+```
+
+Second property is available in each module and can be specified in `.mbt.yml` 
+file. 
+
+```
+name: module-a
+properties:
+  a: foo
+  b: bar 
+```
+
+`module-a` shown in above `.mbt.yml` snippet would make properties `a` and `b`
+available to templates via `.Properties` property as illustrated below.
+
+```go
+{{ $app := range .Applications }}
+{{ $app.Properties["a"] }} {{ $app.Properties["b"] }}
+{{ end }}
+```
+
 ## Install
 ```sh
 curl -L -o /usr/local/bin/mbt [get the url for your target from the links below]
