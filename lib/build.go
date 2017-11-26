@@ -26,8 +26,8 @@ const (
 	BuildStageSkipBuild
 )
 
-// Build runs the build for the applications in specified manifest.
-func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCallback func(app *Application, s BuildStage)) error {
+// Build runs the build for the modules in specified manifest.
+func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCallback func(app *Module, s BuildStage)) error {
 	repo, err := git.OpenRepository(m.Dir)
 	if err != nil {
 		return wrap(err)
@@ -65,7 +65,7 @@ func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCal
 
 	defer checkoutHead(repo)
 
-	for _, a := range m.Applications {
+	for _, a := range m.Modules {
 		if !canBuildHere(a) {
 			buildStageCallback(a, BuildStageSkipBuild)
 			continue
@@ -82,7 +82,7 @@ func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCal
 	return nil
 }
 
-func setupAppBuildEnvironment(manifest *Manifest, app *Application) []string {
+func setupAppBuildEnvironment(manifest *Manifest, app *Module) []string {
 	r := []string{
 		fmt.Sprintf("MBT_BUILD_COMMIT=%s", manifest.Sha),
 		fmt.Sprintf("MBT_APP_VERSION=%s", app.Version()),
@@ -98,7 +98,7 @@ func setupAppBuildEnvironment(manifest *Manifest, app *Application) []string {
 	return r
 }
 
-func buildOne(manifest *Manifest, app *Application, stdin io.Reader, stdout, stderr io.Writer) error {
+func buildOne(manifest *Manifest, app *Module, stdin io.Reader, stdout, stderr io.Writer) error {
 	build := app.Build()[runtime.GOOS]
 	cmd := exec.Command(build.Cmd)
 	cmd.Env = append(os.Environ(), setupAppBuildEnvironment(manifest, app)...)
@@ -111,7 +111,7 @@ func buildOne(manifest *Manifest, app *Application, stdin io.Reader, stdout, std
 	return err
 }
 
-func canBuildHere(app *Application) bool {
+func canBuildHere(app *Module) bool {
 	_, ok := app.Build()[runtime.GOOS]
 	return ok
 }

@@ -2,12 +2,12 @@ package lib
 
 import git "github.com/libgit2/git2go"
 
-// IntersectionByCommit returns the manifest of intersection of applications modified
+// IntersectionByCommit returns the manifest of intersection of modules modified
 // between two commits.
 // If we consider M as the merge base of first and second commits,
-// intersection contains the applications that have been changed
+// intersection contains the modules that have been changed
 // between M and first and M and second.
-func IntersectionByCommit(dir, first, second string) (Applications, error) {
+func IntersectionByCommit(dir, first, second string) (Modules, error) {
 	repo, err := git.OpenRepository(dir)
 	if err != nil {
 		return nil, wrap(err)
@@ -26,12 +26,12 @@ func IntersectionByCommit(dir, first, second string) (Applications, error) {
 	return intersectionCore(repo, fc, sc)
 }
 
-// IntersectionByBranch returns the manifest of intersection of applications modified
+// IntersectionByBranch returns the manifest of intersection of modules modified
 // between two branches.
 // If we consider M as the merge base of first and second branches,
-// intersection contains the applications that have been changed
+// intersection contains the modules that have been changed
 // between M and first and M and second.
-func IntersectionByBranch(dir, first, second string) (Applications, error) {
+func IntersectionByBranch(dir, first, second string) (Modules, error) {
 	repo, err := git.OpenRepository(dir)
 	if err != nil {
 		return nil, wrap(err)
@@ -50,7 +50,7 @@ func IntersectionByBranch(dir, first, second string) (Applications, error) {
 	return intersectionCore(repo, fc, sc)
 }
 
-func intersectionCore(repo *git.Repository, first, second *git.Commit) (Applications, error) {
+func intersectionCore(repo *git.Repository, first, second *git.Commit) (Modules, error) {
 	baseOid, err := repo.MergeBase(first.Id(), second.Id())
 	if err != nil {
 		return nil, wrap(err)
@@ -61,31 +61,31 @@ func intersectionCore(repo *git.Repository, first, second *git.Commit) (Applicat
 		return nil, wrap(err)
 	}
 
-	firstSet, err := applicationsInDiff(repo, first, base)
+	firstSet, err := modulesInDiff(repo, first, base)
 	if err != nil {
 		return nil, err
 	}
 
-	firstSetWithDeps, err := applicationsInDiffWithDependencies(repo, first, base)
+	firstSetWithDeps, err := modulesInDiffWithDependencies(repo, first, base)
 	if err != nil {
 		return nil, err
 	}
 
-	secondSet, err := applicationsInDiff(repo, second, base)
+	secondSet, err := modulesInDiff(repo, second, base)
 	if err != nil {
 		return nil, err
 	}
 
-	secondSetWithDeps, err := applicationsInDiffWithDependencies(repo, second, base)
+	secondSetWithDeps, err := modulesInDiffWithDependencies(repo, second, base)
 	if err != nil {
 		return nil, err
 	}
 
-	intersection := make(map[string]*Application)
+	intersection := make(map[string]*Module)
 	firstMap := firstSet.indexByName()
 	secondMap := secondSet.indexByName()
 
-	merge := func(changesWithDependencies Applications, otherChanges map[string]*Application, intersection map[string]*Application) {
+	merge := func(changesWithDependencies Modules, otherChanges map[string]*Module, intersection map[string]*Module) {
 		for _, app := range changesWithDependencies {
 			if _, ok := otherChanges[app.Name()]; ok {
 				intersection[app.Name()] = app
@@ -96,7 +96,7 @@ func intersectionCore(repo *git.Repository, first, second *git.Commit) (Applicat
 	merge(firstSetWithDeps, secondMap, intersection)
 	merge(secondSetWithDeps, firstMap, intersection)
 
-	result := make([]*Application, len(intersection))
+	result := make([]*Module, len(intersection))
 	i := 0
 	for _, v := range intersection {
 		result[i] = v

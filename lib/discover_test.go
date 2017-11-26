@@ -10,12 +10,12 @@ import (
 )
 
 func TestDependencyLinks(t *testing.T) {
-	a := newApplicationMetadata("app-a", "a", &Spec{Name: "app-a", Dependencies: []string{"app-b"}})
-	b := newApplicationMetadata("app-b", "b", &Spec{Name: "app-b", Dependencies: []string{"app-c"}})
-	c := newApplicationMetadata("app-c", "c", &Spec{Name: "app-c"})
+	a := newModuleMetadata("app-a", "a", &Spec{Name: "app-a", Dependencies: []string{"app-b"}})
+	b := newModuleMetadata("app-b", "b", &Spec{Name: "app-b", Dependencies: []string{"app-c"}})
+	c := newModuleMetadata("app-c", "c", &Spec{Name: "app-c"})
 
-	s := applicationMetadataSet{a, b, c}
-	apps, err := s.toApplications(true)
+	s := moduleMetadataSet{a, b, c}
+	apps, err := s.toModules(true)
 	check(t, err)
 	m := apps.indexByName()
 
@@ -28,11 +28,11 @@ func TestDependencyLinks(t *testing.T) {
 }
 
 func TestVersionCalculation(t *testing.T) {
-	a := newApplicationMetadata("app-a", "a", &Spec{Name: "app-a", Dependencies: []string{"app-b"}})
-	b := newApplicationMetadata("app-b", "b", &Spec{Name: "app-b"})
+	a := newModuleMetadata("app-a", "a", &Spec{Name: "app-a", Dependencies: []string{"app-b"}})
+	b := newModuleMetadata("app-b", "b", &Spec{Name: "app-b"})
 
-	s := applicationMetadataSet{a, b}
-	apps, err := s.toApplications(true)
+	s := moduleMetadataSet{a, b}
+	apps, err := s.toModules(true)
 	check(t, err)
 	m := apps.indexByName()
 
@@ -45,7 +45,7 @@ func TestMalformedSpec(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
+	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("app-a/.mbt.yml", "blah:blah\nblah::"))
 	check(t, repo.Commit("first"))
 
@@ -62,7 +62,7 @@ func TestMissingBlobs(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
+	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
 
 	commit, err := repo.Repo.LookupCommit(repo.LastCommit)
@@ -82,7 +82,7 @@ func TestMissingTreeObject(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
+	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
 	check(t, os.RemoveAll(".tmp/repo/.git/objects/30"))
 
@@ -98,7 +98,7 @@ func TestMissingTreeObject(t *testing.T) {
 }
 
 func TestMissingDependencies(t *testing.T) {
-	s := applicationMetadataSet{&applicationMetadata{
+	s := moduleMetadataSet{&moduleMetadata{
 		dir:  "app-a",
 		hash: "a",
 		spec: &Spec{
@@ -107,7 +107,7 @@ func TestMissingDependencies(t *testing.T) {
 		},
 	}}
 
-	apps, err := s.toApplications(true)
+	apps, err := s.toModules(true)
 
 	assert.Nil(t, apps)
 	assert.EqualError(t, err, "mbt: dependency not found app-a -> app-b")

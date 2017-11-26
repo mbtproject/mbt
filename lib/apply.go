@@ -11,10 +11,10 @@ import (
 
 // TemplateData is the data passed into template.
 type TemplateData struct {
-	Args         map[string]interface{}
-	Sha          string
-	Env          map[string]string
-	Applications map[string]*Application
+	Args    map[string]interface{}
+	Sha     string
+	Env     map[string]string
+	Modules map[string]*Module
 }
 
 // ApplyBranch applies the repository manifest to specified template.
@@ -87,9 +87,9 @@ func applyCore(repo *git.Repository, commit *git.Commit, dir, templatePath, outp
 	}
 
 	data := &TemplateData{
-		Sha:          m.Sha,
-		Env:          getEnvMap(),
-		Applications: m.indexByName(),
+		Sha:     m.Sha,
+		Env:     getEnvMap(),
+		Modules: m.indexByName(),
 	}
 
 	return temp.Execute(writer, data)

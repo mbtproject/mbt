@@ -10,14 +10,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func noopCb(a *Application, s BuildStage) {}
+func noopCb(a *Module, s BuildStage) {}
 func TestBuildExecution(t *testing.T) {
 	clean()
 
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
+	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteShellScript("app-a/build.sh", "echo app-a built"))
 	check(t, repo.WritePowershellScript("app-a/build.ps1", "write-host \"app-a built\""))
 	check(t, repo.Commit("first"))
@@ -28,7 +28,7 @@ func TestBuildExecution(t *testing.T) {
 	stages := make([]BuildStage, 0)
 	stdout := new(bytes.Buffer)
 	stderr := new(bytes.Buffer)
-	check(t, Build(m, os.Stdin, stdout, stderr, func(a *Application, s BuildStage) {
+	check(t, Build(m, os.Stdin, stdout, stderr, func(a *Module, s BuildStage) {
 		stages = append(stages, s)
 	}))
 
@@ -44,13 +44,13 @@ func TestBuildSkip(t *testing.T) {
 
 	switch runtime.GOOS {
 	case "linux", "darwin":
-		check(t, repo.InitApplicationWithOptions("app-a", &Spec{
+		check(t, repo.InitModuleWithOptions("app-a", &Spec{
 			Name:  "app-a",
 			Build: map[string]*BuildCmd{"windows": {"powershell", []string{"-ExecutionPolicy", "Bypass", "-File", ".\\build.ps1"}}},
 		}))
 		check(t, repo.WritePowershellScript("app-a/build.ps1", "write-host built app-a"))
 	case "windows":
-		check(t, repo.InitApplicationWithOptions("app-a", &Spec{
+		check(t, repo.InitModuleWithOptions("app-a", &Spec{
 			Name:  "app-a",
 			Build: map[string]*BuildCmd{"darwin": {"./build.sh", []string{}}},
 		}))
@@ -65,7 +65,7 @@ func TestBuildSkip(t *testing.T) {
 	other := make([]string, 0)
 	buff := new(bytes.Buffer)
 
-	check(t, Build(m, os.Stdin, buff, buff, func(a *Application, s BuildStage) {
+	check(t, Build(m, os.Stdin, buff, buff, func(a *Module, s BuildStage) {
 		if s == BuildStageSkipBuild {
 			skipped = append(skipped, a.Name())
 		} else {
@@ -82,14 +82,14 @@ func TestBuildBranch(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
+	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteShellScript("app-a/build.sh", "echo built app-a"))
 	check(t, repo.WritePowershellScript("app-a/build.ps1", "write-host built app-a"))
 	check(t, repo.Commit("first"))
 
 	check(t, repo.SwitchToBranch("feature"))
 
-	check(t, repo.InitApplication("app-b"))
+	check(t, repo.InitModule("app-b"))
 	check(t, repo.WriteShellScript("app-b/build.sh", "echo built app-b"))
 	check(t, repo.WritePowershellScript("app-b/build.ps1", "write-host built app-b"))
 	check(t, repo.Commit("second"))
@@ -98,7 +98,7 @@ func TestBuildBranch(t *testing.T) {
 	check(t, err)
 
 	buff := new(bytes.Buffer)
-	check(t, Build(m, os.Stdin, buff, buff, func(a *Application, s BuildStage) {}))
+	check(t, Build(m, os.Stdin, buff, buff, func(a *Module, s BuildStage) {}))
 
 	assert.Equal(t, "built app-a\n", buff.String())
 
@@ -106,7 +106,7 @@ func TestBuildBranch(t *testing.T) {
 	check(t, err)
 
 	buff = new(bytes.Buffer)
-	check(t, Build(m, os.Stdin, buff, buff, func(a *Application, s BuildStage) {}))
+	check(t, Build(m, os.Stdin, buff, buff, func(a *Module, s BuildStage) {}))
 
 	assert.Equal(t, "built app-a\nbuilt app-b\n", buff.String())
 }
@@ -116,7 +116,7 @@ func TestDirtyWorkingDir(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
+	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("app-a/foo", "a"))
 	check(t, repo.WriteShellScript("app-a/build.sh", "echo built app-a"))
 	check(t, repo.WritePowershellScript("app-a/build.ps1", "write-host built app-a"))
@@ -128,7 +128,7 @@ func TestDirtyWorkingDir(t *testing.T) {
 	check(t, err)
 
 	buff := new(bytes.Buffer)
-	err = Build(m, os.Stdin, buff, buff, func(a *Application, s BuildStage) {})
+	err = Build(m, os.Stdin, buff, buff, func(a *Module, s BuildStage) {})
 	assert.Error(t, err)
 	assert.Equal(t, "mbt: dirty working dir", err.Error())
 }
@@ -138,7 +138,7 @@ func TestBuildEnvironment(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplicationWithOptions("app-a", &Spec{
+	check(t, repo.InitModuleWithOptions("app-a", &Spec{
 		Name: "app-a",
 		Build: map[string]*BuildCmd{
 			"linux":   {Cmd: "./build.sh"},
@@ -160,13 +160,13 @@ func TestBuildEnvironment(t *testing.T) {
 	check(t, err)
 
 	out := buff.String()
-	assert.Equal(t, fmt.Sprintf("%s-%s-%s-%s\n", m.Sha, m.Applications[0].Version(), m.Applications[0].Name(), m.Applications[0].Properties()["foo"]), out)
+	assert.Equal(t, fmt.Sprintf("%s-%s-%s-%s\n", m.Sha, m.Modules[0].Version(), m.Modules[0].Name(), m.Modules[0].Properties()["foo"]), out)
 }
 
 func TestNonGitRepo(t *testing.T) {
 	clean()
 	check(t, os.MkdirAll(".tmp/repo", 0755))
-	m := &Manifest{Dir: ".tmp/repo", Applications: []*Application{}, Sha: "a"}
+	m := &Manifest{Dir: ".tmp/repo", Modules: []*Module{}, Sha: "a"}
 
 	err := Build(m, os.Stdin, os.Stdout, os.Stderr, noopCb)
 
@@ -178,10 +178,10 @@ func TestBadSha(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
+	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
 
-	m := &Manifest{Dir: ".tmp/repo", Applications: []*Application{}, Sha: "a"}
+	m := &Manifest{Dir: ".tmp/repo", Modules: []*Module{}, Sha: "a"}
 
 	err = Build(m, os.Stdin, os.Stdout, os.Stderr, noopCb)
 
@@ -193,10 +193,10 @@ func TestMissingSha(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
+	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
 
-	m := &Manifest{Dir: ".tmp/repo", Applications: []*Application{}, Sha: "22221c5e56794a2af5f59f94512df4c669c77a49"}
+	m := &Manifest{Dir: ".tmp/repo", Modules: []*Module{}, Sha: "22221c5e56794a2af5f59f94512df4c669c77a49"}
 
 	err = Build(m, os.Stdin, os.Stdout, os.Stderr, noopCb)
 

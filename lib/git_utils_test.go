@@ -11,7 +11,7 @@ func TestStatusCountOnNew(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
+	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("app-a/foo", "a"))
 
 	count, err := statusCount(repo.Repo)
@@ -25,7 +25,7 @@ func TestStatusCountOnEdit(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
+	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("app-a/foo", "a"))
 	check(t, repo.Commit("first"))
 
@@ -42,7 +42,7 @@ func TestStatusCountOnRename(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
+	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("app-a/foo", "a"))
 	check(t, repo.Commit("first"))
 
@@ -59,7 +59,7 @@ func TestInvalidBranch(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
+	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
 
 	c, err := getBranchCommit(repo.Repo, "foo")

@@ -131,7 +131,7 @@ As a simple but rather useless example of this can be illustrated with a templat
 as shown below.
 
 ```go
-{{ $app := range .Applications }}
+{{ $app := range .Modules }}
 {{ app.Name }}
 {{ end }}
 ```
@@ -180,7 +180,7 @@ properties:
 available to templates via `.Properties` property as illustrated below.
 
 ```go
-{{ $app := range .Applications }}
+{{ $app := range .Modules }}
 {{ $app.Properties["a"] }} {{ $app.Properties["b"] }}
 {{ end }}
 ```

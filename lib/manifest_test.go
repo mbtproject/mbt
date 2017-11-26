@@ -14,7 +14,7 @@ func TestSingleAppDir(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	err = repo.InitApplication("app-a")
+	err = repo.InitModule("app-a")
 	check(t, err)
 
 	err = repo.Commit("first")
@@ -23,8 +23,8 @@ func TestSingleAppDir(t *testing.T) {
 	m, err := ManifestByBranch(".tmp/repo", "master")
 	check(t, err)
 
-	assert.Len(t, m.Applications, 1)
-	assert.Equal(t, "app-a", m.Applications[0].Name())
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "app-a", m.Modules[0].Name())
 }
 
 func TestNonAppContent(t *testing.T) {
@@ -32,7 +32,7 @@ func TestNonAppContent(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	err = repo.InitApplication("app-a")
+	err = repo.InitModule("app-a")
 	check(t, err)
 
 	err = repo.WriteContent("content/index.html", "hello")
@@ -44,7 +44,7 @@ func TestNonAppContent(t *testing.T) {
 	m, err := ManifestByBranch(".tmp/repo", "master")
 	check(t, err)
 
-	assert.Len(t, m.Applications, 1)
+	assert.Len(t, m.Modules, 1)
 }
 
 func TestNestedAppDir(t *testing.T) {
@@ -52,14 +52,14 @@ func TestNestedAppDir(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("a/b/c/app-a"))
+	check(t, repo.InitModule("a/b/c/app-a"))
 	check(t, repo.Commit("first"))
 
 	m, err := ManifestByBranch(".tmp/repo", "master")
 	check(t, err)
 
-	assert.Len(t, m.Applications, 1)
-	assert.Equal(t, "a/b/c/app-a", m.Applications[0].Path())
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "a/b/c/app-a", m.Modules[0].Path())
 }
 
 func TestAppsDirInAppDir(t *testing.T) {
@@ -67,18 +67,18 @@ func TestAppsDirInAppDir(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
-	check(t, repo.InitApplication("app-a/app-b"))
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.InitModule("app-a/app-b"))
 	check(t, repo.Commit("first"))
 
 	m, err := ManifestByBranch(".tmp/repo", "master")
 	check(t, err)
 
-	assert.Len(t, m.Applications, 2)
-	assert.Equal(t, "app-a", m.Applications[0].Name())
-	assert.Equal(t, "app-a", m.Applications[0].Path())
-	assert.Equal(t, "app-b", m.Applications[1].Name())
-	assert.Equal(t, "app-a/app-b", m.Applications[1].Path())
+	assert.Len(t, m.Modules, 2)
+	assert.Equal(t, "app-a", m.Modules[0].Name())
+	assert.Equal(t, "app-a", m.Modules[0].Path())
+	assert.Equal(t, "app-b", m.Modules[1].Name())
+	assert.Equal(t, "app-a/app-b", m.Modules[1].Path())
 }
 
 func TestEmptyRepo(t *testing.T) {
@@ -87,12 +87,12 @@ func TestEmptyRepo(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
+	check(t, repo.InitModule("app-a"))
 
 	m, err := ManifestByBranch(".tmp/repo", "master")
 	check(t, err)
 
-	assert.Len(t, m.Applications, 0)
+	assert.Len(t, m.Modules, 0)
 }
 
 func TestDiffingTwoBranches(t *testing.T) {
@@ -101,12 +101,12 @@ func TestDiffingTwoBranches(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
+	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
 	masterTip := repo.LastCommit
 
 	check(t, repo.SwitchToBranch("feature"))
-	check(t, repo.InitApplication("app-b"))
+	check(t, repo.InitModule("app-b"))
 	check(t, repo.Commit("second"))
 
 	featureTip := repo.LastCommit
@@ -114,14 +114,14 @@ func TestDiffingTwoBranches(t *testing.T) {
 	m, err := ManifestByPr(".tmp/repo", "feature", "master")
 	check(t, err)
 
-	assert.Len(t, m.Applications, 1)
+	assert.Len(t, m.Modules, 1)
 	assert.Equal(t, featureTip.String(), m.Sha)
-	assert.Equal(t, "app-b", m.Applications[0].Name())
+	assert.Equal(t, "app-b", m.Modules[0].Name())
 
 	m, err = ManifestByPr(".tmp/repo", "master", "feature")
 	check(t, err)
 
-	assert.Len(t, m.Applications, 0)
+	assert.Len(t, m.Modules, 0)
 	assert.Equal(t, masterTip.String(), m.Sha)
 }
 
@@ -131,26 +131,26 @@ func TestDiffingTwoProgressedBranches(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
+	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
 	check(t, repo.SwitchToBranch("feature"))
-	check(t, repo.InitApplication("app-b"))
+	check(t, repo.InitModule("app-b"))
 	check(t, repo.Commit("second"))
 	check(t, repo.SwitchToBranch("master"))
-	check(t, repo.InitApplication("app-c"))
+	check(t, repo.InitModule("app-c"))
 	check(t, repo.Commit("third"))
 
 	m, err := ManifestByPr(".tmp/repo", "feature", "master")
 	check(t, err)
 
-	assert.Len(t, m.Applications, 1)
-	assert.Equal(t, "app-b", m.Applications[0].Name())
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "app-b", m.Modules[0].Name())
 
 	m, err = ManifestByPr(".tmp/repo", "master", "feature")
 	check(t, err)
 
-	assert.Len(t, m.Applications, 1)
-	assert.Equal(t, "app-c", m.Applications[0].Name())
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "app-c", m.Modules[0].Name())
 }
 
 func TestDiffingWithMultipleChangesToSameApp(t *testing.T) {
@@ -158,7 +158,7 @@ func TestDiffingWithMultipleChangesToSameApp(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
+	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
 	check(t, repo.SwitchToBranch("feature"))
 	check(t, repo.WriteContent("app-a/file1", "hello"))
@@ -169,8 +169,8 @@ func TestDiffingWithMultipleChangesToSameApp(t *testing.T) {
 	m, err := ManifestByPr(".tmp/repo", "feature", "master")
 	check(t, err)
 
-	assert.Len(t, m.Applications, 1)
-	assert.Equal(t, "app-a", m.Applications[0].Name())
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "app-a", m.Modules[0].Name())
 }
 
 func TestDiffingForDeletes(t *testing.T) {
@@ -178,7 +178,7 @@ func TestDiffingForDeletes(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
+	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("app-a/file1", "hello world"))
 	check(t, repo.Commit("first"))
 	check(t, repo.SwitchToBranch("feature"))
@@ -188,8 +188,8 @@ func TestDiffingForDeletes(t *testing.T) {
 	m, err := ManifestByPr(".tmp/repo", "feature", "master")
 	check(t, err)
 
-	assert.Len(t, m.Applications, 1)
-	assert.Equal(t, "app-a", m.Applications[0].Name())
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "app-a", m.Modules[0].Name())
 }
 
 func TestDiffingForRenames(t *testing.T) {
@@ -197,7 +197,7 @@ func TestDiffingForRenames(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
+	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("app-a/file1", "hello world"))
 	check(t, repo.Commit("first"))
 	check(t, repo.SwitchToBranch("feature"))
@@ -207,8 +207,8 @@ func TestDiffingForRenames(t *testing.T) {
 	m, err := ManifestByPr(".tmp/repo", "feature", "master")
 	check(t, err)
 
-	assert.Len(t, m.Applications, 1)
-	assert.Equal(t, "app-a", m.Applications[0].Name())
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "app-a", m.Modules[0].Name())
 }
 
 func TestAppOnRoot(t *testing.T) {
@@ -216,16 +216,16 @@ func TestAppOnRoot(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplicationWithOptions("", &Spec{Name: "root-app"}))
+	check(t, repo.InitModuleWithOptions("", &Spec{Name: "root-app"}))
 	check(t, repo.Commit("first"))
 
 	m, err := ManifestByBranch(".tmp/repo", "master")
 	check(t, err)
 
-	assert.Len(t, m.Applications, 1)
-	assert.Equal(t, "root-app", m.Applications[0].Name())
-	assert.Equal(t, "", m.Applications[0].Path())
-	assert.Equal(t, repo.LastCommit.String(), m.Applications[0].Version())
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "root-app", m.Modules[0].Name())
+	assert.Equal(t, "", m.Modules[0].Path())
+	assert.Equal(t, repo.LastCommit.String(), m.Modules[0].Version())
 }
 
 func TestManifestByDiff(t *testing.T) {
@@ -233,8 +233,8 @@ func TestManifestByDiff(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
-	check(t, repo.InitApplication("app-b"))
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.InitModule("app-b"))
 	check(t, repo.Commit("first"))
 	c1 := repo.LastCommit
 
@@ -245,13 +245,13 @@ func TestManifestByDiff(t *testing.T) {
 	m, err := ManifestByDiff(".tmp/repo", c1.String(), c2.String())
 	check(t, err)
 
-	assert.Len(t, m.Applications, 1)
-	assert.Equal(t, "app-a", m.Applications[0].Name())
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "app-a", m.Modules[0].Name())
 
 	m, err = ManifestByDiff(".tmp/repo", c2.String(), c1.String())
 	check(t, err)
 
-	assert.Len(t, m.Applications, 0)
+	assert.Len(t, m.Modules, 0)
 }
 
 func TestDependencyChange(t *testing.T) {
@@ -259,8 +259,8 @@ func TestDependencyChange(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
-	check(t, repo.InitApplicationWithOptions("app-b", &Spec{
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.InitModuleWithOptions("app-b", &Spec{
 		Name:         "app-b",
 		Dependencies: []string{"app-a"},
 	}))
@@ -274,9 +274,9 @@ func TestDependencyChange(t *testing.T) {
 	m, err := ManifestByDiff(".tmp/repo", c1.String(), c2.String())
 	check(t, err)
 
-	assert.Len(t, m.Applications, 2)
-	assert.Equal(t, "app-a", m.Applications[0].Name())
-	assert.Equal(t, "app-b", m.Applications[1].Name())
+	assert.Len(t, m.Modules, 2)
+	assert.Equal(t, "app-a", m.Modules[0].Name())
+	assert.Equal(t, "app-b", m.Modules[1].Name())
 }
 
 func TestDependentChange(t *testing.T) {
@@ -284,8 +284,8 @@ func TestDependentChange(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
-	check(t, repo.InitApplicationWithOptions("app-b", &Spec{
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.InitModuleWithOptions("app-b", &Spec{
 		Name:         "app-b",
 		Dependencies: []string{"app-a"},
 	}))
@@ -299,8 +299,8 @@ func TestDependentChange(t *testing.T) {
 	m, err := ManifestByDiff(".tmp/repo", c1.String(), c2.String())
 	check(t, err)
 
-	assert.Len(t, m.Applications, 1)
-	assert.Equal(t, "app-b", m.Applications[0].Name())
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "app-b", m.Modules[0].Name())
 }
 
 func TestManifestBySha(t *testing.T) {
@@ -308,12 +308,12 @@ func TestManifestBySha(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
+	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
 
 	c1 := repo.LastCommit
 
-	check(t, repo.InitApplication("app-b"))
+	check(t, repo.InitModule("app-b"))
 	check(t, repo.Commit("second"))
 
 	c2 := repo.LastCommit
@@ -321,17 +321,17 @@ func TestManifestBySha(t *testing.T) {
 	m, err := ManifestBySha(".tmp/repo", c1.String())
 	check(t, err)
 
-	assert.Len(t, m.Applications, 1)
+	assert.Len(t, m.Modules, 1)
 	assert.Equal(t, c1.String(), m.Sha)
-	assert.Equal(t, "app-a", m.Applications[0].Name())
+	assert.Equal(t, "app-a", m.Modules[0].Name())
 
 	m, err = ManifestBySha(".tmp/repo", c2.String())
 	check(t, err)
 
-	assert.Len(t, m.Applications, 2)
+	assert.Len(t, m.Modules, 2)
 	assert.Equal(t, c2.String(), m.Sha)
-	assert.Equal(t, "app-a", m.Applications[0].Name())
-	assert.Equal(t, "app-b", m.Applications[1].Name())
+	assert.Equal(t, "app-a", m.Modules[0].Name())
+	assert.Equal(t, "app-b", m.Modules[1].Name())
 }
 
 func TestNonRepository(t *testing.T) {

@@ -49,7 +49,7 @@ var describeBranchCmd = &cobra.Command{
 			return handle(err)
 		}
 
-		return handle(output(m.Applications))
+		return handle(output(m.Modules))
 	},
 }
 
@@ -70,7 +70,7 @@ var describePrCmd = &cobra.Command{
 			return handle(err)
 		}
 
-		return handle(output(m.Applications))
+		return handle(output(m.Modules))
 	},
 }
 
@@ -89,7 +89,7 @@ var describeCommitCmd = &cobra.Command{
 			return handle(err)
 		}
 
-		return handle(output(m.Applications))
+		return handle(output(m.Modules))
 	},
 }
 
@@ -109,7 +109,7 @@ var describeIntersectionCmd = &cobra.Command{
 			return errors.New("requires the second argument")
 		}
 
-		var apps lib.Applications
+		var apps lib.Modules
 		var err error
 
 		switch kind {
@@ -144,7 +144,7 @@ func formatRow(args ...interface{}) string {
 	return fmt.Sprintf("%s\t\t%s\t\t%s\n", padded...)
 }
 
-func output(apps lib.Applications) error {
+func output(apps lib.Modules) error {
 	if formatAsJson {
 		m := make(map[string]map[string]interface{})
 		for _, a := range apps {

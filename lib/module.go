@@ -10,8 +10,8 @@ import (
 	git "github.com/libgit2/git2go"
 )
 
-// Application represents a single application in the repository.
-type Application struct {
+// Module represents a single module in the repository.
+type Module struct {
 	name       string
 	path       string
 	build      map[string]*BuildCmd
@@ -22,69 +22,69 @@ type Application struct {
 	requiredBy *list.List
 }
 
-// Applications is an array of Application.
-type Applications []*Application
+// Modules is an array of Module.
+type Modules []*Module
 
-// Name returns the name of the application.
-func (a *Application) Name() string {
+// Name returns the name of the module.
+func (a *Module) Name() string {
 	return a.name
 }
 
-// Path returns the relative path to application.
-func (a *Application) Path() string {
+// Path returns the relative path to module.
+func (a *Module) Path() string {
 	return a.path
 }
 
-// Build returns the build configuration for the application.
-func (a *Application) Build() map[string]*BuildCmd {
+// Build returns the build configuration for the module.
+func (a *Module) Build() map[string]*BuildCmd {
 	return a.build
 }
 
 // Properties returns the custom properties in the configuration.
-func (a *Application) Properties() map[string]interface{} {
+func (a *Module) Properties() map[string]interface{} {
 	return a.properties
 }
 
-// Requires returns an array of applications required by this application.
-func (a *Application) Requires() *list.List {
+// Requires returns an array of modules required by this module.
+func (a *Module) Requires() *list.List {
 	return a.requires
 }
 
-// RequiredBy returns an array of applications requires this application.
-func (a *Application) RequiredBy() *list.List {
+// RequiredBy returns an array of modules requires this module.
+func (a *Module) RequiredBy() *list.List {
 	return a.requiredBy
 }
 
-// Version returns the content based version SHA for the application.
-func (a *Application) Version() string {
+// Version returns the content based version SHA for the module.
+func (a *Module) Version() string {
 	return a.version
 }
 
-// Sort interface to sort applications by path
-func (l Applications) Len() int {
+// Sort interface to sort modules by path
+func (l Modules) Len() int {
 	return len(l)
 }
 
-func (l Applications) Less(i, j int) bool {
+func (l Modules) Less(i, j int) bool {
 	return l[i].path < l[j].path
 }
 
-func (l Applications) Swap(i, j int) {
+func (l Modules) Swap(i, j int) {
 	l[i], l[j] = l[j], l[i]
 }
 
 type requiredByNodeProvider struct{}
 
 func (p *requiredByNodeProvider) ID(vertex interface{}) interface{} {
-	return vertex.(*Application).Name()
+	return vertex.(*Module).Name()
 }
 
 func (p *requiredByNodeProvider) ChildCount(vertex interface{}) int {
-	return vertex.(*Application).RequiredBy().Len()
+	return vertex.(*Module).RequiredBy().Len()
 }
 
 func (p *requiredByNodeProvider) Child(vertex interface{}, index int) (interface{}, error) {
-	head := vertex.(*Application).RequiredBy().Front()
+	head := vertex.(*Module).RequiredBy().Front()
 	for i := 0; i < index; i++ {
 		head = head.Next()
 	}
@@ -95,15 +95,15 @@ func (p *requiredByNodeProvider) Child(vertex interface{}, index int) (interface
 type requiresNodeProvider struct{}
 
 func (p *requiresNodeProvider) ID(vertex interface{}) interface{} {
-	return vertex.(*Application).Name()
+	return vertex.(*Module).Name()
 }
 
 func (p *requiresNodeProvider) ChildCount(vertex interface{}) int {
-	return vertex.(*Application).Requires().Len()
+	return vertex.(*Module).Requires().Len()
 }
 
 func (p *requiresNodeProvider) Child(vertex interface{}, index int) (interface{}, error) {
-	head := vertex.(*Application).Requires().Front()
+	head := vertex.(*Module).Requires().Front()
 	for i := 0; i < index; i++ {
 		head = head.Next()
 	}
@@ -111,9 +111,9 @@ func (p *requiresNodeProvider) Child(vertex interface{}, index int) (interface{}
 	return head.Value, nil
 }
 
-func newApplication(metadata *applicationMetadata, requires *list.List) *Application {
+func newModule(metadata *moduleMetadata, requires *list.List) *Module {
 	spec := metadata.spec
-	app := &Application{
+	app := &Module{
 		build:      spec.Build,
 		name:       spec.Name,
 		properties: spec.Properties,
@@ -130,29 +130,29 @@ func newApplication(metadata *applicationMetadata, requires *list.List) *Applica
 	return app
 }
 
-func (l Applications) indexByName() map[string]*Application {
-	q := make(map[string]*Application)
+func (l Modules) indexByName() map[string]*Module {
+	q := make(map[string]*Module)
 	for _, a := range l {
 		q[a.Name()] = a
 	}
 	return q
 }
 
-func (l Applications) indexByPath() map[string]*Application {
-	q := make(map[string]*Application)
+func (l Modules) indexByPath() map[string]*Module {
+	q := make(map[string]*Module)
 	for _, a := range l {
 		q[fmt.Sprintf("%s/", a.Path())] = a
 	}
 	return q
 }
 
-// expandRequiredByDependencies takes a list of Applications and
-// returns a new list of Applications including the ones in their
+// expandRequiredByDependencies takes a list of Modules and
+// returns a new list of Modules including the ones in their
 // requiredBy (see below) dependency chain.
 // requiredBy dependency
-// Application dependencies are described in two forms requires and requiredBy.
+// Module dependencies are described in two forms requires and requiredBy.
 // If A needs B, then, A requires B and B is requiredBy A.
-func (l Applications) expandRequiredByDependencies() (Applications, error) {
+func (l Modules) expandRequiredByDependencies() (Modules, error) {
 	// Step 1
 	// Create the new list with all nodes
 	g := new(list.List)
@@ -170,17 +170,17 @@ func (l Applications) expandRequiredByDependencies() (Applications, error) {
 	// Step 3
 	// Copy resulting array in the reverse order
 	// because we top sorted by requiredBy chain.
-	r := make([]*Application, allItems.Len())
+	r := make([]*Module, allItems.Len())
 	i := allItems.Len() - 1
 	for e := allItems.Front(); e != nil; e = e.Next() {
-		r[i] = e.Value.(*Application)
+		r[i] = e.Value.(*Module)
 		i--
 	}
 
 	return r, nil
 }
 
-func (l Applications) expandRequiresDependencies() (Applications, error) {
+func (l Modules) expandRequiresDependencies() (Modules, error) {
 	g := new(list.List)
 	for _, a := range l {
 		g.PushBack(a)
@@ -191,23 +191,23 @@ func (l Applications) expandRequiresDependencies() (Applications, error) {
 		return nil, wrap(err)
 	}
 
-	r := make([]*Application, items.Len())
+	r := make([]*Module, items.Len())
 	i := 0
 	for e := items.Front(); e != nil; e = e.Next() {
-		r[i] = e.Value.(*Application)
+		r[i] = e.Value.(*Module)
 		i++
 	}
 
 	return r, nil
 }
 
-func applicationsInCommit(repo *git.Repository, commit *git.Commit) (Applications, error) {
+func modulesInCommit(repo *git.Repository, commit *git.Commit) (Modules, error) {
 	metadataSet, err := discoverMetadata(repo, commit)
 	if err != nil {
 		return nil, err
 	}
 
-	vapps, err := metadataSet.toApplications(true)
+	vapps, err := metadataSet.toModules(true)
 	if err != nil {
 		return nil, err
 	}
@@ -216,13 +216,13 @@ func applicationsInCommit(repo *git.Repository, commit *git.Commit) (Application
 	return vapps, nil
 }
 
-func applicationsInDiff(repo *git.Repository, to, from *git.Commit) (Applications, error) {
+func modulesInDiff(repo *git.Repository, to, from *git.Commit) (Modules, error) {
 	diff, err := getDiffFromMergeBase(repo, to, from)
 	if err != nil {
 		return nil, err
 	}
 
-	a, err := applicationsInCommit(repo, to)
+	a, err := modulesInCommit(repo, to)
 	if err != nil {
 		return nil, err
 	}
@@ -230,8 +230,8 @@ func applicationsInDiff(repo *git.Repository, to, from *git.Commit) (Application
 	return reduceToDiff(a, diff)
 }
 
-func applicationsInDiffWithDepGraph(repo *git.Repository, to, from *git.Commit, reversed bool) (Applications, error) {
-	apps, err := applicationsInDiff(repo, to, from)
+func modulesInDiffWithDepGraph(repo *git.Repository, to, from *git.Commit, reversed bool) (Modules, error) {
+	apps, err := modulesInDiff(repo, to, from)
 	if err != nil {
 		return nil, err
 	}
@@ -248,17 +248,17 @@ func applicationsInDiffWithDepGraph(repo *git.Repository, to, from *git.Commit, 
 	return apps, nil
 }
 
-func applicationsInDiffWithDependents(repo *git.Repository, to, from *git.Commit) (Applications, error) {
-	return applicationsInDiffWithDepGraph(repo, to, from, true)
+func modulesInDiffWithDependents(repo *git.Repository, to, from *git.Commit) (Modules, error) {
+	return modulesInDiffWithDepGraph(repo, to, from, true)
 }
 
-func applicationsInDiffWithDependencies(repo *git.Repository, to, from *git.Commit) (Applications, error) {
-	return applicationsInDiffWithDepGraph(repo, to, from, false)
+func modulesInDiffWithDependencies(repo *git.Repository, to, from *git.Commit) (Modules, error) {
+	return modulesInDiffWithDepGraph(repo, to, from, false)
 }
 
-func reduceToDiff(applications Applications, diff *git.Diff) (Applications, error) {
-	q := applications.indexByPath()
-	filtered := make(map[string]*Application)
+func reduceToDiff(modules Modules, diff *git.Diff) (Modules, error) {
+	q := modules.indexByPath()
+	filtered := make(map[string]*Module)
 	err := diff.ForEach(func(delta git.DiffDelta, num float64) (git.DiffForEachHunkCallback, error) {
 		for k := range q {
 			if _, ok := filtered[k]; ok {
@@ -275,7 +275,7 @@ func reduceToDiff(applications Applications, diff *git.Diff) (Applications, erro
 		return nil, wrap(err)
 	}
 
-	apps := Applications{}
+	apps := Modules{}
 	for _, v := range filtered {
 		apps = append(apps, v)
 	}

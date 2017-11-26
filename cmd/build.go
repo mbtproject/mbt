@@ -84,7 +84,7 @@ var buildDiff = &cobra.Command{
 }
 
 func build(m *lib.Manifest) error {
-	return lib.Build(m, os.Stdin, os.Stdout, os.Stderr, func(a *lib.Application, s lib.BuildStage) {
+	return lib.Build(m, os.Stdin, os.Stdout, os.Stderr, func(a *lib.Module, s lib.BuildStage) {
 		switch s {
 		case lib.BuildStageBeforeBuild:
 			logrus.Infof("BUILD %s in %s for %s", a.Name(), a.Path(), a.Version())
@@ -96,5 +96,5 @@ func build(m *lib.Manifest) error {
 
 var buildCommand = &cobra.Command{
 	Use:   "build",
-	Short: "Builds the applications in specified path",
+	Short: "Builds the modules in specified path",
 }

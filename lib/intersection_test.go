@@ -11,8 +11,8 @@ func TestIntersectionWithElements(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
-	check(t, repo.InitApplication("app-b"))
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.InitModule("app-b"))
 	check(t, repo.Commit("first"))
 
 	check(t, repo.SwitchToBranch("feature-a"))
@@ -48,8 +48,8 @@ func TestIntersectionWithoutElements(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
-	check(t, repo.InitApplication("app-b"))
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.InitModule("app-b"))
 	check(t, repo.Commit("first"))
 
 	check(t, repo.SwitchToBranch("feature-a"))
@@ -82,8 +82,8 @@ func TestIntersectionByBranchWithElements(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplication("app-a"))
-	check(t, repo.InitApplication("app-b"))
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.InitModule("app-b"))
 	check(t, repo.Commit("first"))
 
 	check(t, repo.SwitchToBranch("feature-a"))
@@ -115,9 +115,9 @@ func TestIntersectionWithDependencies(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplicationWithOptions("app-a", &Spec{Name: "app-a", Dependencies: []string{"app-c"}}))
-	check(t, repo.InitApplication("app-b"))
-	check(t, repo.InitApplicationWithOptions("app-c", &Spec{Name: "app-c"}))
+	check(t, repo.InitModuleWithOptions("app-a", &Spec{Name: "app-a", Dependencies: []string{"app-c"}}))
+	check(t, repo.InitModule("app-b"))
+	check(t, repo.InitModuleWithOptions("app-c", &Spec{Name: "app-c"}))
 	check(t, repo.Commit("first"))
 
 	check(t, repo.SwitchToBranch("feature-a"))
@@ -148,9 +148,9 @@ func TestIntersctionOfTwoChangesWithSharedDependency(t *testing.T) {
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	check(t, repo.InitApplicationWithOptions("app-a", &Spec{Name: "app-a", Dependencies: []string{"app-c"}}))
-	check(t, repo.InitApplicationWithOptions("app-b", &Spec{Name: "app-b", Dependencies: []string{"app-c"}}))
-	check(t, repo.InitApplicationWithOptions("app-c", &Spec{Name: "app-c"}))
+	check(t, repo.InitModuleWithOptions("app-a", &Spec{Name: "app-a", Dependencies: []string{"app-c"}}))
+	check(t, repo.InitModuleWithOptions("app-b", &Spec{Name: "app-b", Dependencies: []string{"app-c"}}))
+	check(t, repo.InitModuleWithOptions("app-c", &Spec{Name: "app-c"}))
 	check(t, repo.Commit("first"))
 
 	check(t, repo.SwitchToBranch("feature-a"))

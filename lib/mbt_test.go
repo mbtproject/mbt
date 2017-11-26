@@ -19,8 +19,8 @@ type TestRepository struct {
 	CurrentBranch string
 }
 
-func (r *TestRepository) InitApplication(p string) error {
-	return r.InitApplicationWithOptions(p, &Spec{
+func (r *TestRepository) InitModule(p string) error {
+	return r.InitModuleWithOptions(p, &Spec{
 		Name: path.Base(p),
 		Build: map[string]*BuildCmd{
 			"darwin":  {"./build.sh", []string{}},
@@ -31,7 +31,7 @@ func (r *TestRepository) InitApplication(p string) error {
 	})
 }
 
-func (r *TestRepository) InitApplicationWithOptions(p string, app *Spec) error {
+func (r *TestRepository) InitModuleWithOptions(p string, app *Spec) error {
 	appDir := path.Join(r.Dir, p)
 	err := os.MkdirAll(appDir, 0755)
 	if err != nil {

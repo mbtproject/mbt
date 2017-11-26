@@ -13,16 +13,16 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-// applicationMetadata represents the information about applications
+// moduleMetadata represents the information about modules
 // found during discovery phase.
-type applicationMetadata struct {
+type moduleMetadata struct {
 	dir  string
 	hash string
 	spec *Spec
 }
 
-func newApplicationMetadata(dir string, hash string, spec *Spec) *applicationMetadata {
-	return &applicationMetadata{
+func newModuleMetadata(dir string, hash string, spec *Spec) *moduleMetadata {
+	return &moduleMetadata{
 		dir:  dir,
 		hash: hash,
 		spec: spec,
@@ -62,21 +62,21 @@ func newSpec(content []byte) (*Spec, error) {
 	return a, nil
 }
 
-// applicationMetadataSet is an array of ApplicationMetadata extracted from the repository.
-type applicationMetadataSet []*applicationMetadata
+// moduleMetadataSet is an array of ModuleMetadata extracted from the repository.
+type moduleMetadataSet []*moduleMetadata
 
-// toApplications transforms an applicationMetadataSet to Applications structure
+// toModules transforms an moduleMetadataSet to Modules structure
 // while establishing the dependency links.
-func (a applicationMetadataSet) toApplications(withDependencies bool) (Applications, error) {
+func (a moduleMetadataSet) toModules(withDependencies bool) (Modules, error) {
 	// Step 1
-	// Transform each applicationMetadatadata into applicationMetadataNode for sorting.
-	m := make(map[string]*applicationMetadata)
+	// Transform each moduleMetadatadata into moduleMetadataNode for sorting.
+	m := make(map[string]*moduleMetadata)
 	g := new(list.List)
 	for _, meta := range a {
 		m[meta.spec.Name] = meta
 		g.PushBack(meta)
 	}
-	provider := newApplicationMetadataNode(m)
+	provider := newModuleMetadataNode(m)
 
 	// Step 2
 	// Topological sort
@@ -86,40 +86,40 @@ func (a applicationMetadataSet) toApplications(withDependencies bool) (Applicati
 	}
 
 	// Step 3
-	// Now that we have the topologically sorted applicationMetadataNodes
-	// create Application instances with dependency links.
-	mApplications := make(map[string]*Application)
-	applications := make(Applications, sortedNodes.Len())
+	// Now that we have the topologically sorted moduleMetadataNodes
+	// create Module instances with dependency links.
+	mModules := make(map[string]*Module)
+	modules := make(Modules, sortedNodes.Len())
 	i := 0
 	for n := sortedNodes.Front(); n != nil; n = n.Next() {
-		metadata := n.Value.(*applicationMetadata)
+		metadata := n.Value.(*moduleMetadata)
 		spec := metadata.spec
 		deps := new(list.List)
 		for _, d := range spec.Dependencies {
-			if depApp, ok := mApplications[d]; ok {
+			if depApp, ok := mModules[d]; ok {
 				deps.PushBack(depApp)
 			} else {
 				panic("topsort is inconsistent")
 			}
 		}
 
-		app := newApplication(metadata, deps)
-		applications[i] = app
+		app := newModule(metadata, deps)
+		modules[i] = app
 		i++
 
 		for e := deps.Front(); e != nil; e = e.Next() {
-			e.Value.(*Application).requiredBy.PushBack(app)
+			e.Value.(*Module).requiredBy.PushBack(app)
 		}
 
-		mApplications[app.Name()] = app
+		mModules[app.Name()] = app
 	}
 
-	return calculateVersion(applications, withDependencies), nil
+	return calculateVersion(modules, withDependencies), nil
 }
 
-// calculateVersion takes the topologically sorted Applications and
+// calculateVersion takes the topologically sorted Modules and
 // initialises their version field.
-func calculateVersion(topSorted Applications, withDependencies bool) Applications {
+func calculateVersion(topSorted Modules, withDependencies bool) Modules {
 	for _, a := range topSorted {
 		if !withDependencies || a.Requires().Len() == 0 {
 			a.version = a.hash
@@ -128,7 +128,7 @@ func calculateVersion(topSorted Applications, withDependencies bool) Application
 
 			io.WriteString(h, a.hash)
 			for e := a.Requires().Front(); e != nil; e = e.Next() {
-				io.WriteString(h, e.Value.(*Application).Version())
+				io.WriteString(h, e.Value.(*Module).Version())
 			}
 			a.version = hex.EncodeToString(h.Sum(nil))
 		}
@@ -137,27 +137,27 @@ func calculateVersion(topSorted Applications, withDependencies bool) Application
 	return topSorted
 }
 
-// applicationMetadataNodeProvider is an auxiliary type used to build the dependency
+// moduleMetadataNodeProvider is an auxiliary type used to build the dependency
 // graph. Acts as an implementation of graph.NodeProvider interface (We use graph
 // library for topological sort).
-type applicationMetadataNodeProvider struct {
-	set map[string]*applicationMetadata
+type moduleMetadataNodeProvider struct {
+	set map[string]*moduleMetadata
 }
 
-func newApplicationMetadataNode(set map[string]*applicationMetadata) *applicationMetadataNodeProvider {
-	return &applicationMetadataNodeProvider{set}
+func newModuleMetadataNode(set map[string]*moduleMetadata) *moduleMetadataNodeProvider {
+	return &moduleMetadataNodeProvider{set}
 }
 
-func (n *applicationMetadataNodeProvider) ID(vertex interface{}) interface{} {
-	return vertex.(*applicationMetadata).spec.Name
+func (n *moduleMetadataNodeProvider) ID(vertex interface{}) interface{} {
+	return vertex.(*moduleMetadata).spec.Name
 }
 
-func (n *applicationMetadataNodeProvider) ChildCount(vertex interface{}) int {
-	return len(vertex.(*applicationMetadata).spec.Dependencies)
+func (n *moduleMetadataNodeProvider) ChildCount(vertex interface{}) int {
+	return len(vertex.(*moduleMetadata).spec.Dependencies)
 }
 
-func (n *applicationMetadataNodeProvider) Child(vertex interface{}, index int) (interface{}, error) {
-	spec := vertex.(*applicationMetadata).spec
+func (n *moduleMetadataNodeProvider) Child(vertex interface{}, index int) (interface{}, error) {
+	spec := vertex.(*moduleMetadata).spec
 	d := spec.Dependencies[index]
 	if s, ok := n.set[d]; ok {
 		return s, nil
@@ -167,9 +167,9 @@ func (n *applicationMetadataNodeProvider) Child(vertex interface{}, index int) (
 }
 
 // discoverMetadata walks the git tree at a specific commit looking for
-// directories with .mbt.yml file. Returns an applicationMetadataSet representing
-// the applications found.
-func discoverMetadata(repo *git.Repository, commit *git.Commit) (a applicationMetadataSet, outErr error) {
+// directories with .mbt.yml file. Returns an moduleMetadataSet representing
+// the modules found.
+func discoverMetadata(repo *git.Repository, commit *git.Commit) (a moduleMetadataSet, outErr error) {
 	// Setup the panic handler to trap potential panics while walking the tree
 	defer handlePanic(&outErr)
 
@@ -178,7 +178,7 @@ func discoverMetadata(repo *git.Repository, commit *git.Commit) (a applicationMe
 		failf(err, "failed to fetch commit tree for %s", commit.Id())
 	}
 
-	metadataSet := applicationMetadataSet{}
+	metadataSet := moduleMetadataSet{}
 
 	err = tree.Walk(func(path string, entry *git.TreeEntry) int {
 		if entry.Name == ".mbt.yml" && entry.Type == git.ObjectBlob {
@@ -207,7 +207,7 @@ func discoverMetadata(repo *git.Repository, commit *git.Commit) (a applicationMe
 				failf(err, "error while parsing the spec at %s%s", path, entry.Name)
 			}
 
-			metadataSet = append(metadataSet, newApplicationMetadata(p, hash, spec))
+			metadataSet = append(metadataSet, newModuleMetadata(p, hash, spec))
 		}
 		return 0
 	})
