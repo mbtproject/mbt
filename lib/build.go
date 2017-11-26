@@ -27,7 +27,7 @@ const (
 )
 
 // Build runs the build for the modules in specified manifest.
-func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCallback func(app *Module, s BuildStage)) error {
+func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCallback func(mod *Module, s BuildStage)) error {
 	repo, err := git.OpenRepository(m.Dir)
 	if err != nil {
 		return wrap(err)
@@ -82,27 +82,27 @@ func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCal
 	return nil
 }
 
-func setupAppBuildEnvironment(manifest *Manifest, app *Module) []string {
+func setupModBuildEnvironment(manifest *Manifest, mod *Module) []string {
 	r := []string{
 		fmt.Sprintf("MBT_BUILD_COMMIT=%s", manifest.Sha),
-		fmt.Sprintf("MBT_APP_VERSION=%s", app.Version()),
-		fmt.Sprintf("MBT_APP_NAME=%s", app.Name()),
+		fmt.Sprintf("MBT_MODULE_VERSION=%s", mod.Version()),
+		fmt.Sprintf("MBT_MODULE_NAME=%s", mod.Name()),
 	}
 
-	for k, v := range app.Properties() {
+	for k, v := range mod.Properties() {
 		if value, ok := v.(string); ok {
-			r = append(r, fmt.Sprintf("MBT_APP_PROPERTY_%s=%s", strings.ToUpper(k), value))
+			r = append(r, fmt.Sprintf("MBT_MODULE_PROPERTY_%s=%s", strings.ToUpper(k), value))
 		}
 	}
 
 	return r
 }
 
-func buildOne(manifest *Manifest, app *Module, stdin io.Reader, stdout, stderr io.Writer) error {
-	build := app.Build()[runtime.GOOS]
+func buildOne(manifest *Manifest, mod *Module, stdin io.Reader, stdout, stderr io.Writer) error {
+	build := mod.Build()[runtime.GOOS]
 	cmd := exec.Command(build.Cmd)
-	cmd.Env = append(os.Environ(), setupAppBuildEnvironment(manifest, app)...)
-	cmd.Dir = path.Join(manifest.Dir, app.Path())
+	cmd.Env = append(os.Environ(), setupModBuildEnvironment(manifest, mod)...)
+	cmd.Dir = path.Join(manifest.Dir, mod.Path())
 	cmd.Stdin = stdin
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
@@ -111,8 +111,8 @@ func buildOne(manifest *Manifest, app *Module, stdin io.Reader, stdout, stderr i
 	return err
 }
 
-func canBuildHere(app *Module) bool {
-	_, ok := app.Build()[runtime.GOOS]
+func canBuildHere(mod *Module) bool {
+	_, ok := mod.Build()[runtime.GOOS]
 	return ok
 }
 

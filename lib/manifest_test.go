@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSingleAppDir(t *testing.T) {
+func TestSingleModDir(t *testing.T) {
 	clean()
 	// defer clean()
 
@@ -27,7 +27,7 @@ func TestSingleAppDir(t *testing.T) {
 	assert.Equal(t, "app-a", m.Modules[0].Name())
 }
 
-func TestNonAppContent(t *testing.T) {
+func TestNonModContent(t *testing.T) {
 	clean()
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
@@ -62,7 +62,7 @@ func TestNestedAppDir(t *testing.T) {
 	assert.Equal(t, "a/b/c/app-a", m.Modules[0].Path())
 }
 
-func TestAppsDirInAppDir(t *testing.T) {
+func TestModsDirInModDir(t *testing.T) {
 	clean()
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
@@ -153,7 +153,7 @@ func TestDiffingTwoProgressedBranches(t *testing.T) {
 	assert.Equal(t, "app-c", m.Modules[0].Name())
 }
 
-func TestDiffingWithMultipleChangesToSameApp(t *testing.T) {
+func TestDiffingWithMultipleChangesToSameMod(t *testing.T) {
 	clean()
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
@@ -211,7 +211,7 @@ func TestDiffingForRenames(t *testing.T) {
 	assert.Equal(t, "app-a", m.Modules[0].Name())
 }
 
-func TestAppOnRoot(t *testing.T) {
+func TestModOnRoot(t *testing.T) {
 	clean()
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)

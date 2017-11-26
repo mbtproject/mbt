@@ -86,9 +86,9 @@ func intersectionCore(repo *git.Repository, first, second *git.Commit) (Modules,
 	secondMap := secondSet.indexByName()
 
 	merge := func(changesWithDependencies Modules, otherChanges map[string]*Module, intersection map[string]*Module) {
-		for _, app := range changesWithDependencies {
-			if _, ok := otherChanges[app.Name()]; ok {
-				intersection[app.Name()] = app
+		for _, mod := range changesWithDependencies {
+			if _, ok := otherChanges[mod.Name()]; ok {
+				intersection[mod.Name()] = mod
 			}
 		}
 	}

@@ -96,22 +96,22 @@ func (a moduleMetadataSet) toModules(withDependencies bool) (Modules, error) {
 		spec := metadata.spec
 		deps := new(list.List)
 		for _, d := range spec.Dependencies {
-			if depApp, ok := mModules[d]; ok {
-				deps.PushBack(depApp)
+			if depMod, ok := mModules[d]; ok {
+				deps.PushBack(depMod)
 			} else {
 				panic("topsort is inconsistent")
 			}
 		}
 
-		app := newModule(metadata, deps)
-		modules[i] = app
+		mod := newModule(metadata, deps)
+		modules[i] = mod
 		i++
 
 		for e := deps.Front(); e != nil; e = e.Next() {
-			e.Value.(*Module).requiredBy.PushBack(app)
+			e.Value.(*Module).requiredBy.PushBack(mod)
 		}
 
-		mModules[app.Name()] = app
+		mModules[mod.Name()] = mod
 	}
 
 	return calculateVersion(modules, withDependencies), nil

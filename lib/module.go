@@ -113,7 +113,7 @@ func (p *requiresNodeProvider) Child(vertex interface{}, index int) (interface{}
 
 func newModule(metadata *moduleMetadata, requires *list.List) *Module {
 	spec := metadata.spec
-	app := &Module{
+	mod := &Module{
 		build:      spec.Build,
 		name:       spec.Name,
 		properties: spec.Properties,
@@ -124,10 +124,10 @@ func newModule(metadata *moduleMetadata, requires *list.List) *Module {
 	}
 
 	if requires != nil {
-		app.requires.PushBackList(requires)
+		mod.requires.PushBackList(requires)
 	}
 
-	return app
+	return mod
 }
 
 func (l Modules) indexByName() map[string]*Module {
@@ -207,13 +207,13 @@ func modulesInCommit(repo *git.Repository, commit *git.Commit) (Modules, error) 
 		return nil, err
 	}
 
-	vapps, err := metadataSet.toModules(true)
+	vmods, err := metadataSet.toModules(true)
 	if err != nil {
 		return nil, err
 	}
 
-	sort.Sort(vapps)
-	return vapps, nil
+	sort.Sort(vmods)
+	return vmods, nil
 }
 
 func modulesInDiff(repo *git.Repository, to, from *git.Commit) (Modules, error) {
@@ -231,21 +231,21 @@ func modulesInDiff(repo *git.Repository, to, from *git.Commit) (Modules, error) 
 }
 
 func modulesInDiffWithDepGraph(repo *git.Repository, to, from *git.Commit, reversed bool) (Modules, error) {
-	apps, err := modulesInDiff(repo, to, from)
+	mods, err := modulesInDiff(repo, to, from)
 	if err != nil {
 		return nil, err
 	}
 
 	if reversed {
-		apps, err = apps.expandRequiredByDependencies()
+		mods, err = mods.expandRequiredByDependencies()
 	} else {
-		apps, err = apps.expandRequiresDependencies()
+		mods, err = mods.expandRequiresDependencies()
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	return apps, nil
+	return mods, nil
 }
 
 func modulesInDiffWithDependents(repo *git.Repository, to, from *git.Commit) (Modules, error) {
@@ -275,10 +275,10 @@ func reduceToDiff(modules Modules, diff *git.Diff) (Modules, error) {
 		return nil, wrap(err)
 	}
 
-	apps := Modules{}
+	mods := Modules{}
 	for _, v := range filtered {
-		apps = append(apps, v)
+		mods = append(mods, v)
 	}
 
-	return apps, nil
+	return mods, nil
 }

@@ -31,19 +31,19 @@ func (r *TestRepository) InitModule(p string) error {
 	})
 }
 
-func (r *TestRepository) InitModuleWithOptions(p string, app *Spec) error {
-	appDir := path.Join(r.Dir, p)
-	err := os.MkdirAll(appDir, 0755)
+func (r *TestRepository) InitModuleWithOptions(p string, mod *Spec) error {
+	modDir := path.Join(r.Dir, p)
+	err := os.MkdirAll(modDir, 0755)
 	if err != nil {
 		return err
 	}
 
-	buff, err := yaml.Marshal(app)
+	buff, err := yaml.Marshal(mod)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(path.Join(appDir, ".mbt.yml"), buff, 0644)
+	err = ioutil.WriteFile(path.Join(modDir, ".mbt.yml"), buff, 0644)
 	if err != nil {
 		return err
 	}

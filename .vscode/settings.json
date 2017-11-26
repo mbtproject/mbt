@@ -5,6 +5,7 @@
     "initialises",
     "mbtproject",
     "monorepos",
+    "vmods",
     "wrapm"
   ]
 }

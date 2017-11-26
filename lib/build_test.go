@@ -148,8 +148,8 @@ func TestBuildEnvironment(t *testing.T) {
 		Properties: map[string]interface{}{"foo": "bar"},
 	}))
 
-	check(t, repo.WriteShellScript("app-a/build.sh", "echo $MBT_BUILD_COMMIT-$MBT_APP_VERSION-$MBT_APP_NAME-$MBT_APP_PROPERTY_FOO"))
-	check(t, repo.WritePowershellScript("app-a/build.ps1", "write-host $Env:MBT_BUILD_COMMIT-$Env:MBT_APP_VERSION-$Env:MBT_APP_NAME-$Env:MBT_APP_PROPERTY_FOO"))
+	check(t, repo.WriteShellScript("app-a/build.sh", "echo $MBT_BUILD_COMMIT-$MBT_MODULE_VERSION-$MBT_MODULE_NAME-$MBT_MODULE_PROPERTY_FOO"))
+	check(t, repo.WritePowershellScript("app-a/build.ps1", "write-host $Env:MBT_BUILD_COMMIT-$Env:MBT_MODULE_VERSION-$Env:MBT_MODULE_NAME-$Env:MBT_MODULE_PROPERTY_FOO"))
 	check(t, repo.Commit("first"))
 
 	m, err := ManifestByBranch(".tmp/repo", "master")

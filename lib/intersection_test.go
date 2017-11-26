@@ -29,18 +29,18 @@ func TestIntersectionWithElements(t *testing.T) {
 
 	third := repo.LastCommit
 
-	apps, err := IntersectionByCommit(".tmp/repo", second.String(), third.String())
+	mods, err := IntersectionByCommit(".tmp/repo", second.String(), third.String())
 	check(t, err)
 
-	assert.Len(t, apps, 1)
-	assert.Equal(t, "app-a", apps[0].Name())
+	assert.Len(t, mods, 1)
+	assert.Equal(t, "app-a", mods[0].Name())
 
 	// This operation should be commutative
-	apps, err = IntersectionByCommit(".tmp/repo", third.String(), second.String())
+	mods, err = IntersectionByCommit(".tmp/repo", third.String(), second.String())
 	check(t, err)
 
-	assert.Len(t, apps, 1)
-	assert.Equal(t, "app-a", apps[0].Name())
+	assert.Len(t, mods, 1)
+	assert.Equal(t, "app-a", mods[0].Name())
 }
 
 func TestIntersectionWithoutElements(t *testing.T) {
@@ -65,16 +65,16 @@ func TestIntersectionWithoutElements(t *testing.T) {
 
 	third := repo.LastCommit
 
-	apps, err := IntersectionByCommit(".tmp/repo", second.String(), third.String())
+	mods, err := IntersectionByCommit(".tmp/repo", second.String(), third.String())
 	check(t, err)
 
-	assert.Len(t, apps, 0)
+	assert.Len(t, mods, 0)
 
 	// This operation should be commutative
-	apps, err = IntersectionByCommit(".tmp/repo", third.String(), second.String())
+	mods, err = IntersectionByCommit(".tmp/repo", third.String(), second.String())
 	check(t, err)
 
-	assert.Len(t, apps, 0)
+	assert.Len(t, mods, 0)
 }
 
 func TestIntersectionByBranchWithElements(t *testing.T) {
@@ -96,18 +96,18 @@ func TestIntersectionByBranchWithElements(t *testing.T) {
 	check(t, repo.WriteContent("app-b/foo", "hello"))
 	check(t, repo.Commit("third"))
 
-	apps, err := IntersectionByBranch(".tmp/repo", "feature-a", "feature-b")
+	mods, err := IntersectionByBranch(".tmp/repo", "feature-a", "feature-b")
 	check(t, err)
 
-	assert.Len(t, apps, 1)
-	assert.Equal(t, "app-a", apps[0].Name())
+	assert.Len(t, mods, 1)
+	assert.Equal(t, "app-a", mods[0].Name())
 
 	// This operation should be commutative
-	apps, err = IntersectionByBranch(".tmp/repo", "feature-b", "feature-a")
+	mods, err = IntersectionByBranch(".tmp/repo", "feature-b", "feature-a")
 	check(t, err)
 
-	assert.Len(t, apps, 1)
-	assert.Equal(t, "app-a", apps[0].Name())
+	assert.Len(t, mods, 1)
+	assert.Equal(t, "app-a", mods[0].Name())
 }
 
 func TestIntersectionWithDependencies(t *testing.T) {
@@ -129,18 +129,18 @@ func TestIntersectionWithDependencies(t *testing.T) {
 	check(t, repo.WriteContent("app-a/bar", "hello"))
 	check(t, repo.Commit("third"))
 
-	apps, err := IntersectionByBranch(".tmp/repo", "feature-a", "feature-b")
+	mods, err := IntersectionByBranch(".tmp/repo", "feature-a", "feature-b")
 	check(t, err)
 
-	assert.Len(t, apps, 1)
-	assert.Equal(t, "app-c", apps[0].Name())
+	assert.Len(t, mods, 1)
+	assert.Equal(t, "app-c", mods[0].Name())
 
 	// This operation should be commutative
-	apps, err = IntersectionByBranch(".tmp/repo", "feature-b", "feature-a")
+	mods, err = IntersectionByBranch(".tmp/repo", "feature-b", "feature-a")
 	check(t, err)
 
-	assert.Len(t, apps, 1)
-	assert.Equal(t, "app-c", apps[0].Name())
+	assert.Len(t, mods, 1)
+	assert.Equal(t, "app-c", mods[0].Name())
 }
 
 func TestIntersctionOfTwoChangesWithSharedDependency(t *testing.T) {
@@ -162,14 +162,14 @@ func TestIntersctionOfTwoChangesWithSharedDependency(t *testing.T) {
 	check(t, repo.WriteContent("app-b/bar", "hello"))
 	check(t, repo.Commit("third"))
 
-	apps, err := IntersectionByBranch(".tmp/repo", "feature-a", "feature-b")
+	mods, err := IntersectionByBranch(".tmp/repo", "feature-a", "feature-b")
 	check(t, err)
 
-	assert.Len(t, apps, 0)
+	assert.Len(t, mods, 0)
 
 	// This operation should be commutative
-	apps, err = IntersectionByBranch(".tmp/repo", "feature-b", "feature-a")
+	mods, err = IntersectionByBranch(".tmp/repo", "feature-b", "feature-a")
 	check(t, err)
 
-	assert.Len(t, apps, 0)
+	assert.Len(t, mods, 0)
 }

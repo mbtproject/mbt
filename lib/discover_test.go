@@ -15,11 +15,11 @@ func TestDependencyLinks(t *testing.T) {
 	c := newModuleMetadata("app-c", "c", &Spec{Name: "app-c"})
 
 	s := moduleMetadataSet{a, b, c}
-	apps, err := s.toModules(true)
+	mods, err := s.toModules(true)
 	check(t, err)
-	m := apps.indexByName()
+	m := mods.indexByName()
 
-	assert.Len(t, apps, 3)
+	assert.Len(t, mods, 3)
 	assert.Equal(t, m["app-b"], m["app-a"].Requires().Front().Value)
 	assert.Equal(t, m["app-c"], m["app-b"].Requires().Front().Value)
 	assert.Equal(t, 0, m["app-c"].Requires().Len())
@@ -32,9 +32,9 @@ func TestVersionCalculation(t *testing.T) {
 	b := newModuleMetadata("app-b", "b", &Spec{Name: "app-b"})
 
 	s := moduleMetadataSet{a, b}
-	apps, err := s.toModules(true)
+	mods, err := s.toModules(true)
 	check(t, err)
-	m := apps.indexByName()
+	m := mods.indexByName()
 
 	assert.Equal(t, "b", m["app-b"].Version())
 	assert.Equal(t, "da23614e02469a0d7c7bd1bdab5c9c474b1904dc", m["app-a"].Version())
@@ -107,8 +107,8 @@ func TestMissingDependencies(t *testing.T) {
 		},
 	}}
 
-	apps, err := s.toModules(true)
+	mods, err := s.toModules(true)
 
-	assert.Nil(t, apps)
+	assert.Nil(t, mods)
 	assert.EqualError(t, err, "mbt: dependency not found app-a -> app-b")
 }

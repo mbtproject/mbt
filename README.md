@@ -90,16 +90,16 @@ be used by the actual build tools in the process.
 
 |Variable Name |Description |
 |---|---|
-|MBT_APP_NAME |Name of the module |
-|MBT_APP_VERSION |SHA1 hash calculated based on the content of the module directory and the content of any of its dependencies (recursively) |
+|MBT_MODULE_NAME |Name of the module |
+|MBT_MODULE_VERSION |SHA1 hash calculated based on the content of the module directory and the content of any of its dependencies (recursively) |
 |MBT_BUILD_COMMIT |Git commit SHA of the commit being built |
 
 In addition to the variables listed above, module properties (arbitrary list of 
-key/value pairs described below) is also populated in the form of `MBT_PROPERTY_XXX`
+key/value pairs described below) is also populated in the form of `MBT_MODULE_PROPERTY_XXX`
 where `XXX` denotes the key.
 
 One useful scenario of these variables would be, a build command that produces a 
-docker image. In that case, we could tag it with `MBT_APP_VERSION` so that the 
+docker image. In that case, we could tag it with `MBT_MODULE_VERSION` so that the 
 image produced as of a particular Git commit SHA can be identified accurately. 
 (We will also discuss how this information can be used to automatically produce 
 deployment artifacts later in this document)
@@ -131,8 +131,8 @@ As a simple but rather useless example of this can be illustrated with a templat
 as shown below.
 
 ```go
-{{ $app := range .Modules }}
-{{ app.Name }}
+{{ $module := range .Modules }}
+{{ $module.Name }}
 {{ end }}
 ```
 
@@ -180,8 +180,8 @@ properties:
 available to templates via `.Properties` property as illustrated below.
 
 ```go
-{{ $app := range .Modules }}
-{{ $app.Properties["a"] }} {{ $app.Properties["b"] }}
+{{ $module := range .Modules }}
+{{ $module.Properties["a"] }} {{ $module.Properties["b"] }}
 {{ end }}
 ```
 

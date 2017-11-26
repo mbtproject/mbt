@@ -135,13 +135,13 @@ func fromCommit(repo *git.Repository, dir string, commit *git.Commit) (*Manifest
 		return nil, err
 	}
 
-	vapps, err := metadataSet.toModules(true)
+	vmods, err := metadataSet.toModules(true)
 	if err != nil {
 		return nil, err
 	}
 
-	sort.Sort(vapps)
-	return &Manifest{dir, commit.Id().String(), vapps}, nil
+	sort.Sort(vmods)
+	return &Manifest{dir, commit.Id().String(), vmods}, nil
 }
 
 func newEmptyManifest(dir string) *Manifest {

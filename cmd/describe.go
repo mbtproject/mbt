@@ -109,14 +109,14 @@ var describeIntersectionCmd = &cobra.Command{
 			return errors.New("requires the second argument")
 		}
 
-		var apps lib.Modules
+		var mods lib.Modules
 		var err error
 
 		switch kind {
 		case "branch":
-			apps, err = lib.IntersectionByBranch(in, first, second)
+			mods, err = lib.IntersectionByBranch(in, first, second)
 		case "commit":
-			apps, err = lib.IntersectionByCommit(in, first, second)
+			mods, err = lib.IntersectionByCommit(in, first, second)
 		default:
 			err = errors.New("not a valid kind - available options are 'branch' and 'commit'")
 		}
@@ -125,7 +125,7 @@ var describeIntersectionCmd = &cobra.Command{
 			return handle(err)
 		}
 
-		return handle(output(apps))
+		return handle(output(mods))
 	},
 }
 
@@ -144,10 +144,10 @@ func formatRow(args ...interface{}) string {
 	return fmt.Sprintf("%s\t\t%s\t\t%s\n", padded...)
 }
 
-func output(apps lib.Modules) error {
+func output(mods lib.Modules) error {
 	if formatAsJson {
 		m := make(map[string]map[string]interface{})
-		for _, a := range apps {
+		for _, a := range mods {
 			v := make(map[string]interface{})
 			v["Name"] = a.Name()
 			v["Path"] = a.Path()
@@ -162,7 +162,7 @@ func output(apps lib.Modules) error {
 		fmt.Println(string(buff))
 	} else {
 		fmt.Print(formatRow("NAME", "PATH", "VERSION"))
-		for _, a := range apps {
+		for _, a := range mods {
 			fmt.Printf(formatRow(a.Name(), a.Path(), a.Version()))
 		}
 	}
