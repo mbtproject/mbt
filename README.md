@@ -185,6 +185,11 @@ available to templates via `.Properties` property as illustrated below.
 {{ end }}
 ```
 
+More realistic example of this capability is demonstrated in [this example repo](
+  https://github.com/mbtproject/demo). It generates docker images for two web 
+applications hosted in nginx, pushes them to specified docker registry and 
+generates a Kubernetes deployment manifest using `mbt apply` command.
+
 ## Install
 ```sh
 curl -L -o /usr/local/bin/mbt [get the url for your target from the links below]
