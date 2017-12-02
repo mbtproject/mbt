@@ -190,6 +190,9 @@ More realistic example of this capability is demonstrated in [this example repo]
 applications hosted in nginx, pushes them to specified docker registry and 
 generates a Kubernetes deployment manifest using `mbt apply` command.
 
+## CLI Documentation
+[Complete documentation](doc)
+
 ## Install
 ```sh
 curl -L -o /usr/local/bin/mbt [get the url for your target from the links below]

@@ -7,7 +7,7 @@ import (
 	"gopkg.in/sirupsen/logrus.v1"
 
 	"github.com/mbtproject/mbt/lib"
-	"gopkg.in/spf13/cobra.v0"
+	"github.com/spf13/cobra"
 )
 
 func init() {

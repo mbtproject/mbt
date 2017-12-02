@@ -3,7 +3,7 @@ package cmd
 import (
 	"errors"
 
-	"gopkg.in/spf13/cobra.v0"
+	"github.com/spf13/cobra"
 )
 
 // Flags available to all commands.

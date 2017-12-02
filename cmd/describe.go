@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/mbtproject/mbt/lib"
-	"gopkg.in/spf13/cobra.v0"
+	"github.com/spf13/cobra"
 )
 
 var (
