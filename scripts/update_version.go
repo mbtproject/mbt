@@ -70,5 +70,5 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Print(nextVersion)
+	fmt.Printf("%v.%v.%v\n", majorVersion, minorVersion, patchLevel)
 }
