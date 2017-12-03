@@ -35,8 +35,6 @@ go get github.com/stretchr/testify
 
 copy %GIT2GO_VENDOR_PATH%\install\bin\git2.dll lib\git2.dll
 
-powershell -ExecutionPolicy Bypass -File .\apply_version.ps1
-
 go test -v ./...
 
 go build -o "build/%OUT%"

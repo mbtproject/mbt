@@ -48,21 +48,15 @@ go install -x github.com/libgit2/git2go &&
 
 cd $DIR
 
-VERSION=$TRAVIS_COMMIT
+VERSION=$TRAVIS_TAG
 if [ -z $VERSION ]; then
-  VERSION=$(git log --pretty=oneline -1 | awk '{print $1}')
+  VERSION="0.0.0"
 fi
 VERSION=$(echo $VERSION | head -c4)
 
 OUT="mbt_${OS}_${ARCH}"
 
 make restore
-
-# Apply version
-sed "s/#development#/$VERSION/" <./cmd/version.go >./cmd/v.go
-rm ./cmd/version.go
-mv ./cmd/v.go ./cmd/version.go
-cat ./cmd/version.go
 
 TestPackage .
 TestPackage ./lib
@@ -79,10 +73,9 @@ cat >build/bintray.json << EOL
         "name": "${OUT}",
         "repo": "bin",
         "subject": "buddyspike",
-        "desc": "I was pushed completely automatically",
-        "website_url": "https://github.com/buddyspike/mbt", "issue_tracker_url": "https://github.com/buddyspike/mbt/issues", "vcs_url": "https://github.com/buddyspike/mbt.git", "public_download_numbers": true, "public_stats": true }, "version": {
-        "name": "0.1-alpha-${VERSION}",
-        "desc": "not for production use",
+        "desc": "Monorepo Build Tool",
+        "website_url": "https://github.com/mbtproject/mbt", "issue_tracker_url": "https://github.com/mbtproject/mbt/issues", "vcs_url": "https://github.com/buddyspike/mbt.git", "public_download_numbers": true, "public_stats": true }, "version": {
+        "name": "${VERSION}",
         "gpgSign": false
     },
     "files": [ {"includePattern": "build/${OUT}", "uploadPattern": "/${OUT}"} ],

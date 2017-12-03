@@ -6,7 +6,7 @@ install:
 
 .PHONY: build
 build: clean 
-	./build.sh
+	./scripts/build.sh
 
 .PHONY: clean
 clean:
@@ -29,4 +29,4 @@ showcover:
 
 .PHONY: doc
 doc:
-	go run ./gendoc.go
+	go run ./scripts/gendoc.go

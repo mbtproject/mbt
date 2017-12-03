@@ -15,7 +15,8 @@ branches:
   - master
   - release
 deploy:
-  on: release
+  on:
+    tags: true
   provider: bintray
   user: buddyspike
   key:

@@ -21,21 +21,21 @@ before_build:
   - cmd: SET GOPATH=%SYSTEMDRIVE%\gopath
   - cmd: SET PATH=%SYSTEMDRIVE%\bin;%SYSTEMDRIVE%\MinGW\bin;%SYSTEMDRIVE%\go386\go\bin;%PATH%
 build_script: 
-  - cmd: ./build_win.bat
+  - cmd: ./scripts/build_win.bat
 artifacts:
   - path: build/mbt_windows_x86.zip
     name: mbt
 deploy:
 - provider: BinTray
   on:
-    branch: release
+    appveyor_repo_tag: true
   username: buddyspike
   api_key:
     secure: SRz0imDKwe+ssF9RgX+ZsOuoRpz88j57axQuMBUo/263Oqh1qRj39tNjN3NljrXD
   subject: buddyspike
   repo: bin
   package: mbt_windows_x86
-  version: '1.0-alpha'
+  version: '0.0.0'
   publish: true
   override: true
   explode: false
