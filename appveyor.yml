@@ -1,6 +1,8 @@
 version: '{build}'
 image:
   - Visual Studio 2015
+environment:
+  appveyor_repo_tag: true
 clone_folder: '%SYSTEMDRIVE%\gopath\src\github.com\mbtproject\mbt'
 before_build:
   - cmd: mkdir %SYSTEMDRIVE%\downloads
