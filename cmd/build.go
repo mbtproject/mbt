@@ -25,7 +25,13 @@ func init() {
 
 var buildBranch = &cobra.Command{
 	Use:   "branch <branch>",
-	Short: "Builds the specific branch",
+	Short: "Builds the specified branch",
+	Long: `Builds the specified branch
+
+Builds all modules as of the tip of specified branch.
+If branch name is not specified assumes 'master'.
+
+`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		branch := "master"
 		if len(args) > 0 {
@@ -43,7 +49,14 @@ var buildBranch = &cobra.Command{
 
 var buildPr = &cobra.Command{
 	Use:   "pr --src <branch> --dst <branch>",
-	Short: "Builds a pr from src branch to dst branch",
+	Short: "Builds the diff between the src and dst branches",
+	Long: `Builds the diff between the src and dst branches
+
+Works out the merge base for src and dst branches and 
+builds all modules which have been changed between merge base and 
+the tip of dst branch.	
+
+	`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if src == "" {
 			return errors.New("requires source")
@@ -64,7 +77,15 @@ var buildPr = &cobra.Command{
 
 var buildDiff = &cobra.Command{
 	Use:   "diff --from <sha> --to <sha>",
-	Short: "Builds the diff between src and dst commit shas",
+	Short: "Builds the diff between from and to commits",
+	Long: `Builds the diff between from and to commits
+
+Works out the merge base for from and to commits and 
+builds all modules which have been changed between merge base and 
+to commit.
+
+Commit SHA must be the complete 40 character SHA1 string.
+	`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if from == "" {
 			return errors.New("requires from commit")
@@ -96,5 +117,10 @@ func build(m *lib.Manifest) error {
 
 var buildCommand = &cobra.Command{
 	Use:   "build",
-	Short: "Builds the modules in specified path",
+	Short: "Main command for building the repository",
+	Long: `Main command for building the repository 
+
+Executes the build according to the specified sub command. 
+See sub command help for more information.
+`,
 }
