@@ -52,7 +52,6 @@ VERSION=$TRAVIS_TAG
 if [ -z $VERSION ]; then
   VERSION="0.0.0"
 fi
-VERSION=$(echo $VERSION | head -c4)
 
 OUT="mbt_${OS}_${ARCH}"
 
