@@ -70,5 +70,5 @@ func main() {
 		panic(err)
 	}
 
-	println(nextVersion)
+	fmt.Print(nextVersion)
 }
