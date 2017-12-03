@@ -10,10 +10,6 @@ matrix:
   - go: tip
 git:
   submodules: false
-branches:
-  only:
-  - master
-  - release
 deploy:
   on:
     tags: true

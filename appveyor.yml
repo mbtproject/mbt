@@ -1,10 +1,6 @@
 version: '{build}'
 image:
   - Visual Studio 2015
-branches:
-  only:
-  - master
-  - release
 clone_folder: '%SYSTEMDRIVE%\gopath\src\github.com\mbtproject\mbt'
 before_build:
   - cmd: mkdir %SYSTEMDRIVE%\downloads
