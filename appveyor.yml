@@ -3,6 +3,7 @@ image:
   - Visual Studio 2015
 environment:
   appveyor_repo_tag: true
+  BINTRAY_APIKEY: SRz0imDKwe+ssF9RgX+ZsOuoRpz88j57axQuMBUo/263Oqh1qRj39tNjN3NljrXD
 clone_folder: '%SYSTEMDRIVE%\gopath\src\github.com\mbtproject\mbt'
 before_build:
   - cmd: mkdir %SYSTEMDRIVE%\downloads
@@ -18,8 +19,6 @@ before_build:
   - cmd: SET GOROOT=%SYSTEMDRIVE%\go386\go
   - cmd: SET GOPATH=%SYSTEMDRIVE%\gopath
   - cmd: SET PATH=%SYSTEMDRIVE%\bin;%SYSTEMDRIVE%\MinGW\bin;%SYSTEMDRIVE%\go386\go\bin;%PATH%
-environment:
-  BINTRAY_APIKEY: SRz0imDKwe+ssF9RgX+ZsOuoRpz88j57axQuMBUo/263Oqh1qRj39tNjN3NljrXD
 build_script: 
   - cmd: ./scripts/build_win.bat
   - ps: ./scripts/appveyor_publish.ps1
