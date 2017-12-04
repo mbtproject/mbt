@@ -3,8 +3,8 @@ image:
   - Visual Studio 2015
 environment:
   appveyor_repo_tag: true
-  secure:
-    BINTRAY_APIKEY: SRz0imDKwe+ssF9RgX+ZsOuoRpz88j57axQuMBUo/263Oqh1qRj39tNjN3NljrXD
+  BINTRAY_APIKEY:
+    secure: SRz0imDKwe+ssF9RgX+ZsOuoRpz88j57axQuMBUo/263Oqh1qRj39tNjN3NljrXD
 clone_folder: '%SYSTEMDRIVE%\gopath\src\github.com\mbtproject\mbt'
 before_build:
   - cmd: mkdir %SYSTEMDRIVE%\downloads
