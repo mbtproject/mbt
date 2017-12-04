@@ -33,8 +33,8 @@ deploy:
   subject: buddyspike
   repo: bin
   package: mbt_windows_x86
-  version: $(APPVEYOR_REPO_TAG_NAME)
+  version: $(${APPVEYOR_REPO_TAG_NAME:="0.0.0"})
   publish: true
-  override: false
+  override: true
   explode: false
   artifact: mbt
