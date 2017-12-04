@@ -35,6 +35,6 @@ deploy:
   package: mbt_windows_x86
   version: "0.1.8"
   publish: true
-  override: true
+  override: false
   explode: false
   artifact: mbt
