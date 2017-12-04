@@ -33,7 +33,7 @@ deploy:
   subject: buddyspike
   repo: bin
   package: mbt_windows_x86
-  version: '0.0.0'
+  version: "0.0.0"
   publish: true
   override: true
   explode: false
