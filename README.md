@@ -7,15 +7,17 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/mbtproject/mbt)](https://goreportcard.com/report/github.com/mbtproject/mbt)
 [![Coverage Status](https://coveralls.io/repos/github/mbtproject/mbt/badge.svg)](https://coveralls.io/github/mbtproject/mbt)
 
-Monorepos are a great way to organize large, modular applications.
-`mbt` is a build utility to build only the modules affected 
-by a particular change in a git repository. 
+Monorepo Build Tool (`mbt`) is a utility that supports differential builds, 
+dependency tracking and metadata management for monorepos stored in git. 
 
-Modules can be built with different programming languages and their native build tools. 
+In the context of `mbt`, the term 'Module' is used to refer to a part of source 
+tree that can be developed, built and released independently.
+Modules can be built with different programming languages and their 
+native build tools. 
+
 For example, a repository could have .NET modules built with msbuild 
 and NodeJS modules built with npm scripts. 
-Developers of these modules should be able to develop with tools they are 
-already familiar with.
+Module developers should be able to use the build tools native to their tool-chain.
 
 Each module in a repository is stored in its own directory with a spec file 
 called `.mbt.yml`. Presence of the spec file indicates `mbt` that the directory
@@ -57,6 +59,10 @@ mbt build pr --src feature --dst master --in .
 mbt build diff --from <commit-sha> --to <commit-sha> --in .
 
 ```
+
+> Currently, all `mbt` commands interrogates the git repository for 
+> source files required by the operation. Therefore, side effects of 
+> un-committed changes will not be visible.
 
 ## Dependencies
 Sometimes a change to a module could require the build of the modules that 

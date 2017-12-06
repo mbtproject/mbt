@@ -28,10 +28,8 @@ var RootCmd = &cobra.Command{
 	Short: "Build utility for monorepos",
 	Long: `Build utility for monorepos
 
-mbt is a cli tool for building monorepos stored in git. 
-It supports differential builds, dependency tracking and 
-transforming templates based on data inferred from the state of 
-the repository.
+Monorepo Build Tool (mbt) is a utility that supports differential builds,
+dependency tracking and metadata management for monorepos stored in git.
 
 All commands in mbt should specify the path to the repository via 
 --in argument.
