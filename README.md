@@ -10,7 +10,7 @@
 Monorepo Build Tool (`mbt`) is a utility that supports differential builds, 
 dependency tracking and metadata management for monorepos stored in git. 
 
-In the context of `mbt`, the term 'Module' is used to refer to a part of source 
+In the context of `mbt`, term 'Module' is used to refer to a part of source 
 tree that can be developed, built and released independently.
 Modules can be built with different programming languages and their 
 native build tools. 
