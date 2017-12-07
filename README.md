@@ -199,6 +199,9 @@ generates a Kubernetes deployment manifest using `mbt apply` command.
 ## CLI Documentation
 [Complete documentation](doc)
 
+## Demo
+[![asciicast](https://asciinema.org/a/KJxXNgrTs9KZbVV4GYNN5DScC.png)](https://asciinema.org/a/KJxXNgrTs9KZbVV4GYNN5DScC)
+
 ## Install
 ```sh
 curl -L -o /usr/local/bin/mbt [get the url for your target from the links below]
