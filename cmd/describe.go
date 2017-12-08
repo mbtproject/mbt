@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
+	"os"
+	"text/tabwriter"
 
 	"github.com/mbtproject/mbt/lib"
 	"github.com/spf13/cobra"
@@ -157,19 +158,6 @@ var describeIntersectionCmd = &cobra.Command{
 
 const columnWidth = 30
 
-func formatRow(args ...interface{}) string {
-	padded := make([]interface{}, len(args))
-	for i, a := range args {
-		requiredPadding := columnWidth - len(a.(string))
-		if requiredPadding > 0 {
-			padded[i] = fmt.Sprintf("%s%s", a, strings.Join(make([]string, requiredPadding), " "))
-		} else {
-			padded[i] = a
-		}
-	}
-	return fmt.Sprintf("%s\t\t%s\t\t%s\n", padded...)
-}
-
 func output(mods lib.Modules) error {
 	if formatAsJson {
 		m := make(map[string]map[string]interface{})
@@ -187,9 +175,14 @@ func output(mods lib.Modules) error {
 		}
 		fmt.Println(string(buff))
 	} else {
-		fmt.Print(formatRow("NAME", "PATH", "VERSION"))
+		w := tabwriter.NewWriter(os.Stdout, 0, 4, 0, '\t', 0)
+		fmt.Fprintln(w, "NAME\tPATH\tVERSION")
 		for _, a := range mods {
-			fmt.Printf(formatRow(a.Name(), a.Path(), a.Version()))
+			fmt.Fprintf(w, "%s\t%s\t%s\t\n", a.Name(), a.Path(), a.Version())
+		}
+
+		if err := w.Flush(); err != nil {
+			panic(err)
 		}
 	}
 
