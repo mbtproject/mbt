@@ -180,7 +180,7 @@ func output(mods lib.Modules) error {
 			return nil
 		}
 
-		w := tabwriter.NewWriter(os.Stdout, 0, 4, 0, '\t', 0)
+		w := tabwriter.NewWriter(os.Stdout, 0, 4, 4, '\t', 0)
 		fmt.Fprintln(w, "NAME\tPATH\tVERSION")
 		for _, a := range mods {
 			fmt.Fprintf(w, "%s\t%s\t%s\t\n", a.Name(), a.Path(), a.Version())
