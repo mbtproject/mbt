@@ -175,6 +175,11 @@ func output(mods lib.Modules) error {
 		}
 		fmt.Println(string(buff))
 	} else {
+		if len(mods) == 0 {
+			fmt.Println("No modules found")
+			return nil
+		}
+
 		w := tabwriter.NewWriter(os.Stdout, 0, 4, 0, '\t', 0)
 		fmt.Fprintln(w, "NAME\tPATH\tVERSION")
 		for _, a := range mods {
