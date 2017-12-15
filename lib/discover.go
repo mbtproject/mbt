@@ -76,7 +76,7 @@ func (a moduleMetadataSet) toModules(withDependencies bool) (Modules, error) {
 		m[meta.spec.Name] = meta
 		g.PushBack(meta)
 	}
-	provider := newModuleMetadataNode(m)
+	provider := newModuleMetadataProvider(m)
 
 	// Step 2
 	// Topological sort
@@ -144,7 +144,7 @@ type moduleMetadataNodeProvider struct {
 	set map[string]*moduleMetadata
 }
 
-func newModuleMetadataNode(set map[string]*moduleMetadata) *moduleMetadataNodeProvider {
+func newModuleMetadataProvider(set map[string]*moduleMetadata) *moduleMetadataNodeProvider {
 	return &moduleMetadataNodeProvider{set}
 }
 
