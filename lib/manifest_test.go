@@ -279,6 +279,36 @@ func TestDependencyChange(t *testing.T) {
 	assert.Equal(t, "app-b", m.Modules[1].Name())
 }
 
+func TestIndirectDependencyChange(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.InitModuleWithOptions("app-b", &Spec{
+		Name:         "app-b",
+		Dependencies: []string{"app-a"},
+	}))
+	check(t, repo.InitModuleWithOptions("app-c", &Spec{
+		Name:         "app-c",
+		Dependencies: []string{"app-b"},
+	}))
+	check(t, repo.Commit("first"))
+	c1 := repo.LastCommit
+
+	check(t, repo.WriteContent("app-a/foo", "hello"))
+	check(t, repo.Commit("second"))
+	c2 := repo.LastCommit
+
+	m, err := ManifestByDiff(".tmp/repo", c1.String(), c2.String())
+	check(t, err)
+
+	assert.Len(t, m.Modules, 3)
+	assert.Equal(t, "app-a", m.Modules[0].Name())
+	assert.Equal(t, "app-b", m.Modules[1].Name())
+	assert.Equal(t, "app-c", m.Modules[2].Name())
+}
+
 func TestDependentChange(t *testing.T) {
 	clean()
 	repo, err := createTestRepository(".tmp/repo")
