@@ -309,7 +309,7 @@ func TestIndirectDependencyChange(t *testing.T) {
 	assert.Equal(t, "app-c", m.Modules[2].Name())
 }
 
-func TestDependentChange(t *testing.T) {
+func TestDiffOfDependentChange(t *testing.T) {
 	clean()
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
@@ -331,6 +331,90 @@ func TestDependentChange(t *testing.T) {
 
 	assert.Len(t, m.Modules, 1)
 	assert.Equal(t, "app-b", m.Modules[0].Name())
+}
+
+func TestVersionOfIndependentModules(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.InitModule("app-b"))
+	check(t, repo.Commit("first"))
+	c1 := repo.LastCommit
+
+	m1, err := ManifestBySha(".tmp/repo", c1.String())
+	check(t, err)
+
+	check(t, repo.WriteContent("app-a/foo", "hello"))
+	check(t, repo.Commit("second"))
+	c2 := repo.LastCommit
+
+	m2, err := ManifestBySha(".tmp/repo", c2.String())
+	check(t, err)
+
+	assert.Equal(t, m1.Modules[1].Version(), m2.Modules[1].Version())
+	assert.NotEqual(t, m1.Modules[0].Version(), m2.Modules[0].Version())
+}
+
+func TestVersionOfDependentModules(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.InitModuleWithOptions("app-b", &Spec{
+		Name:         "app-b",
+		Dependencies: []string{"app-a"},
+	}))
+	check(t, repo.Commit("first"))
+	c1 := repo.LastCommit
+
+	m1, err := ManifestBySha(".tmp/repo", c1.String())
+	check(t, err)
+
+	check(t, repo.WriteContent("app-a/foo", "hello"))
+	check(t, repo.Commit("second"))
+	c2 := repo.LastCommit
+
+	m2, err := ManifestBySha(".tmp/repo", c2.String())
+	check(t, err)
+
+	assert.NotEqual(t, m1.Modules[0].Version(), m2.Modules[0].Version())
+	assert.NotEqual(t, m1.Modules[1].Version(), m2.Modules[1].Version())
+}
+
+func TestVersionOfIndirectlyDependentModules(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.InitModuleWithOptions("app-b", &Spec{
+		Name:         "app-b",
+		Dependencies: []string{"app-a"},
+	}))
+	check(t, repo.InitModuleWithOptions("app-c", &Spec{
+		Name:         "app-c",
+		Dependencies: []string{"app-b"},
+	}))
+
+	check(t, repo.Commit("first"))
+	c1 := repo.LastCommit
+
+	m1, err := ManifestBySha(".tmp/repo", c1.String())
+	check(t, err)
+
+	check(t, repo.WriteContent("app-a/foo", "hello"))
+	check(t, repo.Commit("second"))
+	c2 := repo.LastCommit
+
+	m2, err := ManifestBySha(".tmp/repo", c2.String())
+	check(t, err)
+
+	assert.NotEqual(t, m1.Modules[0].Version(), m2.Modules[0].Version())
+	assert.NotEqual(t, m1.Modules[1].Version(), m2.Modules[1].Version())
+	assert.NotEqual(t, m1.Modules[2].Version(), m2.Modules[2].Version())
 }
 
 func TestManifestBySha(t *testing.T) {

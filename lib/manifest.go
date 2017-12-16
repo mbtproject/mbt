@@ -135,7 +135,7 @@ func fromCommit(repo *git.Repository, dir string, commit *git.Commit) (*Manifest
 		return nil, err
 	}
 
-	vmods, err := metadataSet.toModules(true)
+	vmods, err := metadataSet.toModules()
 	if err != nil {
 		return nil, err
 	}

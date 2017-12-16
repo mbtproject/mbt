@@ -67,7 +67,7 @@ type moduleMetadataSet []*moduleMetadata
 
 // toModules transforms an moduleMetadataSet to Modules structure
 // while establishing the dependency links.
-func (a moduleMetadataSet) toModules(withDependencies bool) (Modules, error) {
+func (a moduleMetadataSet) toModules() (Modules, error) {
 	// Step 1
 	// Transform each moduleMetadatadata into moduleMetadataNode for sorting.
 	m := make(map[string]*moduleMetadata)
@@ -114,19 +114,25 @@ func (a moduleMetadataSet) toModules(withDependencies bool) (Modules, error) {
 		mModules[mod.Name()] = mod
 	}
 
-	return calculateVersion(modules, withDependencies), nil
+	return calculateVersion(modules), nil
 }
 
 // calculateVersion takes the topologically sorted Modules and
 // initialises their version field.
-func calculateVersion(topSorted Modules, withDependencies bool) Modules {
+func calculateVersion(topSorted Modules) Modules {
 	for _, a := range topSorted {
-		if !withDependencies || a.Requires().Len() == 0 {
+		if a.Requires().Len() == 0 {
 			a.version = a.hash
 		} else {
 			h := sha1.New()
 
 			io.WriteString(h, a.hash)
+			// Consider the version of all dependencies to compute the version of
+			// current module.
+			// It is unnecessary to traverse the entire dependency graph
+			// here because we are processing the list of modules in topological
+			// order. Therefore, version of a dependency would already contain
+			// the version of its dependencies.
 			for e := a.Requires().Front(); e != nil; e = e.Next() {
 				io.WriteString(h, e.Value.(*Module).Version())
 			}
