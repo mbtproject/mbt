@@ -207,7 +207,7 @@ func modulesInCommit(repo *git.Repository, commit *git.Commit) (Modules, error) 
 		return nil, err
 	}
 
-	vmods, err := metadataSet.toModules(true)
+	vmods, err := metadataSet.toModules()
 	if err != nil {
 		return nil, err
 	}
