@@ -112,3 +112,23 @@ func TestMissingDependencies(t *testing.T) {
 	assert.Nil(t, mods)
 	assert.EqualError(t, err, "mbt: dependency not found app-a -> app-b")
 }
+
+func TestModuleNameConflicts(t *testing.T) {
+	s := moduleMetadataSet{
+		&moduleMetadata{
+			dir:  "app-a",
+			hash: "a",
+			spec: &Spec{Name: "app-a"},
+		},
+		&moduleMetadata{
+			dir:  "app-b",
+			hash: "a",
+			spec: &Spec{Name: "app-a"},
+		},
+	}
+
+	mods, err := s.toModules()
+
+	assert.Nil(t, mods)
+	assert.EqualError(t, err, "mbt: Module name 'app-a' in directory 'app-b' conflicts with the module in 'app-a' directory")
+}

@@ -73,6 +73,9 @@ func (a moduleMetadataSet) toModules() (Modules, error) {
 	m := make(map[string]*moduleMetadata)
 	g := new(list.List)
 	for _, meta := range a {
+		if conflict, ok := m[meta.spec.Name]; ok {
+			return nil, newErrorf("Module name '%s' in directory '%s' conflicts with the module in '%s' directory", meta.spec.Name, meta.dir, conflict.dir)
+		}
 		m[meta.spec.Name] = meta
 		g.PushBack(meta)
 	}
