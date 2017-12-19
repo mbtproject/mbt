@@ -3,12 +3,12 @@
 package main
 
 import (
-	"strings"
-	"strconv"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"regexp"
-	"flag"
+	"strconv"
+	"strings"
 )
 
 var major, minor, patch bool
@@ -35,7 +35,7 @@ func main() {
 	}
 
 	currentVersion := match[0]
-	
+
 	majorVersion, err := strconv.ParseInt(match[1], 10, 32)
 	if err != nil {
 		panic(err)
