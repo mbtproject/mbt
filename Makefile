@@ -30,3 +30,7 @@ showcover:
 .PHONY: doc
 doc:
 	go run ./scripts/gendoc.go
+
+.PHONY: lint
+lint:
+	gofmt -s -w **/*.go
