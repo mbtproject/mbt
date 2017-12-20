@@ -70,18 +70,5 @@ func main() {
 		panic(err)
 	}
 
-	contentBytes, err = ioutil.ReadFile("appveyor.yml")
-	if err != nil {
-		panic(err)
-	}
-
-	content = string(contentBytes)
-
-	newContent = strings.Replace(content, currentVersion, nextVersion, 1)
-	err = ioutil.WriteFile("appveyor.yml", []byte(newContent), 0644)
-	if err != nil {
-		panic(err)
-	}
-
 	fmt.Printf("%v.%v.%v\n", majorVersion, minorVersion, patchLevel)
 }
