@@ -457,3 +457,30 @@ func TestNonRepository(t *testing.T) {
 	assert.Nil(t, m)
 	assert.EqualError(t, err, "mbt: could not find repository from '.tmp/repo'")
 }
+
+func TestOrderOfModules(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitModuleWithOptions("app-a", &Spec{
+		Name:         "app-a",
+		Dependencies: []string{"app-b"},
+	}))
+
+	check(t, repo.InitModuleWithOptions("app-b", &Spec{
+		Name:         "app-b",
+		Dependencies: []string{"app-c"},
+	}))
+
+	check(t, repo.InitModule("app-c"))
+	check(t, repo.Commit("first"))
+
+	m, err := ManifestByBranch(".tmp/repo", "master")
+	check(t, err)
+
+	assert.Len(t, m.Modules, 3)
+	assert.Equal(t, "app-c", m.Modules[0].Name())
+	assert.Equal(t, "app-b", m.Modules[1].Name())
+	assert.Equal(t, "app-a", m.Modules[2].Name())
+}

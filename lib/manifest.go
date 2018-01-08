@@ -2,7 +2,6 @@ package lib
 
 import (
 	"encoding/hex"
-	"sort"
 
 	git "github.com/libgit2/git2go"
 )
@@ -140,7 +139,6 @@ func fromCommit(repo *git.Repository, dir string, commit *git.Commit) (*Manifest
 		return nil, err
 	}
 
-	sort.Sort(vmods)
 	return &Manifest{dir, commit.Id().String(), vmods}, nil
 }
 

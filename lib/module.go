@@ -3,7 +3,6 @@ package lib
 import (
 	"container/list"
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/buddyspike/graph"
@@ -58,19 +57,6 @@ func (a *Module) RequiredBy() *list.List {
 // Version returns the content based version SHA for the module.
 func (a *Module) Version() string {
 	return a.version
-}
-
-// Sort interface to sort modules by path
-func (l Modules) Len() int {
-	return len(l)
-}
-
-func (l Modules) Less(i, j int) bool {
-	return l[i].path < l[j].path
-}
-
-func (l Modules) Swap(i, j int) {
-	l[i], l[j] = l[j], l[i]
 }
 
 type requiredByNodeProvider struct{}
@@ -212,7 +198,6 @@ func modulesInCommit(repo *git.Repository, commit *git.Commit) (Modules, error) 
 		return nil, err
 	}
 
-	sort.Sort(vmods)
 	return vmods, nil
 }
 
