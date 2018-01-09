@@ -97,10 +97,10 @@ func (a moduleMetadataSet) toModules() (Modules, error) {
 	for n := sortedNodes.Front(); n != nil; n = n.Next() {
 		metadata := n.Value.(*moduleMetadata)
 		spec := metadata.spec
-		deps := new(list.List)
+		deps := Modules{}
 		for _, d := range spec.Dependencies {
 			if depMod, ok := mModules[d]; ok {
-				deps.PushBack(depMod)
+				deps = append(deps, depMod)
 			} else {
 				panic("topsort is inconsistent")
 			}
@@ -109,10 +109,6 @@ func (a moduleMetadataSet) toModules() (Modules, error) {
 		mod := newModule(metadata, deps)
 		modules[i] = mod
 		i++
-
-		for e := deps.Front(); e != nil; e = e.Next() {
-			e.Value.(*Module).requiredBy.PushBack(mod)
-		}
 
 		mModules[mod.Name()] = mod
 	}
@@ -124,7 +120,7 @@ func (a moduleMetadataSet) toModules() (Modules, error) {
 // initialises their version field.
 func calculateVersion(topSorted Modules) Modules {
 	for _, a := range topSorted {
-		if a.Requires().Len() == 0 {
+		if len(a.Requires()) == 0 {
 			a.version = a.hash
 		} else {
 			h := sha1.New()
@@ -136,8 +132,8 @@ func calculateVersion(topSorted Modules) Modules {
 			// here because we are processing the list of modules in topological
 			// order. Therefore, version of a dependency would already contain
 			// the version of its dependencies.
-			for e := a.Requires().Front(); e != nil; e = e.Next() {
-				io.WriteString(h, e.Value.(*Module).Version())
+			for _, e := range a.Requires() {
+				io.WriteString(h, e.Version())
 			}
 			a.version = hex.EncodeToString(h.Sum(nil))
 		}

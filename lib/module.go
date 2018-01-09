@@ -17,8 +17,8 @@ type Module struct {
 	hash       string
 	version    string
 	properties map[string]interface{}
-	requires   *list.List
-	requiredBy *list.List
+	requires   Modules
+	requiredBy Modules
 }
 
 // Modules is an array of Module.
@@ -45,12 +45,12 @@ func (a *Module) Properties() map[string]interface{} {
 }
 
 // Requires returns an array of modules required by this module.
-func (a *Module) Requires() *list.List {
+func (a *Module) Requires() Modules {
 	return a.requires
 }
 
 // RequiredBy returns an array of modules requires this module.
-func (a *Module) RequiredBy() *list.List {
+func (a *Module) RequiredBy() Modules {
 	return a.requiredBy
 }
 
@@ -66,16 +66,11 @@ func (p *requiredByNodeProvider) ID(vertex interface{}) interface{} {
 }
 
 func (p *requiredByNodeProvider) ChildCount(vertex interface{}) int {
-	return vertex.(*Module).RequiredBy().Len()
+	return len(vertex.(*Module).RequiredBy())
 }
 
 func (p *requiredByNodeProvider) Child(vertex interface{}, index int) (interface{}, error) {
-	head := vertex.(*Module).RequiredBy().Front()
-	for i := 0; i < index; i++ {
-		head = head.Next()
-	}
-
-	return head.Value, nil
+	return vertex.(*Module).RequiredBy()[index], nil
 }
 
 type requiresNodeProvider struct{}
@@ -85,19 +80,14 @@ func (p *requiresNodeProvider) ID(vertex interface{}) interface{} {
 }
 
 func (p *requiresNodeProvider) ChildCount(vertex interface{}) int {
-	return vertex.(*Module).Requires().Len()
+	return len(vertex.(*Module).Requires())
 }
 
 func (p *requiresNodeProvider) Child(vertex interface{}, index int) (interface{}, error) {
-	head := vertex.(*Module).Requires().Front()
-	for i := 0; i < index; i++ {
-		head = head.Next()
-	}
-
-	return head.Value, nil
+	return vertex.(*Module).Requires()[index], nil
 }
 
-func newModule(metadata *moduleMetadata, requires *list.List) *Module {
+func newModule(metadata *moduleMetadata, requires Modules) *Module {
 	spec := metadata.spec
 	mod := &Module{
 		build:      spec.Build,
@@ -105,12 +95,16 @@ func newModule(metadata *moduleMetadata, requires *list.List) *Module {
 		properties: spec.Properties,
 		hash:       metadata.hash,
 		path:       metadata.dir,
-		requires:   new(list.List),
-		requiredBy: new(list.List),
+		requires:   Modules{},
+		requiredBy: Modules{},
 	}
 
 	if requires != nil {
-		mod.requires.PushBackList(requires)
+		mod.requires = requires
+	}
+
+	for _, d := range requires {
+		d.requiredBy = append(d.requiredBy, mod)
 	}
 
 	return mod
