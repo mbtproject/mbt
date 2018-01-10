@@ -26,6 +26,7 @@ func init() {
 	describeCmd.PersistentFlags().BoolVar(&formatAsJson, "json", false, "format output as json")
 	describeCmd.AddCommand(describeCommitCmd)
 	describeCmd.AddCommand(describeBranchCmd)
+	describeCmd.AddCommand(describeHeadCmd)
 	describeCmd.AddCommand(describePrCmd)
 	describeCmd.AddCommand(describeIntersectionCmd)
 
@@ -57,6 +58,23 @@ If branch name is not specified assumes 'master'.
 			branch = args[0]
 		}
 		m, err := lib.ManifestByBranch(in, branch)
+		if err != nil {
+			return handle(err)
+		}
+
+		return handle(output(m.Modules))
+	},
+}
+
+var describeHeadCmd = &cobra.Command{
+	Use:   "head",
+	Short: "Describes the manifest for the branch pointed at head",
+	Long: `Describes the manifest for the branch pointed at head
+
+Displays all modules as of the tip of the branch pointed at head.
+`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		m, err := lib.ManifestByHead(in)
 		if err != nil {
 			return handle(err)
 		}
