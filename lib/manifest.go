@@ -120,6 +120,25 @@ func ManifestByDiff(dir, from, to string) (*Manifest, error) {
 	return &Manifest{Modules: a, Dir: dir, Sha: to}, nil
 }
 
+// ManifestByHead returns the manifest for head of the current branch.
+func ManifestByHead(dir string) (*Manifest, error) {
+	repo, m, err := openRepo(dir)
+	if err != nil {
+		return nil, wrap(err)
+	}
+
+	if m != nil {
+		return m, nil
+	}
+
+	branch, err := getBranchName(repo)
+	if err != nil {
+		return nil, wrap(err)
+	}
+
+	return fromBranch(repo, dir, branch)
+}
+
 func (m *Manifest) indexByName() map[string]*Module {
 	return m.Modules.indexByName()
 }

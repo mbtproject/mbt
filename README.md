@@ -46,8 +46,11 @@ this committed to the repository, we can start using `mbt` cli to build in
 several ways as shown below.
 
 ```
-# Build the current branch 
+# Build the current master branch 
 mbt build branch --in .
+
+# Build the current branch
+mbt build head --in .
 
 # Build a specific branch
 mbt build branch feature --in .

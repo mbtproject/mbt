@@ -67,3 +67,18 @@ func TestInvalidBranch(t *testing.T) {
 	assert.Nil(t, c)
 	assert.EqualError(t, err, "mbt: no reference found for shorthand 'foo'")
 }
+
+func TestBranchName(t *testing.T) {
+	clean()
+
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.Commit("first"))
+	check(t, repo.SwitchToBranch("feature"))
+
+	branch, err := getBranchName(repo.Repo)
+
+	assert.Equal(t, "feature", branch)
+}

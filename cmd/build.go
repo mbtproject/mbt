@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"errors"
-	"log"
 	"os"
 
 	"gopkg.in/sirupsen/logrus.v1"
@@ -34,13 +33,7 @@ Builds all modules as of the head of the branch that is in the specified folder.
 
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		branch, err := lib.GetWorkingBranchName(in)
-		if err != nil {
-			return handle(err)
-		}
-		log.Println("working branch", branch)
-
-		m, err := lib.ManifestByBranch(in, branch)
+		m, err := lib.ManifestByHead(in)
 		if err != nil {
 			return handle(err)
 		}

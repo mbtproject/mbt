@@ -87,23 +87,11 @@ func getCommit(repo *git.Repository, commitSha string) (*git.Commit, error) {
 	return repo.LookupCommit(commitOid)
 }
 
-// GetWorkingBranchName will return the name of the branch in the working directory
-func GetWorkingBranchName(dir string) (string, error) {
-
-	repo, _, err := openRepo(dir)
-	if err != nil {
-		return "", wrap(err)
-	}
-
+func getBranchName(repo *git.Repository) (string, error) {
 	head, err := repo.Head()
 	if err != nil {
 		return "", wrap(err)
 	}
 
-	name, err := head.Branch().Name()
-	if err != nil {
-		return "", wrap(err)
-	}
-
-	return name, nil
+	return head.Branch().Name()
 }

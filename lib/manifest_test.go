@@ -9,7 +9,6 @@ import (
 
 func TestSingleModDir(t *testing.T) {
 	clean()
-	// defer clean()
 
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
@@ -252,6 +251,20 @@ func TestManifestByDiff(t *testing.T) {
 	check(t, err)
 
 	assert.Len(t, m.Modules, 0)
+}
+
+func TestManifestByHead(t *testing.T) {
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.Commit("first"))
+	check(t, repo.SwitchToBranch("feature"))
+
+	m, err := ManifestByHead(".tmp/repo")
+	check(t, err)
+
+	assert.Equal(t, "app-a", m.Modules[0].Name())
 }
 
 func TestDependencyChange(t *testing.T) {
