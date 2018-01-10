@@ -20,7 +20,26 @@ func init() {
 	buildCommand.AddCommand(buildBranch)
 	buildCommand.AddCommand(buildPr)
 	buildCommand.AddCommand(buildDiff)
+	buildCommand.AddCommand(buildHead)
 	RootCmd.AddCommand(buildCommand)
+}
+
+var buildHead = &cobra.Command{
+	Use:   "head",
+	Short: "Builds the local directory",
+	Long: `Builds the local directory
+
+Builds all modules as of the head of the branch that is in the specified folder.
+
+`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		m, err := lib.ManifestByHead(in)
+		if err != nil {
+			return handle(err)
+		}
+
+		return build(m)
+	},
 }
 
 var buildBranch = &cobra.Command{

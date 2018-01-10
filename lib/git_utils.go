@@ -86,3 +86,12 @@ func getCommit(repo *git.Repository, commitSha string) (*git.Commit, error) {
 
 	return repo.LookupCommit(commitOid)
 }
+
+func getBranchName(repo *git.Repository) (string, error) {
+	head, err := repo.Head()
+	if err != nil {
+		return "", wrap(err)
+	}
+
+	return head.Branch().Name()
+}
