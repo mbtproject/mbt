@@ -1,0 +1,10 @@
+/bin
+/build
+/coverage
+.vagrant
+*.swp
+*.test
+.idea
+*.wal
+*.tmp
+*.out

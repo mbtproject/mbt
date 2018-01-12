@@ -1,8 +1,12 @@
 default: install
 
 .PHONY: install
-install: 
+install: build_libgit2
 	go install ./...
+
+.PHONY: build_libgit2
+build_libgit2:
+	./scripts/build_libgit2.sh
 
 .PHONY: build
 build: clean 
@@ -18,7 +22,7 @@ restore:
 	go get github.com/stretchr/testify
 
 .PHONY: test
-test:
+test: build_libgit2
 	go test -coverprofile=coverage.out ./lib
 	go test -coverprofile=coverage.out ./cmd
 	go test -coverprofile=coverage.out .

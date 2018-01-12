@@ -1,0 +1,24 @@
+language: go
+
+go:
+  - 1.7
+  - 1.8
+  - tip
+
+script: make test-static
+
+matrix:
+  allow_failures:
+    - go: tip
+
+git:
+  submodules: false
+
+before_install:
+  - git submodule update --init
+
+branches:
+  only:
+  - master
+  - /v\d+/
+  - next
