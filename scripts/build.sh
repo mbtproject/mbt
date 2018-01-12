@@ -3,11 +3,11 @@
 set -e
 
 DIR=$(pwd)
-GIT2GO_PATH=$GOPATH/src/github.com/libgit2/git2go
-GIT2GO_VENDOR_PATH=$GIT2GO_PATH/vendor/libgit2
+LIBGIT2_PATH=$DIR/vendor/libgit2
 OS=$(uname -s | awk '{print tolower($0)}')
 ARCH=$(uname -m)
 
+# Utility Functions
 TestPackage() {
   package=$1
   go test -v -covermode=count -coverprofile=coverage.out $package
@@ -17,35 +17,19 @@ TestPackage() {
   fi
 }
 
-go get github.com/libgit2/git2go || true &&
+# Restore build dependencies
 go get golang.org/x/tools/cmd/cover
 go get github.com/mattn/goveralls
 
-cd $GIT2GO_PATH &&
-git checkout v26 &&
-git submodule update --init || true &&
+# Build libgit2
+./scripts/build_libgit2.sh &&
 
-cd $GIT2GO_VENDOR_PATH &&
-mkdir -p install/lib &&
-mkdir -p build &&
-cd build &&
-cmake -DTHREADSAFE=ON \
-      -DBUILD_CLAR=OFF \
-      -DBUILD_SHARED_LIBS=OFF \
-      -DCMAKE_C_FLAGS=-fPIC \
-      -DCMAKE_BUILD_TYPE="RelWithDebInfo" \
-      -DCMAKE_INSTALL_PREFIX=../install \
-      -DUSE_SSH=OFF \
-      -DCURL=OFF \
-      .. &&
+# Set environment so to static link libgit2 when building git2go
+export PKG_CONFIG_PATH="$LIBGIT2_PATH/build"
+export CGO_LDFLAGS="$(pkg-config --libs --static $LIBGIT2_PATH/build/libgit2.pc)"
 
-cmake --build . &&
-make -j2 install &&
-
-export PKG_CONFIG_PATH=$GIT2GO_VENDOR_PATH/build
-export CGO_LDFLAGS="$(pkg-config --libs --static $GOPATH/src/github.com/libgit2/git2go/vendor/libgit2/build/libgit2.pc)"
-go install -x github.com/libgit2/git2go &&
-
+# All preparation is done at this point.
+# Move on to building mbt
 cd $DIR
 
 VERSION=$TRAVIS_TAG
@@ -55,14 +39,14 @@ fi
 
 OUT="mbt_${OS}_${ARCH}"
 
-make restore
+make restore &&
 
-TestPackage .
-TestPackage ./lib
-TestPackage ./cmd
+TestPackage . &&
+TestPackage ./lib &&
+TestPackage ./cmd &&
 
-go build -o "build/${OUT}"
-shasum -a 1 -p "build/${OUT}" | cut -d ' ' -f 1 > "build/${OUT}.sha1"
+go build -o "build/${OUT}" &&
+shasum -a 1 -p "build/${OUT}" | cut -d ' ' -f 1 > "build/${OUT}.sha1" &&
 echo "testing the bin"
 "./build/${OUT}" version
 
