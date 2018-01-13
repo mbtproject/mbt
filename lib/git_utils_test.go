@@ -79,6 +79,7 @@ func TestBranchName(t *testing.T) {
 	check(t, repo.SwitchToBranch("feature"))
 
 	branch, err := getBranchName(repo.Repo)
+	check(t, err)
 
 	assert.Equal(t, "feature", branch)
 }
