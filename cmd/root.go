@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"errors"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -31,15 +31,16 @@ var RootCmd = &cobra.Command{
 Monorepo Build Tool (mbt) is a utility that supports differential builds,
 dependency tracking and metadata management for monorepos stored in git.
 
-All commands in mbt should specify the path to the repository via 
---in argument.
-
 See help for individual commands for more information.
 
 	`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if cmd.Use != "version" && in == "" {
-			return errors.New("requires the path to repo")
+			cwd, err := os.Getwd()
+			if err != nil {
+				return err
+			}
+			in = cwd
 		}
 		return nil
 	},

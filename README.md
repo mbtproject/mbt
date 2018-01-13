@@ -47,19 +47,19 @@ several ways as shown below.
 
 ```
 # Build the current master branch 
-mbt build branch --in .
+mbt build branch
 
 # Build the current branch
-mbt build head --in .
+mbt build head
 
 # Build a specific branch
-mbt build branch feature --in .
+mbt build branch feature
 
 # Build only the modules changed in a specific branch relative to another
-mbt build pr --src feature --dst master --in .
+mbt build pr --src feature --dst master
 
 # Build only the modules changed between two commits
-mbt build diff --from <commit-sha> --to <commit-sha> --in .
+mbt build diff --from <commit-sha> --to <commit-sha>
 
 ```
 
@@ -121,7 +121,7 @@ to be built. For example, to list modules affected between two git branches, we
 could run:
 
 ```
-mbt describe pr --src <source-branch-name> --dst <destination-branch-name> --in .
+mbt describe pr --src <source-branch-name> --dst <destination-branch-name>
 ``` 
 
 Furthermore, you can specify `--json` flag to get the output of `describe` 
@@ -150,13 +150,13 @@ useful ways to produce the list of module names in the repository.
 
 ```
 # Apply the state of master branch
-mbt apply branch --to <path to the template> --in <path to repo>
+mbt apply branch --to <path to the template>
 
 # Apply the state of another branch
-mbt apply branch <branch-name> --to <path to the template> --in <path to repo>
+mbt apply branch <branch-name> --to <path to the template>
 
 # Apply the state as of a particular commit
-mbt apply commit <git-commit-sha> --to <path to the template> --in <path to repo>
+mbt apply commit <git-commit-sha> --to <path to the template>
 ```
 
 Output of above commands written to `stdout` by default but can be directed to a 
@@ -172,7 +172,7 @@ For example, running mbt command with an environment variable as shown below wou
 make the key `TARGET` available with value `PRODUCTION` in  `.Env` property.
 
 ```
-TARGET=PRODUCTION mbt apply branch --in .
+TARGET=PRODUCTION mbt apply branch
 ```
 
 Second property is available in each module and can be specified in `.mbt.yml` 
