@@ -1,25 +1,24 @@
-## mbt build branch
+## mbt build head
 
-Builds the specified branch
+Builds the local directory
 
 ### Synopsis
 
 
-Builds the specified branch
+Builds the local directory
 
-Builds all modules as of the tip of specified branch.
-If branch name is not specified assumes 'master'.
+Builds all modules as of the head of the branch that is in the specified folder.
 
 
 
 ```
-mbt build branch <branch> [flags]
+mbt build head [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for branch
+  -h, --help   help for head
 ```
 
 ### Options inherited from parent commands

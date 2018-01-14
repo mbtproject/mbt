@@ -1,25 +1,23 @@
-## mbt describe commit
+## mbt describe head
 
-Describes the manifest of a specified commit
+Describes the manifest for the branch pointed at head
 
 ### Synopsis
 
 
-Describes the manifest of a specified commit
+Describes the manifest for the branch pointed at head
 
-Displays all modules as of the specified commit.
-
-Commit SHA must be the complete 40 character SHA1 string.
+Displays all modules as of the tip of the branch pointed at head.
 
 
 ```
-mbt describe commit <sha> [flags]
+mbt describe head [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for commit
+  -h, --help   help for head
 ```
 
 ### Options inherited from parent commands
