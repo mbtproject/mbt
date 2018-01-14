@@ -15,128 +15,96 @@ type Manifest struct {
 
 // ManifestByPr returns the manifest of pull request.
 func ManifestByPr(dir, src, dst string) (*Manifest, error) {
-	repo, m, err := openRepo(dir)
-	if err != nil {
-		return nil, err
-	}
+	return buildManifest(dir, func(repo *git.Repository) (*Manifest, error) {
+		srcC, err := getBranchCommit(repo, src)
+		if err != nil {
+			return nil, err
+		}
 
-	if m != nil {
-		return m, nil
-	}
+		dstC, err := getBranchCommit(repo, dst)
+		if err != err {
+			return nil, err
+		}
 
-	srcC, err := getBranchCommit(repo, src)
-	if err != nil {
-		return nil, err
-	}
+		a, err := modulesInDiffWithDependents(repo, srcC, dstC)
+		if err != nil {
+			return nil, err
+		}
 
-	dstC, err := getBranchCommit(repo, dst)
-	if err != err {
-		return nil, err
-	}
-
-	a, err := modulesInDiffWithDependents(repo, srcC, dstC)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Manifest{Modules: a, Dir: dir, Sha: srcC.Id().String()}, nil
+		return &Manifest{Modules: a, Dir: dir, Sha: srcC.Id().String()}, nil
+	})
 }
 
 // ManifestBySha returns the manifest as of the specified commit sha.
 func ManifestBySha(dir, sha string) (*Manifest, error) {
-	repo, m, err := openRepo(dir)
-	if err != nil {
-		return nil, err
-	}
+	return buildManifest(dir, func(repo *git.Repository) (*Manifest, error) {
 
-	if m != nil {
-		return m, nil
-	}
+		bytes, err := hex.DecodeString(sha)
+		if err != nil {
+			return nil, wrap(err)
+		}
 
-	bytes, err := hex.DecodeString(sha)
-	if err != nil {
-		return nil, wrap(err)
-	}
+		oid := git.NewOidFromBytes(bytes)
+		commit, err := repo.LookupCommit(oid)
+		if err != nil {
+			return nil, wrap(err)
+		}
 
-	oid := git.NewOidFromBytes(bytes)
-	commit, err := repo.LookupCommit(oid)
-	if err != nil {
-		return nil, wrap(err)
-	}
-
-	return fromCommit(repo, dir, commit)
+		return fromCommit(repo, dir, commit)
+	})
 }
 
 // ManifestByBranch returns the manifest as of the tip of the specified branch.
 func ManifestByBranch(dir, branch string) (*Manifest, error) {
-	repo, m, err := openRepo(dir)
-	if err != nil {
-		return nil, err
-	}
-
-	if m != nil {
-		return m, nil
-	}
-
-	return fromBranch(repo, dir, branch)
+	return buildManifest(dir, func(repo *git.Repository) (*Manifest, error) {
+		return fromBranch(repo, dir, branch)
+	})
 }
 
 // ManifestByDiff returns the manifest for the diff between given two commits.
 func ManifestByDiff(dir, from, to string) (*Manifest, error) {
-	repo, m, err := openRepo(dir)
-	if err != nil {
-		return nil, err
-	}
+	return buildManifest(dir, func(repo *git.Repository) (*Manifest, error) {
 
-	if m != nil {
-		return m, nil
-	}
+		fromOid, err := git.NewOid(from)
+		if err != nil {
+			return nil, wrap(err)
+		}
 
-	fromOid, err := git.NewOid(from)
-	if err != nil {
-		return nil, wrap(err)
-	}
+		toOid, err := git.NewOid(to)
+		if err != nil {
+			return nil, wrap(err)
+		}
 
-	toOid, err := git.NewOid(to)
-	if err != nil {
-		return nil, wrap(err)
-	}
+		fromC, err := repo.LookupCommit(fromOid)
+		if err != nil {
+			return nil, wrap(err)
+		}
 
-	fromC, err := repo.LookupCommit(fromOid)
-	if err != nil {
-		return nil, wrap(err)
-	}
+		toC, err := repo.LookupCommit(toOid)
+		if err != nil {
+			return nil, wrap(err)
+		}
 
-	toC, err := repo.LookupCommit(toOid)
-	if err != nil {
-		return nil, wrap(err)
-	}
+		a, err := modulesInDiffWithDependents(repo, toC, fromC)
+		if err != nil {
+			return nil, err
+		}
 
-	a, err := modulesInDiffWithDependents(repo, toC, fromC)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Manifest{Modules: a, Dir: dir, Sha: to}, nil
+		return &Manifest{Modules: a, Dir: dir, Sha: to}, nil
+	})
 }
 
 // ManifestByHead returns the manifest for head of the current branch.
 func ManifestByHead(dir string) (*Manifest, error) {
-	repo, m, err := openRepo(dir)
-	if err != nil {
-		return nil, wrap(err)
-	}
+	return buildManifest(dir, func(repo *git.Repository) (*Manifest, error) {
 
-	if m != nil {
-		return m, nil
-	}
+		branch, err := getBranchName(repo)
+		if err != nil {
+			return nil, wrap(err)
+		}
 
-	branch, err := getBranchName(repo)
-	if err != nil {
-		return nil, wrap(err)
-	}
-
-	return fromBranch(repo, dir, branch)
+		return fromBranch(repo, dir, branch)
+	})
 }
 
 func (m *Manifest) indexByName() map[string]*Module {
@@ -172,6 +140,21 @@ func fromBranch(repo *git.Repository, dir string, branch string) (*Manifest, err
 	}
 
 	return fromCommit(repo, dir, commit)
+}
+
+type manifestBuilder func(*git.Repository) (*Manifest, error)
+
+func buildManifest(dir string, builder manifestBuilder) (*Manifest, error) {
+	repo, m, err := openRepo(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	if m != nil {
+		return m, nil
+	}
+
+	return builder(repo)
 }
 
 func openRepo(dir string) (*git.Repository, *Manifest, error) {
