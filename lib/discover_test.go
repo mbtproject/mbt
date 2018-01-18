@@ -132,3 +132,22 @@ func TestModuleNameConflicts(t *testing.T) {
 	assert.Nil(t, mods)
 	assert.EqualError(t, err, "mbt: Module name 'app-a' in directory 'app-b' conflicts with the module in 'app-a' directory")
 }
+
+func TestDirectoryEntriesCalledMbtYml(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.WriteContent(".mbt.yml/foo", "blah"))
+	check(t, repo.Commit("first"))
+
+	commit, err := repo.Repo.LookupCommit(repo.LastCommit)
+	check(t, err)
+
+	metadata, err := discoverMetadata(repo.Repo, commit)
+	check(t, err)
+
+	assert.Len(t, metadata, 1)
+	assert.Equal(t, "app-a", metadata[0].spec.Name)
+}
