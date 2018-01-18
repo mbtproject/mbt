@@ -1,6 +1,8 @@
 package lib
 
-import git "github.com/libgit2/git2go"
+import (
+	git "github.com/libgit2/git2go"
+)
 
 func statusCount(repo *git.Repository) (int, error) {
 	status, err := repo.StatusList(&git.StatusOptions{
@@ -71,6 +73,20 @@ func getDiffFromMergeBase(repo *git.Repository, srcC, dstC *git.Commit) (*git.Di
 	}
 
 	diff, err := repo.DiffTreeToTree(baseTree, srcTree, &git.DiffOptions{})
+	if err != nil {
+		return nil, wrap(err)
+	}
+
+	return diff, err
+}
+
+func getDiffFromIndex(repo *git.Repository) (*git.Diff, error) {
+	index, err := repo.Index()
+	if err != nil {
+		return nil, wrap(err)
+	}
+
+	diff, err := repo.DiffIndexToWorkdir(index, &git.DiffOptions{Flags: git.DiffIncludeUntracked})
 	if err != nil {
 		return nil, wrap(err)
 	}

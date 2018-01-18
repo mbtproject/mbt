@@ -6,6 +6,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/buddyspike/graph"
@@ -223,4 +226,48 @@ func discoverMetadata(repo *git.Repository, commit *git.Commit) (a moduleMetadat
 	}
 
 	return metadataSet, nil
+}
+
+func discoverMetadataByDir(repo *git.Repository, dir string) (a moduleMetadataSet, outErr error) {
+	// Setup the panic handler to trap potential panics while walking the tree
+	defer handlePanic(&outErr)
+
+	metadataSet := moduleMetadataSet{}
+	currentDir, err := filepath.Abs(dir)
+	if err != nil {
+		failf(err, "error whilst loading current directory")
+	}
+
+	walkfunc := func(path string, info os.FileInfo, err error) error {
+		if info.Name() == ".mbt.yml" && info.IsDir() == false {
+			contents, err := ioutil.ReadFile(path)
+			if err != nil {
+				failf(err, "error whilst reading file contents at path %s", path)
+			}
+
+			spec, err := newSpec(contents)
+			if err != nil {
+				failf(err, "error whilst parsing spec at %s", path)
+			}
+
+			// reduce the path down to be only relative for the module
+			relPath, err := filepath.Rel(currentDir, filepath.Dir(path))
+			if err != nil {
+				failf(err, "error whilst reading relative path %s", path)
+			}
+			dir := strings.TrimRight(relPath, "/")
+
+			hash := "local"
+			metadataSet = append(metadataSet, newModuleMetadata(dir, hash, spec))
+		}
+
+		return nil
+	}
+
+	err = filepath.Walk(dir, walkfunc)
+	if err != nil {
+		failf(err, "failed to walk the directory at path %s", dir)
+	}
+
+	return metadataSet, err
 }

@@ -82,6 +82,25 @@ func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCal
 	return nil
 }
 
+// BuildDir runs the build for the modules in the specified directory.
+func BuildDir(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCallback func(mod *Module, s BuildStage)) error {
+	for _, a := range m.Modules {
+		if !canBuildHere(a) {
+			buildStageCallback(a, BuildStageSkipBuild)
+			continue
+		}
+
+		buildStageCallback(a, BuildStageBeforeBuild)
+		err := buildOne(m, a, stdin, stdout, stderr)
+		if err != nil {
+			return wrap(err)
+		}
+		buildStageCallback(a, BuildStageAfterBuild)
+	}
+
+	return nil
+}
+
 func setupModBuildEnvironment(manifest *Manifest, mod *Module) []string {
 	r := []string{
 		fmt.Sprintf("MBT_BUILD_COMMIT=%s", manifest.Sha),

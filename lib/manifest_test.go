@@ -2,6 +2,7 @@ package lib
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -265,6 +266,64 @@ func TestManifestByHead(t *testing.T) {
 	check(t, err)
 
 	assert.Equal(t, "app-a", m.Modules[0].Name())
+}
+
+func TestManifestByLocalDir(t *testing.T) {
+	clean()
+	abs, err := filepath.Abs(".tmp/repo")
+	check(t, err)
+
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.WriteContent("app-a/test.txt", "test contents"))
+	check(t, repo.Commit("first"))
+
+	m, err := ManifestByLocalDir(abs, false)
+	check(t, err)
+
+	assert.Equal(t, "local", m.Sha)
+	assert.Equal(t, abs, m.Dir)
+
+	// currently no modules changed locally
+	assert.Equal(t, 0, len(m.Modules))
+
+	// change the file, expect 1 module to be returned
+	check(t, repo.WriteContent("app-a/test.txt", "amended contents"))
+
+	m, err = ManifestByLocalDir(abs, false)
+	check(t, err)
+	assert.Len(t, m.Modules, 1)
+
+	// add in an uncommitted module to ensure its found
+	check(t, repo.InitModule("app-c"))
+	m, err = ManifestByLocalDir(abs, false)
+	assert.Len(t, m.Modules, 2)
+	assert.Equal(t, "app-c", m.Modules[1].name)
+	assert.Equal(t, "local", m.Modules[1].hash)
+}
+
+func TestManifestByLocalDirAll(t *testing.T) {
+	clean()
+	abs, err := filepath.Abs(".tmp/repo")
+	check(t, err)
+
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.WriteContent("app-a/test.txt", "test contents"))
+	check(t, repo.Commit("first"))
+
+	m, err := ManifestByLocalDir(abs, true)
+	check(t, err)
+
+	assert.Equal(t, "local", m.Sha)
+	assert.Equal(t, abs, m.Dir)
+
+	// currently no modules changed locally
+	assert.Equal(t, 1, len(m.Modules))
 }
 
 func TestDependencyChange(t *testing.T) {

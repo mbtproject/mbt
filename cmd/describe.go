@@ -25,11 +25,13 @@ func init() {
 
 	describeDiffCmd.Flags().StringVar(&from, "from", "", "from commit")
 	describeDiffCmd.Flags().StringVar(&to, "to", "", "to commit")
+	describeLocalCmd.Flags().BoolVarP(&all, "all", "a", false, "build all")
 
 	describeCmd.PersistentFlags().BoolVar(&formatAsJson, "json", false, "format output as json")
 	describeCmd.AddCommand(describeCommitCmd)
 	describeCmd.AddCommand(describeBranchCmd)
 	describeCmd.AddCommand(describeHeadCmd)
+	describeCmd.AddCommand(describeLocalCmd)
 	describeCmd.AddCommand(describePrCmd)
 	describeCmd.AddCommand(describeIntersectionCmd)
 	describeCmd.AddCommand(describeDiffCmd)
@@ -79,6 +81,23 @@ Displays all modules as of the tip of the branch pointed at head.
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		m, err := lib.ManifestByHead(in)
+		if err != nil {
+			return handle(err)
+		}
+
+		return handle(output(m.Modules))
+	},
+}
+
+var describeLocalCmd = &cobra.Command{
+	Use:   "local",
+	Short: "Describes the manifest for the local branch",
+	Long: `Describes the manifest for the local branch
+	
+Displays all modules in the local working directory even if they have not been committed.
+`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		m, err := lib.ManifestByLocalDir(in, all)
 		if err != nil {
 			return handle(err)
 		}

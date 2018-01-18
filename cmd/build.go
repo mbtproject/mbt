@@ -17,10 +17,13 @@ func init() {
 	buildDiff.Flags().StringVar(&from, "from", "", "from commit")
 	buildDiff.Flags().StringVar(&to, "to", "", "to commit")
 
+	buildLocal.Flags().BoolVarP(&all, "all", "a", false, "all modules")
+
 	buildCommand.AddCommand(buildBranch)
 	buildCommand.AddCommand(buildPr)
 	buildCommand.AddCommand(buildDiff)
 	buildCommand.AddCommand(buildHead)
+	buildCommand.AddCommand(buildLocal)
 	RootCmd.AddCommand(buildCommand)
 }
 
@@ -123,8 +126,40 @@ Commit SHA must be the complete 40 character SHA1 string.
 	},
 }
 
+var buildLocal = &cobra.Command{
+	Use:   "local [--all]",
+	Short: "Builds the diff between the work dir and the last commit",
+	Long: `Builds the diff between the work dir and the last commit
+
+Works out the merge base between the local working directory and the last 
+commit on this branch. Then it will try to build only the modules have changed
+during the last commit and the current build.
+
+Specify the --all flag to everything local branch. 
+	`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		m, err := lib.ManifestByLocalDir(in, all)
+		if err != nil {
+			return handle(err)
+		}
+
+		return buildDir(m)
+	},
+}
+
 func build(m *lib.Manifest) error {
 	return lib.Build(m, os.Stdin, os.Stdout, os.Stderr, func(a *lib.Module, s lib.BuildStage) {
+		switch s {
+		case lib.BuildStageBeforeBuild:
+			logrus.Infof("BUILD %s in %s for %s", a.Name(), a.Path(), a.Version())
+		case lib.BuildStageSkipBuild:
+			logrus.Infof("SKIP %s in %s for %s", a.Name(), a.Path(), a.Version())
+		}
+	})
+}
+
+func buildDir(m *lib.Manifest) error {
+	return lib.BuildDir(m, os.Stdin, os.Stdout, os.Stderr, func(a *lib.Module, s lib.BuildStage) {
 		switch s {
 		case lib.BuildStageBeforeBuild:
 			logrus.Infof("BUILD %s in %s for %s", a.Name(), a.Path(), a.Version())
