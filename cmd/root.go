@@ -16,6 +16,7 @@ var (
 	first  string
 	second string
 	kind   string
+	all    bool
 )
 
 func init() {

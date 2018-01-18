@@ -61,6 +61,12 @@ mbt build branch
 # Build the current branch
 mbt build head
 
+# Build only the changes in your local workdir without commiting
+mbt build local
+
+# Build everything in the current workdir
+mbt build local --all
+
 # Build a specific branch
 mbt build branch feature
 

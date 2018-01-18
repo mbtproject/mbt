@@ -242,6 +242,39 @@ func modulesInDiffWithDependencies(repo *git.Repository, to, from *git.Commit) (
 	return modulesInDiffWithDepGraph(repo, to, from, false)
 }
 
+func modulesInDirectoryDiff(repo *git.Repository, dir string) (Modules, error) {
+	modules, err := modulesInDirectory(repo, dir)
+	if err != nil {
+		return nil, err
+	}
+
+	diff, err := getDiffFromIndex(repo)
+	if err != nil {
+		return nil, err
+	}
+
+	m, err := reduceToDiff(modules, diff)
+	if err != nil {
+		return nil, err
+	}
+
+	return m, nil
+}
+
+func modulesInDirectory(repo *git.Repository, dir string) (Modules, error) {
+	metadata, err := discoverMetadataByDir(repo, dir)
+	if err != nil {
+		return nil, err
+	}
+
+	modules, err := metadata.toModules()
+	if err != nil {
+		return nil, err
+	}
+
+	return modules, nil
+}
+
 func reduceToDiff(modules Modules, diff *git.Diff) (Modules, error) {
 	q := modules.indexByPath()
 	filtered := make(map[string]*Module)

@@ -83,3 +83,24 @@ func TestBranchName(t *testing.T) {
 
 	assert.Equal(t, "feature", branch)
 }
+
+func TestDiffByIndex(t *testing.T) {
+	clean()
+
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.WriteContent("app-a/test.txt", "test contents"))
+	check(t, repo.Commit("first"))
+
+	check(t, repo.WriteContent("app-a/test.txt", "ammend contents"))
+
+	diff, err := getDiffFromIndex(repo.Repo)
+	check(t, err)
+
+	n, err := diff.NumDeltas()
+	check(t, err)
+
+	assert.Equal(t, 1, n)
+}

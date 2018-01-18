@@ -36,6 +36,29 @@ func TestBuildExecution(t *testing.T) {
 	assert.EqualValues(t, []BuildStage{BuildStageBeforeBuild, BuildStageAfterBuild}, stages)
 }
 
+func TestBuildDirExecution(t *testing.T) {
+	clean()
+
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.WriteShellScript("app-a/build.sh", "echo app-a built"))
+	check(t, repo.Commit("first"))
+	m, err := ManifestByBranch(".tmp/repo", "master")
+	check(t, err)
+
+	stages := make([]BuildStage, 0)
+	stdout := new(bytes.Buffer)
+	stderr := new(bytes.Buffer)
+	check(t, BuildDir(m, os.Stdin, stdout, stderr, func(a *Module, s BuildStage) {
+		stages = append(stages, s)
+	}))
+
+	assert.Equal(t, "app-a built\n", stdout.String())
+	assert.EqualValues(t, []BuildStage{BuildStageBeforeBuild, BuildStageAfterBuild}, stages)
+}
+
 func TestBuildSkip(t *testing.T) {
 	clean()
 

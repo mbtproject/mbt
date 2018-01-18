@@ -94,6 +94,13 @@ func ManifestByDiff(dir, from, to string) (*Manifest, error) {
 	})
 }
 
+// ManifestByLocalDir returns the manifest of the diff between the local branch and the working directory
+func ManifestByLocalDir(dir string, all bool) (*Manifest, error) {
+	return buildManifest(dir, func(repo *git.Repository) (*Manifest, error) {
+		return fromDirectory(repo, dir, "local", all)
+	})
+}
+
 // ManifestByHead returns the manifest for head of the current branch.
 func ManifestByHead(dir string) (*Manifest, error) {
 	return buildManifest(dir, func(repo *git.Repository) (*Manifest, error) {
@@ -115,6 +122,15 @@ func (m *Manifest) indexByPath() map[string]*Module {
 	return m.Modules.indexByPath()
 }
 
+func fromBranch(repo *git.Repository, dir string, branch string) (*Manifest, error) {
+	commit, err := getBranchCommit(repo, branch)
+	if err != nil {
+		return nil, err
+	}
+
+	return fromCommit(repo, dir, commit)
+}
+
 func fromCommit(repo *git.Repository, dir string, commit *git.Commit) (*Manifest, error) {
 	metadataSet, err := discoverMetadata(repo, commit)
 	if err != nil {
@@ -129,17 +145,24 @@ func fromCommit(repo *git.Repository, dir string, commit *git.Commit) (*Manifest
 	return &Manifest{dir, commit.Id().String(), vmods}, nil
 }
 
-func newEmptyManifest(dir string) *Manifest {
-	return &Manifest{Modules: []*Module{}, Dir: dir, Sha: ""}
-}
+func fromDirectory(repo *git.Repository, dir, sha string, all bool) (*Manifest, error) {
+	var vmods Modules
+	var err error
+	if all == false {
+		vmods, err = modulesInDirectoryDiff(repo, dir)
+	} else {
+		vmods, err = modulesInDirectory(repo, dir)
+	}
 
-func fromBranch(repo *git.Repository, dir string, branch string) (*Manifest, error) {
-	commit, err := getBranchCommit(repo, branch)
 	if err != nil {
 		return nil, err
 	}
 
-	return fromCommit(repo, dir, commit)
+	return &Manifest{Modules: vmods, Dir: dir, Sha: sha}, nil
+}
+
+func newEmptyManifest(dir string) *Manifest {
+	return &Manifest{Modules: []*Module{}, Dir: dir, Sha: ""}
 }
 
 type manifestBuilder func(*git.Repository) (*Manifest, error)
