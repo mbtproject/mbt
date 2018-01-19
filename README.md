@@ -10,6 +10,15 @@
 Monorepo Build Tool (`mbt`) is a utility that supports differential builds, 
 dependency tracking and metadata management for monorepos stored in git. 
 
+## Setting up local dev
+
+- First time you clone, run `./scripts/build.sh`
+- After that use make
+`make test` Runs all unit tests
+`make install` Installs the local bin in path
+
+## About
+
 In the context of `mbt`, term 'Module' is used to refer to a part of source 
 tree that can be developed, built and released independently.
 Modules can be built with different programming languages and their 
