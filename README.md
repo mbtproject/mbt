@@ -10,12 +10,12 @@
 Monorepo Build Tool (`mbt`) is a utility that supports differential builds, 
 dependency tracking and metadata management for monorepos stored in git. 
 
-## Setting up local dev
+## Building Locally
 
 - First time you clone, run `./scripts/build.sh`
 - After that use make
-`make test` Runs all unit tests
-`make install` Installs the local bin in path
+  - `make test` Run all unit tests
+  - `make install` Build and install mbt in local bin
 
 ## About
 
@@ -77,6 +77,7 @@ mbt build diff --from <commit-sha> --to <commit-sha>
 > un-committed changes will not be visible.
 
 ## Dependencies
+### Module Dependencies
 Sometimes a change to a module could require the build of the modules that 
 depend on it. We can define these dependencies in `.mbt.yml` files and `mbt` 
 takes care of triggering the build in the topological order.
@@ -100,6 +101,21 @@ usually host app build contains the steps to pack the web app into the deploymen
 package.
 Using the dependency feature, host module could depend on the client app 
 module so that anytime the web app changes the host module is also built. 
+
+### File Dependencies
+File dependencies are useful in situations where a module should be built 
+when a file stored outside the module directory is modified. As an example, 
+a build script that is used to build multiple modules could define a file 
+dependency in order to trigger the build whenever there's a change in build.
+
+File dependencies should specify the path of the file relative to the root
+of git repository.
+
+```yaml
+name: module-a
+fileDependencies:
+  - scripts/build.sh
+```
 
 ## Build Environment
 When `mbt` executes the build command specified for a module, it sets up 

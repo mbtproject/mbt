@@ -74,7 +74,7 @@ func TestMissingBlobs(t *testing.T) {
 	metadata, err := discoverMetadata(repo.Repo, commit)
 
 	assert.Nil(t, metadata)
-	assert.EqualError(t, err, "mbt: error while fetching the blob object for app-a/.mbt.yml - object not found - no match for id (5ed8e79fc340352ac6b4655390b78d12d03a4462)")
+	assert.EqualError(t, err, "mbt: error while fetching the blob object for app-a/.mbt.yml - object not found - no match for id (46c63fb17a3e0ed3a90562371640044c9b90bf6c)")
 }
 
 func TestMissingTreeObject(t *testing.T) {
@@ -84,7 +84,7 @@ func TestMissingTreeObject(t *testing.T) {
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
-	check(t, os.RemoveAll(".tmp/repo/.git/objects/30"))
+	check(t, os.RemoveAll(".tmp/repo/.git/objects/f6"))
 
 	r, err := git.OpenRepository(".tmp/repo")
 	check(t, err)
@@ -94,7 +94,7 @@ func TestMissingTreeObject(t *testing.T) {
 	metadata, err := discoverMetadata(r, commit)
 
 	assert.Nil(t, metadata)
-	assert.EqualError(t, err, "mbt: failed to walk the tree object - object not found - no match for id (308607113d927f0f2dc511a05c0efb5c96260d08)")
+	assert.EqualError(t, err, "mbt: failed to walk the tree object - object not found - no match for id (f6929fe5c1165232e1ee6c92532f1f2bcf936845)")
 }
 
 func TestMissingDependencies(t *testing.T) {

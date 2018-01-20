@@ -11,14 +11,15 @@ import (
 
 // Module represents a single module in the repository.
 type Module struct {
-	name       string
-	path       string
-	build      map[string]*BuildCmd
-	hash       string
-	version    string
-	properties map[string]interface{}
-	requires   Modules
-	requiredBy Modules
+	name             string
+	path             string
+	build            map[string]*BuildCmd
+	hash             string
+	version          string
+	properties       map[string]interface{}
+	requires         Modules
+	requiredBy       Modules
+	fileDependencies []string
 }
 
 // Modules is an array of Module.
@@ -59,6 +60,11 @@ func (a *Module) Version() string {
 	return a.version
 }
 
+// FileDependencies returns the list of file dependencies this module has.
+func (a *Module) FileDependencies() []string {
+	return a.fileDependencies
+}
+
 type requiredByNodeProvider struct{}
 
 func (p *requiredByNodeProvider) ID(vertex interface{}) interface{} {
@@ -90,13 +96,14 @@ func (p *requiresNodeProvider) Child(vertex interface{}, index int) (interface{}
 func newModule(metadata *moduleMetadata, requires Modules) *Module {
 	spec := metadata.spec
 	mod := &Module{
-		build:      spec.Build,
-		name:       spec.Name,
-		properties: spec.Properties,
-		hash:       metadata.hash,
-		path:       metadata.dir,
-		requires:   Modules{},
-		requiredBy: Modules{},
+		build:            spec.Build,
+		name:             spec.Name,
+		properties:       spec.Properties,
+		hash:             metadata.hash,
+		path:             metadata.dir,
+		requires:         Modules{},
+		requiredBy:       Modules{},
+		fileDependencies: spec.FileDependencies,
 	}
 
 	if requires != nil {
@@ -243,8 +250,19 @@ func reduceToDiff(modules Modules, diff *git.Diff) (Modules, error) {
 			if _, ok := filtered[k]; ok {
 				continue
 			}
+			m, _ := q[k]
 			if strings.HasPrefix(delta.NewFile.Path, k) {
-				filtered[k] = q[k]
+				filtered[k] = m
+			} else {
+				for _, p := range m.FileDependencies() {
+					// Current comparison is case insensitive. This is problematic
+					// for case sensitive file systems.
+					// Perhaps we can read core.ignorecase configuration value
+					// in git and adjust accordingly.
+					if strings.ToLower(p) == strings.ToLower(delta.NewFile.Path) {
+						filtered[k] = m
+					}
+				}
 			}
 		}
 		return nil, nil

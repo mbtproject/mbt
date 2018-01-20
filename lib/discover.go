@@ -37,10 +37,11 @@ type BuildCmd struct {
 
 // Spec represents the structure of .mbt.yml contents.
 type Spec struct {
-	Name         string                 `yaml:"name"`
-	Build        map[string]*BuildCmd   `yaml:"build"`
-	Properties   map[string]interface{} `yaml:"properties"`
-	Dependencies []string               `yaml:"dependencies"`
+	Name             string                 `yaml:"name"`
+	Build            map[string]*BuildCmd   `yaml:"build"`
+	Properties       map[string]interface{} `yaml:"properties"`
+	Dependencies     []string               `yaml:"dependencies"`
+	FileDependencies []string               `yaml:"fileDependencies"`
 }
 
 func newSpec(content []byte) (*Spec, error) {

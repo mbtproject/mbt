@@ -430,6 +430,99 @@ func TestVersionOfIndirectlyDependentModules(t *testing.T) {
 	assert.NotEqual(t, m1.Modules[2].Version(), m2.Modules[2].Version())
 }
 
+func TestChangeToFileDependency(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.WriteContent("shared/file", "a"))
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.InitModuleWithOptions("app-b", &Spec{
+		Name:             "app-b",
+		FileDependencies: []string{"shared/file"},
+	}))
+
+	check(t, repo.Commit("first"))
+	c1 := repo.LastCommit.String()
+
+	check(t, repo.WriteContent("shared/file", "b"))
+	check(t, repo.Commit("second"))
+	c2 := repo.LastCommit.String()
+
+	m, err := ManifestByDiff(".tmp/repo", c1, c2)
+	check(t, err)
+
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "app-b", m.Modules[0].Name())
+}
+
+func TestFileDependencyInADependentModule(t *testing.T) {
+	/*
+		Edge case: It does not make sense to have a file dependency to a file
+		in a module that you already have a dependency on. We test the correct
+		behavior nevertheless.
+	*/
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.WriteContent("app-a/file", "a"))
+
+	check(t, repo.InitModuleWithOptions("app-b", &Spec{
+		Name:             "app-b",
+		Dependencies:     []string{"app-a"},
+		FileDependencies: []string{"app-a/file"},
+	}))
+
+	check(t, repo.Commit("first"))
+	c1 := repo.LastCommit.String()
+
+	check(t, repo.WriteContent("app-a/file", "b"))
+	check(t, repo.Commit("second"))
+	c2 := repo.LastCommit.String()
+
+	m, err := ManifestByDiff(".tmp/repo", c1, c2)
+	check(t, err)
+
+	assert.Len(t, m.Modules, 2)
+	assert.Equal(t, "app-a", m.Modules[0].Name())
+	assert.Equal(t, "app-b", m.Modules[1].Name())
+}
+
+func TestDependentOfAModuleWithFileDependency(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.WriteContent("shared/file", "a"))
+	check(t, repo.InitModuleWithOptions("app-a", &Spec{
+		Name:             "app-a",
+		FileDependencies: []string{"shared/file"},
+	}))
+
+	check(t, repo.InitModuleWithOptions("app-b", &Spec{
+		Name:         "app-b",
+		Dependencies: []string{"app-a"},
+	}))
+
+	check(t, repo.InitModule("app-c"))
+
+	check(t, repo.Commit("first"))
+	c1 := repo.LastCommit.String()
+
+	check(t, repo.WriteContent("shared/file", "b"))
+	check(t, repo.Commit("second"))
+	c2 := repo.LastCommit.String()
+
+	m, err := ManifestByDiff(".tmp/repo", c1, c2)
+	check(t, err)
+
+	assert.Len(t, m.Modules, 2)
+	assert.Equal(t, "app-a", m.Modules[0].Name())
+	assert.Equal(t, "app-b", m.Modules[1].Name())
+}
+
 func TestManifestBySha(t *testing.T) {
 	clean()
 	repo, err := createTestRepository(".tmp/repo")
