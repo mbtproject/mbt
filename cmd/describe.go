@@ -23,12 +23,16 @@ func init() {
 	describeIntersectionCmd.Flags().StringVar(&first, "first", "", "first item")
 	describeIntersectionCmd.Flags().StringVar(&second, "second", "", "second item")
 
+	describeDiffCmd.Flags().StringVar(&from, "from", "", "from commit")
+	describeDiffCmd.Flags().StringVar(&to, "to", "", "to commit")
+
 	describeCmd.PersistentFlags().BoolVar(&formatAsJson, "json", false, "format output as json")
 	describeCmd.AddCommand(describeCommitCmd)
 	describeCmd.AddCommand(describeBranchCmd)
 	describeCmd.AddCommand(describeHeadCmd)
 	describeCmd.AddCommand(describePrCmd)
 	describeCmd.AddCommand(describeIntersectionCmd)
+	describeCmd.AddCommand(describeDiffCmd)
 
 	RootCmd.AddCommand(describeCmd)
 }
@@ -171,6 +175,33 @@ var describeIntersectionCmd = &cobra.Command{
 		}
 
 		return handle(output(mods))
+	},
+}
+
+var describeDiffCmd = &cobra.Command{
+	Use:   "diff --from <commit> --to <commit>",
+	Short: "Describes the manifest for diff between from and to commits",
+	Long: `Describes the manifest for diff between from and to commits
+
+Works out the merge base for from and to commits and 
+displays all modules which have been changed between merge base and 
+the to commit.	
+`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if from == "" {
+			return errors.New("requires from commit")
+		}
+
+		if to == "" {
+			return errors.New("requires to commit")
+		}
+
+		m, err := lib.ManifestByDiff(in, from, to)
+		if err != nil {
+			return handle(err)
+		}
+
+		return handle(output(m.Modules))
 	},
 }
 
