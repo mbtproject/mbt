@@ -301,10 +301,12 @@ func TestManifestByLocalDir(t *testing.T) {
 	m, err = ManifestByLocalDir(abs, false)
 	assert.Len(t, m.Modules, 2)
 	assert.Equal(t, "app-c", m.Modules[1].name)
-	assert.Equal(t, "local", m.Modules[1].hash)
+	assert.Equal(t, "local", m.Modules[1].Version())
 }
 
-func TestManifestByLocalDirAll(t *testing.T) {
+func TestVersionOfLocalDirManifest(t *testing.T) {
+	// All modules should have the fixed versin string "local" as
+	// for manifest derived from local directory.
 	clean()
 	abs, err := filepath.Abs(".tmp/repo")
 	check(t, err)
@@ -314,6 +316,10 @@ func TestManifestByLocalDirAll(t *testing.T) {
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("app-a/test.txt", "test contents"))
+	check(t, repo.InitModuleWithOptions("app-b", &Spec{
+		Name:         "app-b",
+		Dependencies: []string{"app-a"},
+	}))
 	check(t, repo.Commit("first"))
 
 	m, err := ManifestByLocalDir(abs, true)
@@ -322,8 +328,11 @@ func TestManifestByLocalDirAll(t *testing.T) {
 	assert.Equal(t, "local", m.Sha)
 	assert.Equal(t, abs, m.Dir)
 
-	// currently no modules changed locally
-	assert.Equal(t, 1, len(m.Modules))
+	assert.Equal(t, 2, len(m.Modules))
+	assert.Equal(t, "app-a", m.Modules[0].Name())
+	assert.Equal(t, "local", m.Modules[0].Version())
+	assert.Equal(t, "app-b", m.Modules[1].Name())
+	assert.Equal(t, "local", m.Modules[1].Version())
 }
 
 func TestDependencyChange(t *testing.T) {

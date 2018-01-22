@@ -124,22 +124,26 @@ func (a moduleMetadataSet) toModules() (Modules, error) {
 // initialises their version field.
 func calculateVersion(topSorted Modules) Modules {
 	for _, a := range topSorted {
-		if len(a.Requires()) == 0 {
-			a.version = a.hash
+		if a.hash == "local" {
+			a.version = "local"
 		} else {
-			h := sha1.New()
+			if len(a.Requires()) == 0 {
+				a.version = a.hash
+			} else {
+				h := sha1.New()
 
-			io.WriteString(h, a.hash)
-			// Consider the version of all dependencies to compute the version of
-			// current module.
-			// It is unnecessary to traverse the entire dependency graph
-			// here because we are processing the list of modules in topological
-			// order. Therefore, version of a dependency would already contain
-			// the version of its dependencies.
-			for _, e := range a.Requires() {
-				io.WriteString(h, e.Version())
+				io.WriteString(h, a.hash)
+				// Consider the version of all dependencies to compute the version of
+				// current module.
+				// It is unnecessary to traverse the entire dependency graph
+				// here because we are processing the list of modules in topological
+				// order. Therefore, version of a dependency would already contain
+				// the version of its dependencies.
+				for _, e := range a.Requires() {
+					io.WriteString(h, e.Version())
+				}
+				a.version = hex.EncodeToString(h.Sum(nil))
 			}
-			a.version = hex.EncodeToString(h.Sum(nil))
 		}
 	}
 
