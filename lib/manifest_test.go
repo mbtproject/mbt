@@ -321,6 +321,25 @@ func TestManifestByLocalDirForAddition(t *testing.T) {
 	assert.Equal(t, "local", m.Modules[0].Version())
 }
 
+func TestManifestByLocalDirForConversion(t *testing.T) {
+	clean()
+	abs, err := filepath.Abs(".tmp/repo")
+	check(t, err)
+
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.WriteContent("app-a/test.txt", "test contents"))
+	check(t, repo.Commit("first"))
+
+	check(t, repo.InitModule("app-a"))
+	m, err := ManifestByLocalDir(abs, false)
+	check(t, err)
+
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "app-a", m.Modules[0].Name())
+}
+
 func TestVersionOfLocalDirManifest(t *testing.T) {
 	// All modules should have the fixed versin string "local" as
 	// for manifest derived from local directory.
