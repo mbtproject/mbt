@@ -268,7 +268,7 @@ func TestManifestByHead(t *testing.T) {
 	assert.Equal(t, "app-a", m.Modules[0].Name())
 }
 
-func TestManifestByLocalDir(t *testing.T) {
+func TestManifestByLocalDirForUpdates(t *testing.T) {
 	clean()
 	abs, err := filepath.Abs(".tmp/repo")
 	check(t, err)
@@ -294,14 +294,31 @@ func TestManifestByLocalDir(t *testing.T) {
 
 	m, err = ManifestByLocalDir(abs, false)
 	check(t, err)
-	assert.Len(t, m.Modules, 1)
 
-	// add in an uncommitted module to ensure its found
-	check(t, repo.InitModule("app-c"))
-	m, err = ManifestByLocalDir(abs, false)
-	assert.Len(t, m.Modules, 2)
-	assert.Equal(t, "app-c", m.Modules[1].name)
-	assert.Equal(t, "local", m.Modules[1].Version())
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "app-a", m.Modules[0].Name())
+	assert.Equal(t, "local", m.Modules[0].Version())
+}
+
+func TestManifestByLocalDirForAddition(t *testing.T) {
+	clean()
+	abs, err := filepath.Abs(".tmp/repo")
+	check(t, err)
+
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.WriteContent("app-a/test.txt", "test contents"))
+	check(t, repo.Commit("first"))
+
+	check(t, repo.InitModule("app-b"))
+	m, err := ManifestByLocalDir(abs, false)
+	check(t, err)
+
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "app-b", m.Modules[0].Name())
+	assert.Equal(t, "local", m.Modules[0].Version())
 }
 
 func TestVersionOfLocalDirManifest(t *testing.T) {
