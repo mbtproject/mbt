@@ -25,7 +25,7 @@ func init() {
 
 	describeDiffCmd.Flags().StringVar(&from, "from", "", "from commit")
 	describeDiffCmd.Flags().StringVar(&to, "to", "", "to commit")
-	describeLocalCmd.Flags().BoolVarP(&all, "all", "a", false, "build all")
+	describeLocalCmd.Flags().BoolVarP(&all, "all", "a", false, "describe all")
 
 	describeCmd.PersistentFlags().BoolVar(&formatAsJson, "json", false, "format output as json")
 	describeCmd.AddCommand(describeCommitCmd)
