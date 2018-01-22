@@ -44,6 +44,7 @@ func TestBuildDirExecution(t *testing.T) {
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteShellScript("app-a/build.sh", "echo app-a built"))
+	check(t, repo.WritePowershellScript("app-a/build.ps1", "write-host \"app-a built\""))
 	check(t, repo.Commit("first"))
 	m, err := ManifestByBranch(".tmp/repo", "master")
 	check(t, err)
