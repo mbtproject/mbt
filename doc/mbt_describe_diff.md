@@ -1,27 +1,27 @@
-## mbt describe pr
+## mbt describe diff
 
-Describes the manifest for diff between src and dst branches
+Describes the manifest for diff between from and to commits
 
 ### Synopsis
 
 
-Describes the manifest for diff between src and dst branches
+Describes the manifest for diff between from and to commits
 
-Works out the merge base for src and dst branches and 
+Works out the merge base for from and to commits and 
 displays all modules which have been changed between merge base and 
-the tip of dst branch.	
+the to commit.	
 
 
 ```
-mbt describe pr --src <branch> --dst <branch> [flags]
+mbt describe diff --from <commit> --to <commit> [flags]
 ```
 
 ### Options
 
 ```
-      --dst string   destination branch
-  -h, --help         help for pr
-      --src string   source branch
+      --from string   from commit
+  -h, --help          help for diff
+      --to string     to commit
 ```
 
 ### Options inherited from parent commands

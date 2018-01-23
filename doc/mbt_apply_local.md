@@ -1,25 +1,24 @@
-## mbt apply commit
+## mbt apply local
 
-Applies the manifest of specified commit over a template
+Applies the manifest of local directory state over a template
 
 ### Synopsis
 
 
-Applies the manifest of specified commit over a template
+Applies the manifest of local directory state over a template
 
-Calculated manifest and the template is based on the specified commit.
-
-Commit SHA must be the complete 40 character SHA1 string.
+Calculated manifest and the template is based on the content of local directory.
+This command is useful for testing pending changes in workspace.
 	
 
 ```
-mbt apply commit <sha> [flags]
+mbt apply local [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for commit
+  -h, --help   help for local
 ```
 
 ### Options inherited from parent commands

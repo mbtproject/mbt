@@ -1,24 +1,24 @@
-## mbt describe branch
+## mbt describe local
 
-Describes the manifest for the given branch
+Describes the manifest for the local branch
 
 ### Synopsis
 
 
-Describes the manifest for the given branch
-
-Displays all modules as of the tip of specified branch.
-If branch name is not specified assumes 'master'.
+Describes the manifest for the local branch
+	
+Displays all modules in the local working directory even if they have not been committed.
 
 
 ```
-mbt describe branch <branch> [flags]
+mbt describe local [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for branch
+  -a, --all    describe all
+  -h, --help   help for local
 ```
 
 ### Options inherited from parent commands
