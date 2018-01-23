@@ -2,7 +2,10 @@ package lib
 
 import (
 	"io"
+	"io/ioutil"
 	"os"
+	"path"
+	"path/filepath"
 	"strings"
 	"text/template"
 
@@ -18,7 +21,7 @@ type TemplateData struct {
 }
 
 // ApplyBranch applies the repository manifest to specified template.
-func ApplyBranch(dir, templatePath, branch, output string) error {
+func ApplyBranch(dir, templatePath, branch string, output io.Writer) error {
 	repo, err := git.OpenRepository(dir)
 	if err != nil {
 		return wrap(err)
@@ -33,7 +36,7 @@ func ApplyBranch(dir, templatePath, branch, output string) error {
 }
 
 // ApplyCommit applies the repository manifest to specified template.
-func ApplyCommit(dir, sha, templatePath, output string) error {
+func ApplyCommit(dir, sha, templatePath string, output io.Writer) error {
 	repo, err := git.OpenRepository(dir)
 	if err != nil {
 		return wrap(err)
@@ -52,7 +55,38 @@ func ApplyCommit(dir, sha, templatePath, output string) error {
 	return applyCore(repo, commit, dir, templatePath, output)
 }
 
-func applyCore(repo *git.Repository, commit *git.Commit, dir, templatePath, output string) error {
+// ApplyLocal applies local directory manifest over an specified template
+func ApplyLocal(dir, templatePath string, output io.Writer) error {
+	absDir, err := filepath.Abs(dir)
+	if err != nil {
+		return wrap(err)
+	}
+
+	c, err := ioutil.ReadFile(path.Join(absDir, templatePath))
+	if err != nil {
+		return wrap(err)
+	}
+
+	temp, err := template.New("template").Parse(string(c))
+	if err != nil {
+		return wrap(err)
+	}
+
+	m, err := ManifestByLocalDir(absDir, true)
+	if err != nil {
+		return err
+	}
+
+	data := &TemplateData{
+		Sha:     m.Sha,
+		Env:     getEnvMap(),
+		Modules: m.indexByName(),
+	}
+
+	return temp.Execute(output, data)
+}
+
+func applyCore(repo *git.Repository, commit *git.Commit, dir, templatePath string, output io.Writer) error {
 	tree, err := commit.Tree()
 	if err != nil {
 		return wrap(err)
@@ -73,14 +107,6 @@ func applyCore(repo *git.Repository, commit *git.Commit, dir, templatePath, outp
 		return wrap(err)
 	}
 
-	var writer io.Writer = os.Stdout
-	if output != "" {
-		writer, err = os.Create(output)
-		if err != nil {
-			return wrap(err)
-		}
-	}
-
 	m, err := fromCommit(repo, dir, commit)
 	if err != nil {
 		return err
@@ -92,7 +118,7 @@ func applyCore(repo *git.Repository, commit *git.Commit, dir, templatePath, outp
 		Modules: m.indexByName(),
 	}
 
-	return temp.Execute(writer, data)
+	return temp.Execute(output, data)
 }
 
 func getEnvMap() map[string]string {

@@ -191,6 +191,10 @@ func clean() {
 
 func check(t *testing.T, err error) {
 	if err != nil {
+		mbtError := err.(*MbtError)
+		if mbtError != nil {
+			err = mbtError.WithLocation()
+		}
 		t.Fatal(err)
 	}
 }

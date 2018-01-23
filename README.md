@@ -78,10 +78,6 @@ mbt build diff --from <commit-sha> --to <commit-sha>
 
 ```
 
-> Currently, all `mbt` commands interrogates the git repository for 
-> source files required by the operation. Therefore, side effects of 
-> un-committed changes will not be visible.
-
 ## Dependencies
 ### Module Dependencies
 Sometimes a change to a module could require the build of the modules that 
@@ -188,6 +184,9 @@ mbt apply branch <branch-name> --to <path to the template>
 
 # Apply the state as of a particular commit
 mbt apply commit <git-commit-sha> --to <path to the template>
+
+# Apply the state of local working directory (i.e. uncommitted work)
+mbt apply local --to <path to the template>
 ```
 
 Output of above commands written to `stdout` by default but can be directed to a 

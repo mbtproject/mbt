@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"errors"
+	"io"
+	"os"
 
 	"github.com/mbtproject/mbt/lib"
 	"github.com/spf13/cobra"
@@ -16,6 +18,7 @@ func init() {
 	applyCmd.PersistentFlags().StringVar(&out, "out", "", "output path")
 	applyCmd.AddCommand(applyBranchCmd)
 	applyCmd.AddCommand(applyCommitCmd)
+	applyCmd.AddCommand(applyLocal)
 	RootCmd.AddCommand(applyCmd)
 }
 
@@ -51,7 +54,12 @@ Calculated manifest and the template is based on the tip of the specified branch
 			return errors.New("requires the path to template")
 		}
 
-		return handle(lib.ApplyBranch(in, to, branch, out))
+		output, err := getOutput(out)
+		if err != nil {
+			return handle(err)
+		}
+
+		return handle(lib.ApplyBranch(in, to, branch, output))
 	},
 }
 
@@ -71,6 +79,40 @@ Commit SHA must be the complete 40 character SHA1 string.
 
 		commit := args[0]
 
-		return handle(lib.ApplyCommit(in, commit, to, out))
+		output, err := getOutput(out)
+		if err != nil {
+			return handle(err)
+		}
+
+		return handle(lib.ApplyCommit(in, commit, to, output))
 	},
+}
+
+var applyLocal = &cobra.Command{
+	Use:   "local",
+	Short: "Applies the manifest of local directory state over a template",
+	Long: `Applies the manifest of local directory state over a template
+
+Calculated manifest and the template is based on the content of local directory.
+This command is useful for testing pending changes in workspace.
+	`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if to == "" {
+			return errors.New("requires the path to template")
+		}
+
+		output, err := getOutput(out)
+		if err != nil {
+			return handle(err)
+		}
+
+		return handle(lib.ApplyLocal(in, to, output))
+	},
+}
+
+func getOutput(out string) (io.Writer, error) {
+	if out == "" {
+		return os.Stdout, nil
+	}
+	return os.Create(out)
 }
