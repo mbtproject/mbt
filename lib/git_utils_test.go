@@ -94,7 +94,7 @@ func TestDiffByIndex(t *testing.T) {
 	check(t, repo.WriteContent("app-a/test.txt", "test contents"))
 	check(t, repo.Commit("first"))
 
-	check(t, repo.WriteContent("app-a/test.txt", "ammend contents"))
+	check(t, repo.WriteContent("app-a/test.txt", "amend contents"))
 
 	diff, err := getDiffFromIndex(repo.Repo)
 	check(t, err)
