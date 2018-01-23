@@ -35,6 +35,7 @@ dependency tracking and metadata management for monorepos stored in git.
 See help for individual commands for more information.
 
 	`,
+	SilenceUsage: true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if cmd.Use != "version" && in == "" {
 			cwd, err := os.Getwd()
