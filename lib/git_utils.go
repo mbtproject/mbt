@@ -111,3 +111,12 @@ func getBranchName(repo *git.Repository) (string, error) {
 
 	return head.Branch().Name()
 }
+
+func getHeadCommit(repo *git.Repository) (*git.Commit, error) {
+	branch, err := getBranchName(repo)
+	if err != nil {
+		return nil, err
+	}
+
+	return getBranchCommit(repo, branch)
+}

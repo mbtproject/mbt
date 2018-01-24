@@ -53,6 +53,29 @@ func TestApplyCommit(t *testing.T) {
 	assert.Equal(t, "app-a,app-b,\n", output.String())
 }
 
+func TestApplyHead(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.WriteContent("template.tmpl", `
+{{- range $i, $mod := .Modules}}
+{{- $mod.Name }},
+{{- end}}
+`))
+	check(t, repo.Commit("first"))
+
+	check(t, repo.SwitchToBranch("feature"))
+	check(t, repo.InitModule("app-b"))
+	check(t, repo.Commit("second"))
+
+	output := new(bytes.Buffer)
+	check(t, ApplyHead(".tmp/repo", "template.tmpl", output))
+
+	assert.Equal(t, "app-a,app-b,\n", output.String())
+}
+
 func TestApplyLocal(t *testing.T) {
 	clean()
 	repo, err := createTestRepository(".tmp/repo")

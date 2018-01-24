@@ -55,6 +55,21 @@ func ApplyCommit(dir, sha, templatePath string, output io.Writer) error {
 	return applyCore(repo, commit, dir, templatePath, output)
 }
 
+// ApplyHead applies the repository manifest to specified template.
+func ApplyHead(dir, templatePath string, output io.Writer) error {
+	repo, err := git.OpenRepository(dir)
+	if err != nil {
+		return wrap(err)
+	}
+
+	commit, err := getHeadCommit(repo)
+	if err != nil {
+		return err
+	}
+
+	return applyCore(repo, commit, dir, templatePath, output)
+}
+
 // ApplyLocal applies local directory manifest over an specified template
 func ApplyLocal(dir, templatePath string, output io.Writer) error {
 	absDir, err := filepath.Abs(dir)

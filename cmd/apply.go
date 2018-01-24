@@ -18,6 +18,7 @@ func init() {
 	applyCmd.PersistentFlags().StringVar(&out, "out", "", "output path")
 	applyCmd.AddCommand(applyBranchCmd)
 	applyCmd.AddCommand(applyCommitCmd)
+	applyCmd.AddCommand(applyHeadCmd)
 	applyCmd.AddCommand(applyLocal)
 	RootCmd.AddCommand(applyCmd)
 }
@@ -50,16 +51,9 @@ Calculated manifest and the template is based on the tip of the specified branch
 			branch = args[0]
 		}
 
-		if to == "" {
-			return errors.New("requires the path to template")
-		}
-
-		output, err := getOutput(out)
-		if err != nil {
-			return handle(err)
-		}
-
-		return handle(lib.ApplyBranch(in, to, branch, output))
+		return handle(applyCore(func(to string, output io.Writer) error {
+			return lib.ApplyBranch(in, to, branch, output)
+		}))
 	},
 }
 
@@ -79,12 +73,23 @@ Commit SHA must be the complete 40 character SHA1 string.
 
 		commit := args[0]
 
-		output, err := getOutput(out)
-		if err != nil {
-			return handle(err)
-		}
+		return handle(applyCore(func(to string, output io.Writer) error {
+			return lib.ApplyCommit(in, commit, to, output)
+		}))
+	},
+}
 
-		return handle(lib.ApplyCommit(in, commit, to, output))
+var applyHeadCmd = &cobra.Command{
+	Use:   "head",
+	Short: "Applies the manifest of current head over a template",
+	Long: `Applies the manifest of current head over a template
+
+Calculated manifest and the template is based on the current head.
+	`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return handle(applyCore(func(to string, output io.Writer) error {
+			return lib.ApplyHead(in, to, output)
+		}))
 	},
 }
 
@@ -97,17 +102,25 @@ Calculated manifest and the template is based on the content of local directory.
 This command is useful for testing pending changes in workspace.
 	`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if to == "" {
-			return errors.New("requires the path to template")
-		}
-
-		output, err := getOutput(out)
-		if err != nil {
-			return handle(err)
-		}
-
-		return handle(lib.ApplyLocal(in, to, output))
+		return handle(applyCore(func(to string, output io.Writer) error {
+			return lib.ApplyLocal(in, to, output)
+		}))
 	},
+}
+
+type applyFunc func(to string, output io.Writer) error
+
+func applyCore(f applyFunc) error {
+	if to == "" {
+		return errors.New("requires the path to template, specify --to argument")
+	}
+
+	output, err := getOutput(out)
+	if err != nil {
+		return handle(err)
+	}
+
+	return f(to, output)
 }
 
 func getOutput(out string) (io.Writer, error) {
