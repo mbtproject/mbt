@@ -183,6 +183,7 @@ func TestCustomTemplateFuncs(t *testing.T) {
 {{- if contains (property (module "app-a") "nested") "a"}}foo{{- end}}
 {{- propertyOr (module "app-a") "foo" "car"}}
 {{- propertyOr (module "app-a") "foo.bar" "foo"}}
+{{- propertyOr (module "app-b") "foo" "foo"}}
 `))
 	check(t, repo.Commit("first"))
 
@@ -190,5 +191,5 @@ func TestCustomTemplateFuncs(t *testing.T) {
 	err = ApplyCommit(".tmp/repo", repo.LastCommit.String(), "template.tmpl", output)
 	check(t, err)
 
-	assert.Equal(t, "foofoobarfoo\n", output.String())
+	assert.Equal(t, "foofoobarfoofoo\n", output.String())
 }
