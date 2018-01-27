@@ -152,3 +152,40 @@ func TestEnvironmentVariables(t *testing.T) {
 
 	assert.Equal(t, "FOO", output.String())
 }
+
+func TestCustomTemplateFuncs(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitModuleWithOptions("app-a", &Spec{
+		Name: "app-a",
+		Properties: map[string]interface{}{
+			"tags":    []string{"a", "b", "c"},
+			"numbers": []int{1, 2, 3},
+			"nested": map[string]interface{}{
+				"tags": []string{"a", "b", "c"},
+			},
+		},
+	}))
+
+	check(t, repo.WriteContent("template.tmpl", `
+{{- if contains (property (module "app-a") "tags") "a"}}foo{{- end}}
+{{- if contains (property (module "app-b") "tags") "a"}}foo{{- end}}
+{{- if contains (property (module "app-a") "dags") "a"}}foo{{- end}}
+{{- if contains (property (module "app-a") "tags") "d"}}foo{{- end}}
+{{- if contains (property (module "app-a") "numbers") "1"}}foo{{- end}}
+{{- if contains (property (module "app-a") "nested.tags") "a"}}foo{{- end}}
+{{- if contains (property (module "app-a") "nested.bags") "a"}}foo{{- end}}
+{{- if contains (property (module "app-a") "tags.tags") "a"}}foo{{- end}}
+{{- if contains (property (module "app-a") "nested.") "a"}}foo{{- end}}
+{{- if contains (property (module "app-a") "nested") "a"}}foo{{- end}}
+`))
+	check(t, repo.Commit("first"))
+
+	output := new(bytes.Buffer)
+	err = ApplyCommit(".tmp/repo", repo.LastCommit.String(), "template.tmpl", output)
+	check(t, err)
+
+	assert.Equal(t, "foofoo\n", output.String())
+}

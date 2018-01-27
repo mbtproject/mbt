@@ -220,7 +220,7 @@ available to templates via `.Properties` property as illustrated below.
 
 ```go
 {{ $module := range .Modules }}
-{{ $module.Properties["a"] }} {{ $module.Properties["b"] }}
+{{ property $module "a" }} {{ property $module "b" }}
 {{ end }}
 ```
 
@@ -228,6 +228,21 @@ More realistic example of this capability is demonstrated in [this example repo]
   https://github.com/mbtproject/demo). It generates docker images for two web 
 applications hosted in nginx, pushes them to specified docker registry and 
 generates a Kubernetes deployment manifest using `mbt apply` command.
+
+### Template Helpers
+Following helper functions are available when writing templates.
+
+|Helper |Description
+|---|--- 
+|`module <name>` |Finds the specified module from modules set discovered in the repo.
+|`property <module> <name>` |Finds the specified property in the given module. Standard dot notation can be used to access nested properties (e.g. `a.b.c`).
+|`contains <array> <item>` |Returns true if the given item is present in the array.
+
+These functions can be pipelined to simplify complex template expressions. Below is an example of emitting the word "foo"
+when module "app-a" has the value "a" in it's tags property.
+```
+{{if contains (property (module "app-a") "tags") "a"}}foo{{end}}
+```
 
 ## CLI Documentation
 [Complete documentation](doc)
