@@ -12,8 +12,8 @@ dependency tracking and metadata management for monorepos stored in git.
 
 ## Building Locally
 
-- First time you clone, run `./scripts/build.sh`
-- After that use make
+- After clone, run `make build`
+- Then
   - `make test` Run all unit tests
   - `make install` Build and install mbt in local bin
 
