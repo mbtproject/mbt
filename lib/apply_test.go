@@ -166,6 +166,7 @@ func TestCustomTemplateFuncs(t *testing.T) {
 			"nested": map[string]interface{}{
 				"tags": []string{"a", "b", "c"},
 			},
+			"foo": "bar",
 		},
 	}))
 
@@ -180,6 +181,8 @@ func TestCustomTemplateFuncs(t *testing.T) {
 {{- if contains (property (module "app-a") "tags.tags") "a"}}foo{{- end}}
 {{- if contains (property (module "app-a") "nested.") "a"}}foo{{- end}}
 {{- if contains (property (module "app-a") "nested") "a"}}foo{{- end}}
+{{- propertyOr (module "app-a") "foo" "car"}}
+{{- propertyOr (module "app-a") "foo.bar" "foo"}}
 `))
 	check(t, repo.Commit("first"))
 
@@ -187,5 +190,5 @@ func TestCustomTemplateFuncs(t *testing.T) {
 	err = ApplyCommit(".tmp/repo", repo.LastCommit.String(), "template.tmpl", output)
 	check(t, err)
 
-	assert.Equal(t, "foofoo\n", output.String())
+	assert.Equal(t, "foofoobarfoo\n", output.String())
 }

@@ -236,6 +236,7 @@ Following helper functions are available when writing templates.
 |---|--- 
 |`module <name>` |Finds the specified module from modules set discovered in the repo.
 |`property <module> <name>` |Finds the specified property in the given module. Standard dot notation can be used to access nested properties (e.g. `a.b.c`).
+|`propertyOr <module> <name> <default>` |Finds specified property in the given module or returns the designated default value
 |`contains <array> <item>` |Returns true if the given item is present in the array.
 
 These functions can be pipelined to simplify complex template expressions. Below is an example of emitting the word "foo"

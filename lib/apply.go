@@ -126,7 +126,14 @@ func processTemplate(buffer []byte, m *Manifest, output io.Writer) error {
 				return nil
 			}
 
-			return resolveProperty(m.Properties(), strings.Split(n, "."))
+			return resolveProperty(m.Properties(), strings.Split(n, "."), nil)
+		},
+		"propertyOr": func(m *Module, n string, def interface{}) interface{} {
+			if m == nil {
+				return def
+			}
+
+			return resolveProperty(m.Properties(), strings.Split(n, "."), def)
 		},
 		"contains": func(container interface{}, item string) bool {
 			if container == nil {
@@ -162,22 +169,22 @@ func processTemplate(buffer []byte, m *Manifest, output io.Writer) error {
 	return temp.Execute(output, data)
 }
 
-func resolveProperty(in interface{}, path []string) interface{} {
+func resolveProperty(in interface{}, path []string, def interface{}) interface{} {
 	if in == nil || len(path) == 0 {
-		return nil
+		return def
 	}
 	if currentMap, ok := in.(map[string]interface{}); ok {
 		v, ok := currentMap[path[0]]
 		if !ok {
-			return nil
+			return def
 		}
 		rest := path[1:]
 		if len(rest) > 0 {
-			return resolveProperty(v, rest)
+			return resolveProperty(v, rest, def)
 		}
 		return v
 	}
-	return nil
+	return def
 }
 
 func getEnvMap() map[string]string {
