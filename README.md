@@ -10,6 +10,20 @@
 Monorepo Build Tool (`mbt`) is a utility that supports differential builds, 
 dependency tracking and metadata management for monorepos stored in git. 
 
+## Install
+```sh
+curl -L -o /usr/local/bin/mbt [get the url for your target from the links below]
+chmod +x /usr/local/bin/mbt
+```
+
+## Releases
+
+|OS               |Download|
+|-----------------|--------|
+|darwin x86_64    |[![Download](https://api.bintray.com/packages/buddyspike/bin/mbt_darwin_x86_64/images/download.svg)](https://bintray.com/buddyspike/bin/mbt_darwin_x86_64/_latestVersion)|
+|linux x86_64     |[![Download](https://api.bintray.com/packages/buddyspike/bin/mbt_linux_x86_64/images/download.svg)](https://bintray.com/buddyspike/bin/mbt_linux_x86_64/_latestVersion)|
+|windows          |[ ![Download](https://api.bintray.com/packages/buddyspike/bin/mbt_windows_x86/images/download.svg) ](https://bintray.com/buddyspike/bin/mbt_windows_x86/_latestVersion)|
+
 ## Building Locally
 
 - After clone, run `make build`
@@ -250,21 +264,6 @@ when module "app-a" has the value "a" in it's tags property.
 
 ## Demo
 [![asciicast](https://asciinema.org/a/KJxXNgrTs9KZbVV4GYNN5DScC.png)](https://asciinema.org/a/KJxXNgrTs9KZbVV4GYNN5DScC)
-
-## Install
-```sh
-curl -L -o /usr/local/bin/mbt [get the url for your target from the links below]
-chmod +x /usr/local/bin/mbt
-```
-## Builds
-
-|OS               |Download|
-|-----------------|--------|
-|darwin x86_64    |[![Download](https://api.bintray.com/packages/buddyspike/bin/mbt_darwin_x86_64/images/download.svg)](https://bintray.com/buddyspike/bin/mbt_darwin_x86_64/_latestVersion)|
-|linux x86_64     |[![Download](https://api.bintray.com/packages/buddyspike/bin/mbt_linux_x86_64/images/download.svg)](https://bintray.com/buddyspike/bin/mbt_linux_x86_64/_latestVersion)|
-|windows          |[ ![Download](https://api.bintray.com/packages/buddyspike/bin/mbt_windows_x86/images/download.svg) ](https://bintray.com/buddyspike/bin/mbt_windows_x86/_latestVersion)|
-
-[This blog post](https://buddyspike.github.io/blog/post/building-modular-systems-with-mbt/) covers some initial thinking behind the tool.
 
 ## Credits
 `mbt` is powered by these awesome libraries
