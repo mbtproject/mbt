@@ -714,3 +714,26 @@ func TestOrderOfModules(t *testing.T) {
 	assert.Equal(t, "app-b", m.Modules[1].Name())
 	assert.Equal(t, "app-a", m.Modules[2].Name())
 }
+
+func TestAppsWithSamePrefix(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitModule("app-aa"))
+	check(t, repo.Commit("first"))
+
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.Commit("second"))
+	c1 := repo.LastCommit
+
+	check(t, repo.WriteContent("app-aa/foo", "bar"))
+	check(t, repo.Commit("third"))
+	c2 := repo.LastCommit
+
+	m, err := ManifestByDiff(".tmp/repo", c1.String(), c2.String())
+	check(t, err)
+
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "app-aa", m.Modules[0].Name())
+}

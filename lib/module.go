@@ -128,7 +128,7 @@ func (l Modules) indexByName() map[string]*Module {
 func (l Modules) indexByPath() map[string]*Module {
 	q := make(map[string]*Module)
 	for _, a := range l {
-		q[fmt.Sprintf("%s/", a.Path())] = a
+		q[a.Path()] = a
 	}
 	return q
 }
@@ -279,12 +279,11 @@ func reduceToDiff(modules Modules, diff *git.Diff) (Modules, error) {
 	q := modules.indexByPath()
 	filtered := make(map[string]*Module)
 	err := diff.ForEach(func(delta git.DiffDelta, num float64) (git.DiffForEachHunkCallback, error) {
-		for k := range q {
+		for k, m := range q {
 			if _, ok := filtered[k]; ok {
 				continue
 			}
-			m, _ := q[k]
-			if strings.HasPrefix(delta.NewFile.Path, k) {
+			if strings.HasPrefix(delta.NewFile.Path, fmt.Sprintf("%s/", k)) {
 				filtered[k] = m
 			} else {
 				for _, p := range m.FileDependencies() {

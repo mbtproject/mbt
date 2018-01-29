@@ -163,7 +163,7 @@ func processTemplate(buffer []byte, m *Manifest, output io.Writer) error {
 	data := &TemplateData{
 		Sha:     m.Sha,
 		Env:     getEnvMap(),
-		Modules: m.indexByName(),
+		Modules: m.Modules.indexByName(),
 	}
 
 	return temp.Execute(output, data)

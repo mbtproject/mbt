@@ -114,14 +114,6 @@ func ManifestByHead(dir string) (*Manifest, error) {
 	})
 }
 
-func (m *Manifest) indexByName() map[string]*Module {
-	return m.Modules.indexByName()
-}
-
-func (m *Manifest) indexByPath() map[string]*Module {
-	return m.Modules.indexByPath()
-}
-
 func fromBranch(repo *git.Repository, dir string, branch string) (*Manifest, error) {
 	commit, err := getBranchCommit(repo, branch)
 	if err != nil {
