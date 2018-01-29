@@ -86,7 +86,16 @@ func getDiffFromIndex(repo *git.Repository) (*git.Diff, error) {
 		return nil, wrap(err)
 	}
 
-	diff, err := repo.DiffIndexToWorkdir(index, &git.DiffOptions{Flags: git.DiffIncludeUntracked})
+	// Diff flags below are essential to get a list of
+	// untracked files (including the ones inside new directories)
+	// in the diff.
+	// Without git.DiffRecurseUntracked option, if a new file is added inside
+	// a new directory, we only get the path to the directory.
+	// This option is same as running git status -uall
+	diff, err := repo.DiffIndexToWorkdir(index, &git.DiffOptions{
+		Flags: git.DiffIncludeUntracked | git.DiffRecurseUntracked,
+	})
+
 	if err != nil {
 		return nil, wrap(err)
 	}
