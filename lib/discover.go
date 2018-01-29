@@ -259,7 +259,8 @@ func discoverMetadataByDir(repo *git.Repository, dir string) (a moduleMetadataSe
 			if err != nil {
 				failf(err, "error whilst reading relative path %s", path)
 			}
-			dir := strings.TrimRight(relPath, "/")
+			dir := strings.Replace(relPath, string(os.PathSeparator), "/", -1)
+			dir = strings.TrimRight(dir, "/")
 
 			hash := "local"
 			metadataSet = append(metadataSet, newModuleMetadata(dir, hash, spec))

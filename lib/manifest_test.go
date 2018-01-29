@@ -340,6 +340,26 @@ func TestManifestByLocalDirForConversion(t *testing.T) {
 	assert.Equal(t, "app-a", m.Modules[0].Name())
 }
 
+func TestManifestByLocalDirForNestedModules(t *testing.T) {
+	clean()
+	abs, err := filepath.Abs(".tmp/repo")
+	check(t, err)
+
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.WriteContent("README.md", "test contents"))
+	check(t, repo.Commit("first"))
+	check(t, repo.InitModule("src/app-a"))
+	check(t, repo.WriteContent("src/app-a/test.txt", "test contents"))
+
+	m, err := ManifestByLocalDir(abs, false)
+	check(t, err)
+
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "app-a", m.Modules[0].Name())
+}
+
 func TestVersionOfLocalDirManifest(t *testing.T) {
 	// All modules should have the fixed versin string "local" as
 	// for manifest derived from local directory.
