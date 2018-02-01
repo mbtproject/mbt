@@ -25,6 +25,7 @@ restore:
 test: build_libgit2
 	go test -coverprofile=coverage.out ./lib
 	go test -coverprofile=coverage.out ./cmd
+	go test -coverprofile=coverage.out ./trie
 	go test -coverprofile=coverage.out .
 
 .PHONY: showcover
