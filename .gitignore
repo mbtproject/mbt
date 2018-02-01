@@ -1,4 +1,5 @@
 *.out
+*.prof
 .tmp/
 tmp/
 repo/

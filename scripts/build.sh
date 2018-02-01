@@ -44,6 +44,7 @@ make restore &&
 TestPackage . &&
 TestPackage ./lib &&
 TestPackage ./cmd &&
+TestPackage ./trie &&
 
 go build -o "build/${OUT}" &&
 shasum -a 1 -p "build/${OUT}" | cut -d ' ' -f 1 > "build/${OUT}.sha1" &&

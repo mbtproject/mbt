@@ -7,6 +7,7 @@ import (
 
 	"github.com/buddyspike/graph"
 	git "github.com/libgit2/git2go"
+	"github.com/mbtproject/mbt/trie"
 )
 
 // Module represents a single module in the repository.
@@ -276,27 +277,14 @@ func modulesInDirectory(repo *git.Repository, dir string) (Modules, error) {
 }
 
 func reduceToDiff(modules Modules, diff *git.Diff) (Modules, error) {
-	q := modules.indexByPath()
-	filtered := make(map[string]*Module)
+	t := trie.NewTrie()
+	filtered := make(Modules, 0)
 	err := diff.ForEach(func(delta git.DiffDelta, num float64) (git.DiffForEachHunkCallback, error) {
-		for k, m := range q {
-			if _, ok := filtered[k]; ok {
-				continue
-			}
-			if strings.HasPrefix(delta.NewFile.Path, fmt.Sprintf("%s/", k)) {
-				filtered[k] = m
-			} else {
-				for _, p := range m.FileDependencies() {
-					// Current comparison is case insensitive. This is problematic
-					// for case sensitive file systems.
-					// Perhaps we can read core.ignorecase configuration value
-					// in git and adjust accordingly.
-					if strings.ToLower(p) == strings.ToLower(delta.NewFile.Path) {
-						filtered[k] = m
-					}
-				}
-			}
-		}
+		// Current comparison is case insensitive. This is problematic
+		// for case sensitive file systems.
+		// Perhaps we can read core.ignorecase configuration value
+		// in git and adjust accordingly.
+		t.Add(strings.ToLower(delta.NewFile.Path))
 		return nil, nil
 	}, git.DiffDetailFiles)
 
@@ -304,10 +292,17 @@ func reduceToDiff(modules Modules, diff *git.Diff) (Modules, error) {
 		return nil, wrap(err)
 	}
 
-	mods := Modules{}
-	for _, v := range filtered {
-		mods = append(mods, v)
+	for _, m := range modules {
+		if t.Find(fmt.Sprintf("%s/", m.Path())).Success {
+			filtered = append(filtered, m)
+		} else {
+			for _, p := range m.FileDependencies() {
+				if t.Find(strings.ToLower(p)).Success {
+					filtered = append(filtered, m)
+				}
+			}
+		}
 	}
 
-	return mods, nil
+	return filtered, nil
 }
