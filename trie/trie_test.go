@@ -78,3 +78,38 @@ func TestPrefix(t *testing.T) {
 	assert.False(t, m.IsCompleteMatch)
 	assert.Equal(t, "a", m.NearestPrefix)
 }
+
+func TestUnsuccessfulMatch(t *testing.T) {
+	i := NewTrie()
+
+	i.Add("abc")
+
+	m := i.Find("def")
+
+	assert.False(t, m.Success)
+	assert.False(t, m.IsCompleteMatch)
+	assert.Equal(t, "", m.NearestPrefix)
+}
+
+func TestUnicodeEntries(t *testing.T) {
+	i := NewTrie()
+	i.Add("😄🍓💩👠")
+
+	m := i.Find("😄🍓")
+
+	assert.True(t, m.Success)
+	assert.False(t, m.IsCompleteMatch)
+	assert.Equal(t, "😄🍓", m.NearestPrefix)
+
+	m = i.Find("😄🍓💩👠")
+
+	assert.True(t, m.Success)
+	assert.True(t, m.IsCompleteMatch)
+	assert.Equal(t, "😄🍓💩👠", m.NearestPrefix)
+
+	m = i.Find("🍓💩")
+
+	assert.False(t, m.Success)
+	assert.False(t, m.IsCompleteMatch)
+	assert.Equal(t, "", m.NearestPrefix)
+}
