@@ -38,9 +38,10 @@ tree that can be developed, built and released independently.
 Modules can be built with different programming languages and their 
 native build tools. 
 
-For example, a repository could have .NET modules built with msbuild 
-and NodeJS modules built with npm scripts. 
-Module developers should be able to use the build tools native to their tool-chain.
+For example, you could have a Java modules built with Maven/Gradle, 
+.NET modules built with MSBUILD and NodeJS modules built with npm scripts - all 
+in one repository. 
+The idea is, module developers should be able to use the build tools native to their stack.
 
 Each module in a repository is stored in its own directory with a spec file 
 called `.mbt.yml`. Presence of the spec file indicates `mbt` that the directory
