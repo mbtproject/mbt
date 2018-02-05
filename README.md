@@ -38,7 +38,7 @@ tree that can be developed, built and released independently.
 Modules can be built with different programming languages and their 
 native build tools. 
 
-For example, you could have a Java modules built with Maven/Gradle, 
+For example, you could have Java modules built with Maven/Gradle, 
 .NET modules built with MSBUILD and NodeJS modules built with npm scripts - all 
 in one repository. 
 The idea is, module developers should be able to use the build tools native to their stack.
