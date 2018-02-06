@@ -23,6 +23,7 @@ func init() {
 	buildCommand.AddCommand(buildPr)
 	buildCommand.AddCommand(buildDiff)
 	buildCommand.AddCommand(buildHead)
+	buildCommand.AddCommand(buildCommit)
 	buildCommand.AddCommand(buildLocal)
 	RootCmd.AddCommand(buildCommand)
 }
@@ -118,6 +119,27 @@ Commit SHA must be the complete 40 character SHA1 string.
 		}
 
 		m, err := lib.ManifestByDiff(in, from, to)
+		if err != nil {
+			return handle(err)
+		}
+
+		return build(m)
+	},
+}
+
+var buildCommit = &cobra.Command{
+	Use:   "commit <sha>",
+	Short: "Builds all modules in the specified commit",
+	Long: `Builds all modules in the specified commit
+	`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if len(args) == 0 {
+			return errors.New("requires the commit sha")
+		}
+
+		commit := args[0]
+
+		m, err := lib.ManifestBySha(in, commit)
 		if err != nil {
 			return handle(err)
 		}
