@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -685,7 +686,9 @@ func TestNonRepository(t *testing.T) {
 	m, err := ManifestByBranch(".tmp/repo", "master")
 
 	assert.Nil(t, m)
-	assert.EqualError(t, err, "mbt: could not find repository from '.tmp/repo'")
+	assert.EqualError(t, err, fmt.Sprintf(msgFailedOpenRepo, ".tmp/repo"))
+	assert.EqualError(t, (err.(*MbtError)).InnerError(), "could not find repository from '.tmp/repo'")
+	assert.Equal(t, ErrClassUser, (err.(*MbtError)).Class())
 }
 
 func TestOrderOfModules(t *testing.T) {

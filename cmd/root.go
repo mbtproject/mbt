@@ -17,10 +17,12 @@ var (
 	second string
 	kind   string
 	all    bool
+	debug  bool
 )
 
 func init() {
 	RootCmd.PersistentFlags().StringVar(&in, "in", "", "path to repo")
+	RootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "enable debugging")
 }
 
 // RootCmd is the main command.

@@ -152,7 +152,7 @@ func (l Modules) expandRequiredByDependencies() (Modules, error) {
 	// Top sort it by requiredBy chain.
 	allItems, err := graph.TopSort(g, &requiredByNodeProvider{})
 	if err != nil {
-		return nil, wrap(err)
+		return nil, wrap(ErrClassInternal, err)
 	}
 
 	// Step 3
@@ -176,7 +176,7 @@ func (l Modules) expandRequiresDependencies() (Modules, error) {
 
 	items, err := graph.TopSort(g, &requiresNodeProvider{})
 	if err != nil {
-		return nil, wrap(err)
+		return nil, wrap(ErrClassInternal, err)
 	}
 
 	r := make([]*Module, items.Len())
@@ -289,7 +289,7 @@ func reduceToDiff(modules Modules, diff *git.Diff) (Modules, error) {
 	}, git.DiffDetailFiles)
 
 	if err != nil {
-		return nil, wrap(err)
+		return nil, wrap(ErrClassInternal, err)
 	}
 
 	for _, m := range modules {

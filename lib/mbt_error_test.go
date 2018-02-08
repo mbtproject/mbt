@@ -8,36 +8,34 @@ import (
 )
 
 func TestSimpleError(t *testing.T) {
-	e := newError("a")
-	assert.EqualError(t, e, "mbt: a")
+	e := newError(ErrClassInternal, "a")
+	assert.EqualError(t, e, "a")
 }
 
 func TestSimpleErrorWithFormat(t *testing.T) {
-	e := newErrorf("a%s", "b")
-	assert.EqualError(t, e, "mbt: ab")
+	e := newErrorf(ErrClassInternal, "a%s", "b")
+	assert.EqualError(t, e, "ab")
 }
 
 func TestWrappedErrorWithMessage(t *testing.T) {
-	e := wrapm(errors.New("a"), "b")
-	assert.EqualError(t, e, "mbt: b - a")
+	i := errors.New("a")
+	e := wrapm(ErrClassInternal, i, "b")
+	assert.EqualError(t, e, "b")
+	assert.EqualError(t, e.InnerError(), "a")
 }
 
 func TestWrappedError(t *testing.T) {
-	e := wrap(errors.New("a"))
-	assert.EqualError(t, e, "mbt: a")
+	e := wrap(ErrClassInternal, errors.New("a"))
+	assert.EqualError(t, e, "a")
 }
 
-func TestLine(t *testing.T) {
-	e := newError("a")
-	assert.Equal(t, 31, e.Line())
+func TestStack(t *testing.T) {
+	e := wrap(ErrClassInternal, errors.New("b"))
+	assert.Equal(t, "github.com/mbtproject/mbt/lib.TestStack", e.Stack()[1].Function)
 }
 
-func TestFile(t *testing.T) {
-	e := newError("a")
-	assert.Equal(t, "mbt_error_test.go", e.File())
-}
-
-func TestLocation(t *testing.T) {
-	e := newError("a").WithLocation()
-	assert.EqualError(t, e, "mbt (mbt_error_test.go,41): a")
+func WrappingAnMbtError(t *testing.T) {
+	a := wrap(ErrClassInternal, errors.New("a"))
+	assert.Equal(t, a, wrap(ErrClassInternal, a))
+	assert.Equal(t, a, wrap(ErrClassUser, a))
 }

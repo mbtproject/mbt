@@ -193,7 +193,7 @@ func check(t *testing.T, err error) {
 	if err != nil {
 		mbtError, ok := err.(*MbtError)
 		if ok {
-			err = mbtError.WithLocation()
+			err = mbtError.WithExtendedInfo()
 		}
 		t.Fatal(err)
 	}

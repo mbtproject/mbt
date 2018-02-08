@@ -38,6 +38,7 @@ func TestNonStringKey(t *testing.T) {
 
 	o, err := transformProps(i)
 
-	assert.EqualError(t, err, "mbt: Key is not a string 42")
+	assert.EqualError(t, err, "Key is not a string 42")
+	assert.Equal(t, ErrClassInternal, (err.(*MbtError)).Class())
 	assert.Nil(t, o)
 }

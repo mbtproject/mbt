@@ -10,7 +10,7 @@ import git "github.com/libgit2/git2go"
 func IntersectionByCommit(dir, first, second string) (Modules, error) {
 	repo, err := git.OpenRepository(dir)
 	if err != nil {
-		return nil, wrap(err)
+		return nil, wrapm(ErrClassUser, err, msgFailedOpenRepo, dir)
 	}
 
 	fc, err := getCommit(repo, first)
@@ -34,7 +34,7 @@ func IntersectionByCommit(dir, first, second string) (Modules, error) {
 func IntersectionByBranch(dir, first, second string) (Modules, error) {
 	repo, err := git.OpenRepository(dir)
 	if err != nil {
-		return nil, wrap(err)
+		return nil, wrapm(ErrClassUser, err, msgFailedOpenRepo, dir)
 	}
 
 	fc, err := getBranchCommit(repo, first)
@@ -53,12 +53,12 @@ func IntersectionByBranch(dir, first, second string) (Modules, error) {
 func intersectionCore(repo *git.Repository, first, second *git.Commit) (Modules, error) {
 	baseOid, err := repo.MergeBase(first.Id(), second.Id())
 	if err != nil {
-		return nil, wrap(err)
+		return nil, wrap(ErrClassInternal, err)
 	}
 
 	base, err := repo.LookupCommit(baseOid)
 	if err != nil {
-		return nil, wrap(err)
+		return nil, wrap(ErrClassInternal, err)
 	}
 
 	firstSet, err := modulesInDiff(repo, first, base)

@@ -58,18 +58,18 @@ var describeBranchCmd = &cobra.Command{
 Displays all modules as of the tip of specified branch.
 If branch name is not specified assumes 'master'.
 `,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		branch := "master"
 		if len(args) > 0 {
 			branch = args[0]
 		}
 		m, err := lib.ManifestByBranch(in, branch)
 		if err != nil {
-			return handle(err)
+			return err
 		}
 
-		return handle(output(m.Modules))
-	},
+		return output(m.Modules)
+	}),
 }
 
 var describeHeadCmd = &cobra.Command{
@@ -79,14 +79,14 @@ var describeHeadCmd = &cobra.Command{
 
 Displays all modules as of the tip of the branch pointed at head.
 `,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		m, err := lib.ManifestByHead(in)
 		if err != nil {
-			return handle(err)
+			return err
 		}
 
-		return handle(output(m.Modules))
-	},
+		return output(m.Modules)
+	}),
 }
 
 var describeLocalCmd = &cobra.Command{
@@ -96,14 +96,14 @@ var describeLocalCmd = &cobra.Command{
 	
 Displays all modules in the local working directory even if they have not been committed.
 `,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		m, err := lib.ManifestByLocalDir(in, all)
 		if err != nil {
-			return handle(err)
+			return err
 		}
 
-		return handle(output(m.Modules))
-	},
+		return output(m.Modules)
+	}),
 }
 
 var describePrCmd = &cobra.Command{
@@ -115,7 +115,7 @@ Works out the merge base for src and dst branches and
 displays all modules which have been changed between merge base and 
 the tip of dst branch.	
 `,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if src == "" {
 			return errors.New("requires source")
 		}
@@ -126,11 +126,11 @@ the tip of dst branch.
 
 		m, err := lib.ManifestByPr(in, src, dst)
 		if err != nil {
-			return handle(err)
+			return err
 		}
 
-		return handle(output(m.Modules))
-	},
+		return output(m.Modules)
+	}),
 }
 
 var describeCommitCmd = &cobra.Command{
@@ -142,7 +142,7 @@ Displays all modules as of the specified commit.
 
 Commit SHA must be the complete 40 character SHA1 string.
 `,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			return errors.New("requires the commit sha")
 		}
@@ -151,11 +151,11 @@ Commit SHA must be the complete 40 character SHA1 string.
 
 		m, err := lib.ManifestBySha(in, commit)
 		if err != nil {
-			return handle(err)
+			return err
 		}
 
-		return handle(output(m.Modules))
-	},
+		return output(m.Modules)
+	}),
 }
 
 var describeIntersectionCmd = &cobra.Command{
@@ -164,7 +164,7 @@ var describeIntersectionCmd = &cobra.Command{
 	Long: `Describes the intersection between two commit trees
 	
 	`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if kind == "" {
 			return errors.New("requires the kind argument")
 		}
@@ -190,11 +190,11 @@ var describeIntersectionCmd = &cobra.Command{
 		}
 
 		if err != nil {
-			return handle(err)
+			return err
 		}
 
-		return handle(output(mods))
-	},
+		return output(mods)
+	}),
 }
 
 var describeDiffCmd = &cobra.Command{
@@ -206,7 +206,7 @@ Works out the merge base for from and to commits and
 displays all modules which have been changed between merge base and 
 the to commit.	
 `,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if from == "" {
 			return errors.New("requires from commit")
 		}
@@ -217,11 +217,11 @@ the to commit.
 
 		m, err := lib.ManifestByDiff(in, from, to)
 		if err != nil {
-			return handle(err)
+			return err
 		}
 
-		return handle(output(m.Modules))
-	},
+		return output(m.Modules)
+	}),
 }
 
 const columnWidth = 30
