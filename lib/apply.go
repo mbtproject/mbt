@@ -23,9 +23,9 @@ type TemplateData struct {
 
 // ApplyBranch applies the repository manifest to specified template.
 func ApplyBranch(dir, templatePath, branch string, output io.Writer) error {
-	repo, err := git.OpenRepository(dir)
+	repo, err := openRepo(dir)
 	if err != nil {
-		return wrapm(ErrClassUser, err, msgFailedOpenRepo, dir)
+		return err
 	}
 
 	commit, err := getBranchCommit(repo, branch)
@@ -38,19 +38,14 @@ func ApplyBranch(dir, templatePath, branch string, output io.Writer) error {
 
 // ApplyCommit applies the repository manifest to specified template.
 func ApplyCommit(dir, sha, templatePath string, output io.Writer) error {
-	repo, err := git.OpenRepository(dir)
+	repo, err := openRepo(dir)
 	if err != nil {
-		return wrapm(ErrClassUser, err, msgFailedOpenRepo, dir)
+		return err
 	}
 
-	shaOid, err := git.NewOid(sha)
+	commit, err := getCommit(repo, sha)
 	if err != nil {
-		return wrapm(ErrClassUser, err, msgInvalidSha, sha)
-	}
-
-	commit, err := repo.LookupCommit(shaOid)
-	if err != nil {
-		return wrap(ErrClassInternal, err)
+		return err
 	}
 
 	return applyCore(repo, commit, dir, templatePath, output)
@@ -58,9 +53,9 @@ func ApplyCommit(dir, sha, templatePath string, output io.Writer) error {
 
 // ApplyHead applies the repository manifest to specified template.
 func ApplyHead(dir, templatePath string, output io.Writer) error {
-	repo, err := git.OpenRepository(dir)
+	repo, err := openRepo(dir)
 	if err != nil {
-		return wrapm(ErrClassUser, err, msgFailedOpenRepo, dir)
+		return err
 	}
 
 	commit, err := getHeadCommit(repo)

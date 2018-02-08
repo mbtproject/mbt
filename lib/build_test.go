@@ -225,10 +225,12 @@ func TestMissingSha(t *testing.T) {
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
 
-	m := &Manifest{Dir: ".tmp/repo", Modules: []*Module{}, Sha: "22221c5e56794a2af5f59f94512df4c669c77a49"}
+	sha := "22221c5e56794a2af5f59f94512df4c669c77a49"
+	m := &Manifest{Dir: ".tmp/repo", Modules: []*Module{}, Sha: sha}
 
 	err = Build(m, os.Stdin, os.Stdout, os.Stderr, noopCb)
 
-	assert.EqualError(t, err, "object not found - no match for id (22221c5e56794a2af5f59f94512df4c669c77a49)")
-	assert.Equal(t, ErrClassInternal, (err.(*MbtError)).Class())
+	assert.EqualError(t, err, fmt.Sprintf(msgCommitShaNotFound, sha))
+	assert.EqualError(t, (err.(*MbtError)).InnerError(), "object not found - no match for id (22221c5e56794a2af5f59f94512df4c669c77a49)")
+	assert.Equal(t, ErrClassUser, (err.(*MbtError)).Class())
 }

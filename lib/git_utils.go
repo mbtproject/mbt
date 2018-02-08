@@ -4,6 +4,14 @@ import (
 	git "github.com/libgit2/git2go"
 )
 
+func openRepo(dir string) (*git.Repository, error) {
+	repo, err := git.OpenRepository(dir)
+	if err != nil {
+		return nil, wrapm(ErrClassUser, err, msgFailedOpenRepo, dir)
+	}
+	return repo, nil
+}
+
 func statusCount(repo *git.Repository) (int, error) {
 	status, err := repo.StatusList(&git.StatusOptions{
 		Flags: git.StatusOptIncludeUntracked,
@@ -111,7 +119,7 @@ func getCommit(repo *git.Repository, commitSha string) (*git.Commit, error) {
 
 	commit, err := repo.LookupCommit(commitOid)
 	if err != nil {
-		return nil, wrap(ErrClassInternal, err)
+		return nil, wrapm(ErrClassUser, err, msgCommitShaNotFound, commitSha)
 	}
 
 	return commit, nil
@@ -123,7 +131,12 @@ func getBranchName(repo *git.Repository) (string, error) {
 		return "", wrap(ErrClassInternal, err)
 	}
 
-	return head.Branch().Name()
+	name, err := head.Branch().Name()
+	if err != nil {
+		return "", wrap(ErrClassInternal, err)
+	}
+
+	return name, nil
 }
 
 func getHeadCommit(repo *git.Repository) (*git.Commit, error) {

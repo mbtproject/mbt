@@ -140,7 +140,7 @@ func newEmptyManifest(dir string) *Manifest {
 type manifestBuilder func(*git.Repository) (*Manifest, error)
 
 func buildManifest(dir string, builder manifestBuilder) (*Manifest, error) {
-	repo, m, err := openRepo(dir)
+	repo, m, err := openRepoSafe(dir)
 	if err != nil {
 		return nil, err
 	}
@@ -152,11 +152,12 @@ func buildManifest(dir string, builder manifestBuilder) (*Manifest, error) {
 	return builder(repo)
 }
 
-func openRepo(dir string) (*git.Repository, *Manifest, error) {
-	repo, err := git.OpenRepository(dir)
+func openRepoSafe(dir string) (*git.Repository, *Manifest, error) {
+	repo, err := openRepo(dir)
 	if err != nil {
-		return nil, nil, wrapm(ErrClassUser, err, msgFailedOpenRepo, dir)
+		return nil, nil, err
 	}
+
 	empty, err := repo.IsEmpty()
 	if err != nil {
 		return nil, nil, wrap(ErrClassInternal, err)

@@ -1,7 +1,8 @@
 package lib
 
 const (
-	msgInvalidSha          = "invalid commit sha %s"
+	msgInvalidSha          = "invalid commit sha '%s'"
+	msgCommitShaNotFound   = "failed to find commit sha '%s'"
 	msgFailedOpenRepo      = "failed to open a git repository in dir - '%s'"
 	msgFailedTemplatePath  = "failed to read the template in file '%s'"
 	msgFailedReadFile      = "failed to read file '%s'"
