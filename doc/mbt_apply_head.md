@@ -1,23 +1,22 @@
-## mbt apply local
+## mbt apply head
 
-Apply the manifest of current workspace
+Apply the manifest of the commit pointed by current head
 
 ### Synopsis
 
 
-Apply the manifest of current workspace
+Apply the manifest of the commit point by current head
 
-This command is useful for testing pending changes in workspace.
 	
 
 ```
-mbt apply local [flags]
+mbt apply head [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for local
+  -h, --help   help for head
 ```
 
 ### Options inherited from parent commands

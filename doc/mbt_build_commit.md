@@ -1,22 +1,21 @@
-## mbt build head
+## mbt build commit
 
-Build all modules in the commit pointed at current head
+Build all modules in the specified commit
 
 ### Synopsis
 
 
-Build all modules in the commit pointed at current head
-
-
+Build all modules in the specified commit
+	
 
 ```
-mbt build head [flags]
+mbt build commit <sha> [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for head
+  -h, --help   help for commit
 ```
 
 ### Options inherited from parent commands
