@@ -36,14 +36,14 @@ var buildHead = &cobra.Command{
 Builds all modules as of the head of the branch that is in the specified folder.
 
 `,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		m, err := lib.ManifestByHead(in)
 		if err != nil {
-			return handle(err)
+			return err
 		}
 
 		return build(m)
-	},
+	}),
 }
 
 var buildBranch = &cobra.Command{
@@ -55,7 +55,7 @@ Builds all modules as of the tip of specified branch.
 If branch name is not specified assumes 'master'.
 
 `,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		branch := "master"
 		if len(args) > 0 {
 			branch = args[0]
@@ -63,11 +63,11 @@ If branch name is not specified assumes 'master'.
 
 		m, err := lib.ManifestByBranch(in, branch)
 		if err != nil {
-			return handle(err)
+			return err
 		}
 
 		return build(m)
-	},
+	}),
 }
 
 var buildPr = &cobra.Command{
@@ -80,7 +80,7 @@ builds all modules which have been changed between merge base and
 the tip of dst branch.	
 
 	`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if src == "" {
 			return errors.New("requires source")
 		}
@@ -91,11 +91,11 @@ the tip of dst branch.
 
 		m, err := lib.ManifestByPr(in, src, dst)
 		if err != nil {
-			return handle(err)
+			return err
 		}
 
 		return build(m)
-	},
+	}),
 }
 
 var buildDiff = &cobra.Command{
@@ -109,7 +109,7 @@ to commit.
 
 Commit SHA must be the complete 40 character SHA1 string.
 	`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if from == "" {
 			return errors.New("requires from commit")
 		}
@@ -120,11 +120,11 @@ Commit SHA must be the complete 40 character SHA1 string.
 
 		m, err := lib.ManifestByDiff(in, from, to)
 		if err != nil {
-			return handle(err)
+			return err
 		}
 
 		return build(m)
-	},
+	}),
 }
 
 var buildCommit = &cobra.Command{
@@ -132,7 +132,7 @@ var buildCommit = &cobra.Command{
 	Short: "Builds all modules in the specified commit",
 	Long: `Builds all modules in the specified commit
 	`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			return errors.New("requires the commit sha")
 		}
@@ -141,11 +141,11 @@ var buildCommit = &cobra.Command{
 
 		m, err := lib.ManifestBySha(in, commit)
 		if err != nil {
-			return handle(err)
+			return err
 		}
 
 		return build(m)
-	},
+	}),
 }
 
 var buildLocal = &cobra.Command{
@@ -159,14 +159,14 @@ during the last commit and the current build.
 
 Specify the --all flag to everything local branch. 
 	`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		m, err := lib.ManifestByLocalDir(in, all)
 		if err != nil {
-			return handle(err)
+			return err
 		}
 
 		return buildDir(m)
-	},
+	}),
 }
 
 func build(m *lib.Manifest) error {

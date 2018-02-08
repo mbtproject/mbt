@@ -2,6 +2,7 @@ package lib
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"testing"
 
@@ -114,7 +115,8 @@ func TestIncorrectTemplatePath(t *testing.T) {
 	output := new(bytes.Buffer)
 	err = ApplyCommit(".tmp/repo", repo.LastCommit.String(), "foo/template.tmpl", output)
 
-	assert.EqualError(t, err, "mbt: the path 'foo' does not exist in the given tree")
+	assert.EqualError(t, err, fmt.Sprintf(msgTemplateNotFound, "foo/template.tmpl", repo.LastCommit.String()))
+	assert.Equal(t, ErrClassUser, (err.(*MbtError)).Class())
 	assert.Equal(t, "", output.String())
 }
 
@@ -132,7 +134,9 @@ func TestBadTemplate(t *testing.T) {
 	output := new(bytes.Buffer)
 	err = ApplyCommit(".tmp/repo", repo.LastCommit.String(), "template.tmpl", output)
 
-	assert.EqualError(t, err, "mbt: template: template:2: unexpected EOF")
+	assert.EqualError(t, err, msgFailedTemplateParse)
+	assert.EqualError(t, (err.(*MbtError)).InnerError(), "template: template:2: unexpected EOF")
+	assert.Equal(t, ErrClassUser, (err.(*MbtError)).Class())
 	assert.Equal(t, "", output.String())
 }
 

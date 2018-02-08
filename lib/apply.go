@@ -25,7 +25,7 @@ type TemplateData struct {
 func ApplyBranch(dir, templatePath, branch string, output io.Writer) error {
 	repo, err := git.OpenRepository(dir)
 	if err != nil {
-		return wrap(err)
+		return wrapm(ErrClassUser, err, msgFailedOpenRepo, dir)
 	}
 
 	commit, err := getBranchCommit(repo, branch)
@@ -40,17 +40,17 @@ func ApplyBranch(dir, templatePath, branch string, output io.Writer) error {
 func ApplyCommit(dir, sha, templatePath string, output io.Writer) error {
 	repo, err := git.OpenRepository(dir)
 	if err != nil {
-		return wrap(err)
+		return wrapm(ErrClassUser, err, msgFailedOpenRepo, dir)
 	}
 
 	shaOid, err := git.NewOid(sha)
 	if err != nil {
-		return wrap(err)
+		return wrapm(ErrClassUser, err, msgInvalidSha, sha)
 	}
 
 	commit, err := repo.LookupCommit(shaOid)
 	if err != nil {
-		return wrap(err)
+		return wrap(ErrClassInternal, err)
 	}
 
 	return applyCore(repo, commit, dir, templatePath, output)
@@ -60,7 +60,7 @@ func ApplyCommit(dir, sha, templatePath string, output io.Writer) error {
 func ApplyHead(dir, templatePath string, output io.Writer) error {
 	repo, err := git.OpenRepository(dir)
 	if err != nil {
-		return wrap(err)
+		return wrapm(ErrClassUser, err, msgFailedOpenRepo, dir)
 	}
 
 	commit, err := getHeadCommit(repo)
@@ -75,12 +75,13 @@ func ApplyHead(dir, templatePath string, output io.Writer) error {
 func ApplyLocal(dir, templatePath string, output io.Writer) error {
 	absDir, err := filepath.Abs(dir)
 	if err != nil {
-		return wrap(err)
+		return wrapm(ErrClassUser, err, msgFailedLocalPath)
 	}
 
-	c, err := ioutil.ReadFile(path.Join(absDir, templatePath))
+	absTemplatePath := path.Join(absDir, templatePath)
+	c, err := ioutil.ReadFile(absTemplatePath)
 	if err != nil {
-		return wrap(err)
+		return wrapm(ErrClassUser, err, msgFailedReadFile, absTemplatePath)
 	}
 
 	m, err := ManifestByLocalDir(absDir, true)
@@ -94,17 +95,17 @@ func ApplyLocal(dir, templatePath string, output io.Writer) error {
 func applyCore(repo *git.Repository, commit *git.Commit, dir, templatePath string, output io.Writer) error {
 	tree, err := commit.Tree()
 	if err != nil {
-		return wrap(err)
+		return wrap(ErrClassInternal, err)
 	}
 
 	e, err := tree.EntryByPath(templatePath)
 	if err != nil {
-		return wrap(err)
+		return wrapm(ErrClassUser, err, msgTemplateNotFound, templatePath, commit.Id().String())
 	}
 
 	b, err := repo.LookupBlob(e.Id)
 	if err != nil {
-		return wrap(err)
+		return wrap(ErrClassInternal, err)
 	}
 
 	m, err := fromCommit(repo, dir, commit)
@@ -157,7 +158,7 @@ func processTemplate(buffer []byte, m *Manifest, output io.Writer) error {
 		},
 	}).Parse(string(buffer))
 	if err != nil {
-		return wrap(err)
+		return wrapm(ErrClassUser, err, msgFailedTemplateParse)
 	}
 
 	data := &TemplateData{

@@ -10,7 +10,7 @@ func statusCount(repo *git.Repository) (int, error) {
 	})
 
 	if err != nil {
-		return 0, wrap(err)
+		return 0, wrap(ErrClassInternal, err)
 	}
 
 	defer status.Free()
@@ -26,13 +26,13 @@ func isWorkingDirDirty(repo *git.Repository) (bool, error) {
 func getBranchCommit(repo *git.Repository, branch string) (*git.Commit, error) {
 	ref, err := repo.References.Dwim(branch)
 	if err != nil {
-		return nil, wrap(err)
+		return nil, wrapm(ErrClassUser, err, msgFailedBranchLookup, branch)
 	}
 
 	oid := ref.Target()
 	commit, err := repo.LookupCommit(oid)
 	if err != nil {
-		return nil, wrap(err)
+		return nil, wrap(ErrClassInternal, err)
 	}
 
 	return commit, nil
@@ -45,7 +45,7 @@ func getBranchTree(repo *git.Repository, branch string) (*git.Tree, error) {
 	}
 	tree, err := commit.Tree()
 	if err != nil {
-		return nil, wrap(err)
+		return nil, wrap(ErrClassInternal, err)
 	}
 
 	return tree, nil
@@ -54,27 +54,27 @@ func getBranchTree(repo *git.Repository, branch string) (*git.Tree, error) {
 func getDiffFromMergeBase(repo *git.Repository, srcC, dstC *git.Commit) (*git.Diff, error) {
 	baseOid, err := repo.MergeBase(srcC.Id(), dstC.Id())
 	if err != nil {
-		return nil, wrap(err)
+		return nil, wrap(ErrClassInternal, err)
 	}
 
 	baseC, err := repo.LookupCommit(baseOid)
 	if err != nil {
-		return nil, wrap(err)
+		return nil, wrap(ErrClassInternal, err)
 	}
 
 	baseTree, err := baseC.Tree()
 	if err != nil {
-		return nil, wrap(err)
+		return nil, wrap(ErrClassInternal, err)
 	}
 
 	srcTree, err := srcC.Tree()
 	if err != nil {
-		return nil, wrap(err)
+		return nil, wrap(ErrClassInternal, err)
 	}
 
 	diff, err := repo.DiffTreeToTree(baseTree, srcTree, &git.DiffOptions{})
 	if err != nil {
-		return nil, wrap(err)
+		return nil, wrap(ErrClassInternal, err)
 	}
 
 	return diff, err
@@ -83,7 +83,7 @@ func getDiffFromMergeBase(repo *git.Repository, srcC, dstC *git.Commit) (*git.Di
 func getDiffFromIndex(repo *git.Repository) (*git.Diff, error) {
 	index, err := repo.Index()
 	if err != nil {
-		return nil, wrap(err)
+		return nil, wrap(ErrClassInternal, err)
 	}
 
 	// Diff flags below are essential to get a list of
@@ -97,7 +97,7 @@ func getDiffFromIndex(repo *git.Repository) (*git.Diff, error) {
 	})
 
 	if err != nil {
-		return nil, wrap(err)
+		return nil, wrap(ErrClassInternal, err)
 	}
 
 	return diff, err
@@ -106,16 +106,21 @@ func getDiffFromIndex(repo *git.Repository) (*git.Diff, error) {
 func getCommit(repo *git.Repository, commitSha string) (*git.Commit, error) {
 	commitOid, err := git.NewOid(commitSha)
 	if err != nil {
-		return nil, wrap(err)
+		return nil, wrapm(ErrClassUser, err, msgInvalidSha, commitSha)
 	}
 
-	return repo.LookupCommit(commitOid)
+	commit, err := repo.LookupCommit(commitOid)
+	if err != nil {
+		return nil, wrap(ErrClassInternal, err)
+	}
+
+	return commit, nil
 }
 
 func getBranchName(repo *git.Repository) (string, error) {
 	head, err := repo.Head()
 	if err != nil {
-		return "", wrap(err)
+		return "", wrap(ErrClassInternal, err)
 	}
 
 	return head.Branch().Name()

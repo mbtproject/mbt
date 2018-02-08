@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -65,7 +66,9 @@ func TestInvalidBranch(t *testing.T) {
 	c, err := getBranchCommit(repo.Repo, "foo")
 
 	assert.Nil(t, c)
-	assert.EqualError(t, err, "mbt: no reference found for shorthand 'foo'")
+	assert.EqualError(t, err, fmt.Sprintf(msgFailedBranchLookup, "foo"))
+	assert.EqualError(t, (err.(*MbtError)).InnerError(), "no reference found for shorthand 'foo'")
+	assert.Equal(t, ErrClassUser, (err.(*MbtError)).Class())
 }
 
 func TestBranchName(t *testing.T) {

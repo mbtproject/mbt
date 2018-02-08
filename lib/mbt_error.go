@@ -2,81 +2,116 @@ package lib
 
 import (
 	"fmt"
-	"path"
 	"runtime"
+	"strings"
+)
+
+const (
+	// ErrClassNone Not specified
+	ErrClassNone = iota
+	// ErrClassUser is a user error that can be corrected
+	ErrClassUser
+	// ErrClassInternal is an internal error potentially due to a bug
+	ErrClassInternal
 )
 
 // MbtError is a generic wrapper for errors occur in various mbt components.
 type MbtError struct {
-	message      string
-	innerError   error
-	file         string
-	line         int
-	showLocation bool
+	message          string
+	innerError       error
+	class            int
+	stack            []runtime.Frame
+	showExtendedInfo bool
 }
 
 func (e *MbtError) Error() string {
-	s := ""
-	if e.showLocation {
-		s = fmt.Sprintf("mbt (%s,%v): %s", e.file, e.line, e.message)
-	} else {
-		s = fmt.Sprintf("mbt: %s", e.message)
+	s := e.message
+	if s == "" && e.innerError != nil {
+		s = e.innerError.Error()
 	}
-	if e.message != "" && e.innerError != nil {
-		s = fmt.Sprintf("%s - ", s)
+
+	if e.showExtendedInfo {
+		stack := make([]string, 0, len(e.stack))
+		for _, f := range e.stack {
+			stack = append(stack, fmt.Sprintf("%s %s(%v)", f.Function, f.File, f.Line))
+		}
+		return fmt.Sprintf(`%s
+inner error: %s
+call stack:
+%s
+`, s, e.innerError.Error(), strings.Join(stack, "\n"))
 	}
-	if e.innerError != nil {
-		s = fmt.Sprintf("%s%s", s, e.innerError)
-	}
+
 	return s
 }
 
-// Line returns the line number where e was created.
-func (e *MbtError) Line() int {
-	return e.line
+// InnerError returns the inner error wrapped in this error if there's one.
+func (e *MbtError) InnerError() error {
+	return e.innerError
 }
 
-// File returns the filename where e was created.
-func (e *MbtError) File() string {
-	return e.file
+// Class returns the class of this error.
+// See ErrClassXxx constants for possible values.
+func (e *MbtError) Class() int {
+	return e.class
 }
 
-// WithLocation enables the error location info in the output.
-func (e *MbtError) WithLocation() *MbtError {
-	e.showLocation = true
-	return e
+// Stack returns the callstack (up to 32 frames) indicating where the
+// error occurred
+func (e *MbtError) Stack() []runtime.Frame {
+	return e.stack
 }
 
-func newError(message string) *MbtError {
-	return newMbtError(nil, message)
-}
-
-func newErrorf(message string, args ...interface{}) *MbtError {
-	return newMbtError(nil, message, args...)
-}
-
-func wrap(innerError error) *MbtError {
-	return newMbtError(innerError, "")
-}
-
-func wrapm(innerError error, message string, args ...interface{}) *MbtError {
-	return newMbtError(innerError, message, args...)
-}
-
-func failf(innerError error, message string, args ...interface{}) {
-	panic(newMbtError(innerError, message, args...))
-}
-
-func newMbtError(innerError error, message string, args ...interface{}) *MbtError {
-	m := fmt.Sprintf(message, args...)
-	_, file, line, ok := runtime.Caller(2)
-	if !ok {
-		file = "???"
-		line = 0
-	} else {
-		file = path.Base(file)
+// WithExtendedInfo returns a new instance of MbtError which prints the
+// additional details such as callstack.
+func (e *MbtError) WithExtendedInfo() *MbtError {
+	return &MbtError{
+		class:            e.class,
+		innerError:       e.innerError,
+		message:          e.message,
+		showExtendedInfo: true,
+		stack:            e.stack,
 	}
-	return &MbtError{message: m, innerError: innerError, file: file, line: line}
+}
+
+func newError(klass int, message string) *MbtError {
+	return newMbtError(klass, nil, message)
+}
+
+func newErrorf(klass int, message string, args ...interface{}) *MbtError {
+	return newMbtError(klass, nil, message, args...)
+}
+
+func wrap(klass int, innerError error) *MbtError {
+	if wrapped, ok := innerError.(*MbtError); ok {
+		return wrapped
+	}
+
+	return newMbtError(klass, innerError, "")
+}
+
+func wrapm(klass int, innerError error, message string, args ...interface{}) *MbtError {
+	return newMbtError(klass, innerError, message, args...)
+}
+
+func failf(klass int, innerError error, message string, args ...interface{}) {
+	panic(wrapm(klass, innerError, message, args...))
+}
+
+func newMbtError(klass int, innerError error, message string, args ...interface{}) *MbtError {
+	m := fmt.Sprintf(message, args...)
+	pc := make([]uintptr, 32 /*limit the number of frames to 32 max*/)
+	n := runtime.Callers(2, pc)
+	frames := make([]runtime.Frame, 0, n)
+	rframes := runtime.CallersFrames(pc[:n])
+	for {
+		f, more := rframes.Next()
+		frames = append(frames, f)
+		if !more {
+			break
+		}
+	}
+	return &MbtError{class: klass, message: m, innerError: innerError, stack: frames}
 }
 
 func handlePanic(err *error) {

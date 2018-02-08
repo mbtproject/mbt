@@ -154,7 +154,8 @@ func TestDirtyWorkingDir(t *testing.T) {
 	buff := new(bytes.Buffer)
 	err = Build(m, os.Stdin, buff, buff, func(a *Module, s BuildStage) {})
 	assert.Error(t, err)
-	assert.Equal(t, "mbt: dirty working dir", err.Error())
+	assert.Equal(t, "dirty working dir", err.Error())
+	assert.Equal(t, ErrClassUser, (err.(*MbtError)).Class())
 }
 
 func TestBuildEnvironment(t *testing.T) {
@@ -194,7 +195,9 @@ func TestNonGitRepo(t *testing.T) {
 
 	err := Build(m, os.Stdin, os.Stdout, os.Stderr, noopCb)
 
-	assert.EqualError(t, err, "mbt: could not find repository from '.tmp/repo'")
+	assert.EqualError(t, err, "Unable to open repository in .tmp/repo")
+	assert.EqualError(t, (err.(*MbtError)).InnerError(), "could not find repository from '.tmp/repo'")
+	assert.Equal(t, ErrClassUser, (err.(*MbtError)).Class())
 }
 
 func TestBadSha(t *testing.T) {
@@ -209,7 +212,9 @@ func TestBadSha(t *testing.T) {
 
 	err = Build(m, os.Stdin, os.Stdout, os.Stderr, noopCb)
 
-	assert.EqualError(t, err, "mbt: encoding/hex: odd length hex string")
+	assert.EqualError(t, err, fmt.Sprintf(msgInvalidSha, "a"))
+	assert.EqualError(t, (err.(*MbtError)).InnerError(), "encoding/hex: odd length hex string")
+	assert.Equal(t, ErrClassUser, (err.(*MbtError)).Class())
 }
 
 func TestMissingSha(t *testing.T) {
@@ -224,5 +229,6 @@ func TestMissingSha(t *testing.T) {
 
 	err = Build(m, os.Stdin, os.Stdout, os.Stderr, noopCb)
 
-	assert.EqualError(t, err, "mbt: object not found - no match for id (22221c5e56794a2af5f59f94512df4c669c77a49)")
+	assert.EqualError(t, err, "object not found - no match for id (22221c5e56794a2af5f59f94512df4c669c77a49)")
+	assert.Equal(t, ErrClassInternal, (err.(*MbtError)).Class())
 }

@@ -30,7 +30,7 @@ const (
 func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCallback func(mod *Module, s BuildStage)) error {
 	repo, err := git.OpenRepository(m.Dir)
 	if err != nil {
-		return wrap(err)
+		return wrapm(ErrClassUser, err, "Unable to open repository in %s", m.Dir)
 	}
 
 	dirty, err := isWorkingDirDirty(repo)
@@ -39,28 +39,23 @@ func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCal
 	}
 
 	if dirty {
-		return newError("dirty working dir")
+		return newError(ErrClassUser, "dirty working dir")
 	}
 
-	oid, err := git.NewOid(m.Sha)
+	commit, err := getCommit(repo, m.Sha)
 	if err != nil {
-		return wrap(err)
-	}
-
-	commit, err := repo.LookupCommit(oid)
-	if err != nil {
-		return wrap(err)
+		return err
 	}
 
 	tree, err := commit.Tree()
 	if err != nil {
-		return wrap(err)
+		return wrap(ErrClassInternal, err)
 	}
 
 	// TODO: Confirm the strategy is correct
 	err = repo.CheckoutTree(tree, defaultCheckoutOptions)
 	if err != nil {
-		return wrap(err)
+		return wrap(ErrClassInternal, err)
 	}
 
 	defer checkoutHead(repo)
@@ -74,7 +69,7 @@ func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCal
 		buildStageCallback(a, BuildStageBeforeBuild)
 		err := buildOne(m, a, stdin, stdout, stderr)
 		if err != nil {
-			return wrap(err)
+			return err
 		}
 		buildStageCallback(a, BuildStageAfterBuild)
 	}
@@ -93,7 +88,7 @@ func BuildDir(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStage
 		buildStageCallback(a, BuildStageBeforeBuild)
 		err := buildOne(m, a, stdin, stdout, stderr)
 		if err != nil {
-			return wrap(err)
+			return err
 		}
 		buildStageCallback(a, BuildStageAfterBuild)
 	}
@@ -127,7 +122,10 @@ func buildOne(manifest *Manifest, mod *Module, stdin io.Reader, stdout, stderr i
 	cmd.Stderr = stderr
 	cmd.Args = append(cmd.Args, build.Args...)
 	err := cmd.Run()
-	return err
+	if err != nil {
+		return wrapm(ErrClassUser, err, msgFailedBuild, mod.Name())
+	}
+	return nil
 }
 
 func canBuildHere(mod *Module) bool {

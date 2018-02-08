@@ -45,16 +45,16 @@ var applyBranchCmd = &cobra.Command{
 
 Calculated manifest and the template is based on the tip of the specified branch.
 	`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		branch := "master"
 		if len(args) > 0 {
 			branch = args[0]
 		}
 
-		return handle(applyCore(func(to string, output io.Writer) error {
+		return applyCore(func(to string, output io.Writer) error {
 			return lib.ApplyBranch(in, to, branch, output)
-		}))
-	},
+		})
+	}),
 }
 
 var applyCommitCmd = &cobra.Command{
@@ -66,17 +66,17 @@ Calculated manifest and the template is based on the specified commit.
 
 Commit SHA must be the complete 40 character SHA1 string.
 	`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			return errors.New("requires the commit sha")
 		}
 
 		commit := args[0]
 
-		return handle(applyCore(func(to string, output io.Writer) error {
+		return applyCore(func(to string, output io.Writer) error {
 			return lib.ApplyCommit(in, commit, to, output)
-		}))
-	},
+		})
+	}),
 }
 
 var applyHeadCmd = &cobra.Command{
@@ -86,11 +86,11 @@ var applyHeadCmd = &cobra.Command{
 
 Calculated manifest and the template is based on the current head.
 	`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return handle(applyCore(func(to string, output io.Writer) error {
+	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
+		return applyCore(func(to string, output io.Writer) error {
 			return lib.ApplyHead(in, to, output)
-		}))
-	},
+		})
+	}),
 }
 
 var applyLocal = &cobra.Command{
@@ -101,11 +101,11 @@ var applyLocal = &cobra.Command{
 Calculated manifest and the template is based on the content of local directory.
 This command is useful for testing pending changes in workspace.
 	`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return handle(applyCore(func(to string, output io.Writer) error {
+	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
+		return applyCore(func(to string, output io.Writer) error {
 			return lib.ApplyLocal(in, to, output)
-		}))
-	},
+		})
+	}),
 }
 
 type applyFunc func(to string, output io.Writer) error
@@ -117,7 +117,7 @@ func applyCore(f applyFunc) error {
 
 	output, err := getOutput(out)
 	if err != nil {
-		return handle(err)
+		return err
 	}
 
 	return f(to, output)

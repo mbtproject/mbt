@@ -1,8 +1,6 @@
 package lib
 
 import (
-	"encoding/hex"
-
 	git "github.com/libgit2/git2go"
 )
 
@@ -38,16 +36,9 @@ func ManifestByPr(dir, src, dst string) (*Manifest, error) {
 // ManifestBySha returns the manifest as of the specified commit sha.
 func ManifestBySha(dir, sha string) (*Manifest, error) {
 	return buildManifest(dir, func(repo *git.Repository) (*Manifest, error) {
-
-		bytes, err := hex.DecodeString(sha)
+		commit, err := getCommit(repo, sha)
 		if err != nil {
-			return nil, wrap(err)
-		}
-
-		oid := git.NewOidFromBytes(bytes)
-		commit, err := repo.LookupCommit(oid)
-		if err != nil {
-			return nil, wrap(err)
+			return nil, err
 		}
 
 		return fromCommit(repo, dir, commit)
@@ -64,25 +55,14 @@ func ManifestByBranch(dir, branch string) (*Manifest, error) {
 // ManifestByDiff returns the manifest for the diff between given two commits.
 func ManifestByDiff(dir, from, to string) (*Manifest, error) {
 	return buildManifest(dir, func(repo *git.Repository) (*Manifest, error) {
-
-		fromOid, err := git.NewOid(from)
+		fromC, err := getCommit(repo, from)
 		if err != nil {
-			return nil, wrap(err)
+			return nil, err
 		}
 
-		toOid, err := git.NewOid(to)
+		toC, err := getCommit(repo, to)
 		if err != nil {
-			return nil, wrap(err)
-		}
-
-		fromC, err := repo.LookupCommit(fromOid)
-		if err != nil {
-			return nil, wrap(err)
-		}
-
-		toC, err := repo.LookupCommit(toOid)
-		if err != nil {
-			return nil, wrap(err)
+			return nil, err
 		}
 
 		a, err := modulesInDiffWithDependents(repo, toC, fromC)
@@ -107,7 +87,7 @@ func ManifestByHead(dir string) (*Manifest, error) {
 
 		branch, err := getBranchName(repo)
 		if err != nil {
-			return nil, wrap(err)
+			return nil, err
 		}
 
 		return fromBranch(repo, dir, branch)
@@ -175,11 +155,11 @@ func buildManifest(dir string, builder manifestBuilder) (*Manifest, error) {
 func openRepo(dir string) (*git.Repository, *Manifest, error) {
 	repo, err := git.OpenRepository(dir)
 	if err != nil {
-		return nil, nil, wrap(err)
+		return nil, nil, wrapm(ErrClassUser, err, msgFailedOpenRepo, dir)
 	}
 	empty, err := repo.IsEmpty()
 	if err != nil {
-		return nil, nil, wrap(err)
+		return nil, nil, wrap(ErrClassInternal, err)
 	}
 
 	if empty {
