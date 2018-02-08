@@ -30,10 +30,8 @@ func init() {
 
 var buildHead = &cobra.Command{
 	Use:   "head",
-	Short: "Builds the local directory",
-	Long: `Builds the local directory
-
-Builds all modules as of the head of the branch that is in the specified folder.
+	Short: "Build all modules in the commit pointed at current head",
+	Long: `Build all modules in the commit pointed at current head
 
 `,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
@@ -48,11 +46,11 @@ Builds all modules as of the head of the branch that is in the specified folder.
 
 var buildBranch = &cobra.Command{
 	Use:   "branch <branch>",
-	Short: "Builds the specified branch",
-	Long: `Builds the specified branch
+	Short: "Build all modules at the tip of the specified branch",
+	Long: `Build all modules at the tip of the specified branch
 
-Builds all modules as of the tip of specified branch.
-If branch name is not specified assumes 'master'.
+Build all modules at the tip of the specified branch.
+If branch name is not specified, the command assumes 'master'.
 
 `,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
@@ -72,12 +70,15 @@ If branch name is not specified assumes 'master'.
 
 var buildPr = &cobra.Command{
 	Use:   "pr --src <branch> --dst <branch>",
-	Short: "Builds the diff between the src and dst branches",
-	Long: `Builds the diff between the src and dst branches
+	Short: "Build the modules changed in dst branch relatively to src branch",
+	Long: `Build the modules changed in dst branch relatively to src branch
 
-Works out the merge base for src and dst branches and 
-builds all modules which have been changed between merge base and 
+This command works out the merge base for src and dst branches and 
+builds all modules impacted by the diff between merge base and 
 the tip of dst branch.	
+
+In addition to the modules impacted by changes, this command also 
+builds their dependents.
 
 	`,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
@@ -100,12 +101,15 @@ the tip of dst branch.
 
 var buildDiff = &cobra.Command{
 	Use:   "diff --from <sha> --to <sha>",
-	Short: "Builds the diff between from and to commits",
-	Long: `Builds the diff between from and to commits
+	Short: "Build the modules changed between from and to commits",
+	Long: `Build the modules chanaged between from and to commits
 
 Works out the merge base for from and to commits and 
 builds all modules which have been changed between merge base and 
 to commit.
+
+In addition to the modules impacted by changes, this command also 
+builds their dependents.
 
 Commit SHA must be the complete 40 character SHA1 string.
 	`,
@@ -129,8 +133,8 @@ Commit SHA must be the complete 40 character SHA1 string.
 
 var buildCommit = &cobra.Command{
 	Use:   "commit <sha>",
-	Short: "Builds all modules in the specified commit",
-	Long: `Builds all modules in the specified commit
+	Short: "Build all modules in the specified commit",
+	Long: `Build all modules in the specified commit
 	`,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
@@ -150,14 +154,11 @@ var buildCommit = &cobra.Command{
 
 var buildLocal = &cobra.Command{
 	Use:   "local [--all]",
-	Short: "Builds the diff between the work dir and the last commit",
-	Long: `Builds the diff between the work dir and the last commit
+	Short: "Build all modules in uncommitted changes in current workspace",
+	Long: `Build all modules in uncommitted changes in current workspace
 
-Works out the merge base between the local working directory and the last 
-commit on this branch. Then it will try to build only the modules have changed
-during the last commit and the current build.
-
-Specify the --all flag to everything local branch. 
+Local builds always uses a fixed version identifier - 'local'.
+Specify the --all flag to build all modules in current workspace. 
 	`,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		m, err := lib.ManifestByLocalDir(in, all)
@@ -196,7 +197,7 @@ var buildCommand = &cobra.Command{
 	Short: "Main command for building the repository",
 	Long: `Main command for building the repository 
 
-Executes the build according to the specified sub command. 
+Execute the build according to the specified sub command. 
 See sub command help for more information.
 `,
 }

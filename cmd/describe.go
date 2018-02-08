@@ -41,8 +41,8 @@ func init() {
 
 var describeCmd = &cobra.Command{
 	Use:   "describe",
-	Short: "Describes the manifest of a repo",
-	Long: `Describes the manifest of a repo
+	Short: "Describe the modules in the repo",
+	Long: `Describe the modules in the repo
 
 Displays all modules discovered in repo according to the sub command 
 used. This can be used to understand the impact of executing the build 
@@ -52,10 +52,9 @@ command and also to pipe mbt manifest to external tools.
 
 var describeBranchCmd = &cobra.Command{
 	Use:   "branch <branch>",
-	Short: "Describes the manifest for the given branch",
-	Long: `Describes the manifest for the given branch
+	Short: "Describe all modules in the tip of the given branch",
+	Long: `Describe all modules in the tip of the given branch 
 
-Displays all modules as of the tip of specified branch.
 If branch name is not specified assumes 'master'.
 `,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
@@ -74,10 +73,9 @@ If branch name is not specified assumes 'master'.
 
 var describeHeadCmd = &cobra.Command{
 	Use:   "head",
-	Short: "Describes the manifest for the branch pointed at head",
-	Long: `Describes the manifest for the branch pointed at head
+	Short: "Describe all modules in the branch pointed by head",
+	Long: `Describe all modules in the branch pointed by head
 
-Displays all modules as of the tip of the branch pointed at head.
 `,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		m, err := lib.ManifestByHead(in)
@@ -91,10 +89,10 @@ Displays all modules as of the tip of the branch pointed at head.
 
 var describeLocalCmd = &cobra.Command{
 	Use:   "local",
-	Short: "Describes the manifest for the local branch",
-	Long: `Describes the manifest for the local branch
+	Short: "Describe all modules in current workspace",
+	Long: `Describe all modules in current workspace
 	
-Displays all modules in the local working directory even if they have not been committed.
+This includes the modules in uncommitted changes.
 `,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		m, err := lib.ManifestByLocalDir(in, all)
@@ -108,8 +106,8 @@ Displays all modules in the local working directory even if they have not been c
 
 var describePrCmd = &cobra.Command{
 	Use:   "pr --src <branch> --dst <branch>",
-	Short: "Describes the manifest for diff between src and dst branches",
-	Long: `Describes the manifest for diff between src and dst branches
+	Short: "Describe the modules changed between src and dst branches",
+	Long: `Describe the modules changed between src and dst branches
 
 Works out the merge base for src and dst branches and 
 displays all modules which have been changed between merge base and 
@@ -135,10 +133,8 @@ the tip of dst branch.
 
 var describeCommitCmd = &cobra.Command{
 	Use:   "commit <sha>",
-	Short: "Describes the manifest of a specified commit",
-	Long: `Describes the manifest of a specified commit
-
-Displays all modules as of the specified commit.
+	Short: "Describe all modules in the specified commit",
+	Long: `Describe all modules in the specified commit
 
 Commit SHA must be the complete 40 character SHA1 string.
 `,
@@ -160,8 +156,8 @@ Commit SHA must be the complete 40 character SHA1 string.
 
 var describeIntersectionCmd = &cobra.Command{
 	Use:   "intersection --kind <branch|commit> --first <first> --second <second>",
-	Short: "Describes the intersection between two commit trees",
-	Long: `Describes the intersection between two commit trees
+	Short: "Describe the common modules changed in two commit trees",
+	Long: `Describe the common modules changed in two commit trees
 	
 	`,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
@@ -199,8 +195,8 @@ var describeIntersectionCmd = &cobra.Command{
 
 var describeDiffCmd = &cobra.Command{
 	Use:   "diff --from <commit> --to <commit>",
-	Short: "Describes the manifest for diff between from and to commits",
-	Long: `Describes the manifest for diff between from and to commits
+	Short: "Describe the modules in the diff between from and to commits",
+	Long: `Describe the modules in the diff between from and to commits
 
 Works out the merge base for from and to commits and 
 displays all modules which have been changed between merge base and 

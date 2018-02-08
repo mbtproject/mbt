@@ -28,7 +28,8 @@ var applyCmd = &cobra.Command{
 	Short: "Main command for applying the repository manifest over a template",
 	Long: `Main command for applying the repository manifest over a template 
 
-Repository manifest is a data structure created by inspecting .mbt.yml files.
+Manifest contains information about all modules in the repository. 
+It is a data structure created by inspecting .mbt.yml files.
 It contains the information about the modules stored within the repository therefore,
 can be used for generating artifacts such as deployment scripts.
 
@@ -40,10 +41,9 @@ Template must be committed to the repository.
 
 var applyBranchCmd = &cobra.Command{
 	Use:   "branch <branch>",
-	Short: "Applies the manifest of specified branch over a template",
-	Long: `Applies the manifest of specified branch over a template 
+	Short: "Apply the manifest in the tip of the specified branch",
+	Long: `Apply the manifest in the tip of the specified branch 
 
-Calculated manifest and the template is based on the tip of the specified branch.
 	`,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		branch := "master"
@@ -59,10 +59,8 @@ Calculated manifest and the template is based on the tip of the specified branch
 
 var applyCommitCmd = &cobra.Command{
 	Use:   "commit <sha>",
-	Short: "Applies the manifest of specified commit over a template",
-	Long: `Applies the manifest of specified commit over a template
-
-Calculated manifest and the template is based on the specified commit.
+	Short: "Apply the manifest of all modules in specified commit",
+	Long: `Apply the manifest in specified commit
 
 Commit SHA must be the complete 40 character SHA1 string.
 	`,
@@ -81,10 +79,9 @@ Commit SHA must be the complete 40 character SHA1 string.
 
 var applyHeadCmd = &cobra.Command{
 	Use:   "head",
-	Short: "Applies the manifest of current head over a template",
-	Long: `Applies the manifest of current head over a template
+	Short: "Apply the manifest of the commit pointed by current head",
+	Long: `Apply the manifest of the commit point by current head
 
-Calculated manifest and the template is based on the current head.
 	`,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		return applyCore(func(to string, output io.Writer) error {
@@ -95,10 +92,9 @@ Calculated manifest and the template is based on the current head.
 
 var applyLocal = &cobra.Command{
 	Use:   "local",
-	Short: "Applies the manifest of local directory state over a template",
-	Long: `Applies the manifest of local directory state over a template
+	Short: "Apply the manifest of current workspace",
+	Long: `Apply the manifest of current workspace
 
-Calculated manifest and the template is based on the content of local directory.
 This command is useful for testing pending changes in workspace.
 	`,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
