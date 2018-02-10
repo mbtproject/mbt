@@ -1,14 +1,18 @@
 ![mbt](assets/logo-m.png)
 # mbt
->> Build utility for monorepos
+>> The most flexible build tool for monorepo
 
 [![Build Status](https://travis-ci.org/mbtproject/mbt.svg?branch=release)](https://travis-ci.org/mbtproject/mbt)
 [![Build status](https://ci.appveyor.com/api/projects/status/wy8rhr188t3phqvk?svg=true)](https://ci.appveyor.com/project/mbtproject/mbt)
 [![Go Report Card](https://goreportcard.com/badge/github.com/mbtproject/mbt)](https://goreportcard.com/report/github.com/mbtproject/mbt)
 [![Coverage Status](https://coveralls.io/repos/github/mbtproject/mbt/badge.svg)](https://coveralls.io/github/mbtproject/mbt)
 
-Monorepo Build Tool (`mbt`) is a utility that supports differential builds, 
-dependency tracking and metadata management for monorepos stored in git. 
+mbt is a build tool for monorepo. It can do differential builds based on git commits.
+mbt is a cli tool that can run anywhere from dev machines to CI servers. 
+
+## Status
+mbt is production ready. We try our best to maintain semver. 
+Visit [Github issues](https://github.com/mbtproject/mbt/issues) for support.
 
 ## Install
 ```sh
@@ -76,6 +80,9 @@ mbt build branch
 # Build the current branch
 mbt build head
 
+# Build specific commit
+mbt build commit <commit sha>
+
 # Build only the changes in your local workdir without commiting
 mbt build local
 
@@ -89,16 +96,18 @@ mbt build branch feature
 mbt build pr --src feature --dst master
 
 # Build only the modules changed between two commits
-mbt build diff --from <commit-sha> --to <commit-sha>
+mbt build diff --from <commit sha> --to <commit sha>
 
 ```
 
 ## Dependencies
 ### Module Dependencies
-Sometimes a change to a module could require the build of the modules that 
-depend on it. We can define these dependencies in `.mbt.yml` files and `mbt` 
-takes care of triggering the build in the topological order.
+One advantage of a single repo is that you can share code between multiple modules 
+more effectively. Building this type of dependencies requires some thought. mbt provides 
+an easy way to define dependencies between modules and automatically builds the impacted modules
+in topological order. 
 
+Dependencies are defined in `.mbt.yml` files and.
 For example, `module-a` could define a dependency on `module-b`, so that any
 time `module-b` is changed, build command for `module-a` is also executed.
 
@@ -111,17 +120,9 @@ One example of where this could be useful is shared libraries. A shared library
 could be developed independently of its consumers. However, all consumers 
 gets automatically built whenever the shared library is modified. 
 
-Another situation could be where one module is a single page web app and the 
-other module is the back-end API and the host application of that. It's a 
-prevalent model to develop such modules in different programming languages and 
-usually host app build contains the steps to pack the web app into the deployment 
-package.
-Using the dependency feature, host module could depend on the client app 
-module so that anytime the web app changes the host module is also built. 
-
 ### File Dependencies
 File dependencies are useful in situations where a module should be built 
-when a file stored outside the module directory is modified. As an example, 
+when a file(s) stored outside the module directory is modified. As an example, 
 a build script that is used to build multiple modules could define a file 
 dependency in order to trigger the build whenever there's a change in build.
 
