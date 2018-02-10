@@ -107,9 +107,10 @@ more effectively. Building this type of dependencies requires some thought. mbt 
 an easy way to define dependencies between modules and automatically builds the impacted modules
 in topological order. 
 
-Dependencies are defined in `.mbt.yml` files and.
-For example, `module-a` could define a dependency on `module-b`, so that any
-time `module-b` is changed, build command for `module-a` is also executed.
+Dependencies are defined in `.mbt.yml` file under 'dependencies' property.
+It accepts an array of module names.
+For example, `module-a` could define a dependency on `module-b` as shown below, 
+so that any time `module-b` is changed, build command for `module-a` is also executed.
 
 ```yaml
 name: module-a 
