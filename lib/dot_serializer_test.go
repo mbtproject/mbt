@@ -30,6 +30,8 @@ func TestGraph(t *testing.T) {
 	check(t, repo.Commit("first"))
 
 	m, err := ManifestByHead(".tmp/repo")
+	check(t, err)
+
 	s := SerializeAsDot(m.Modules)
 
 	assert.Equal(t, `digraph mbt {

@@ -362,6 +362,23 @@ func TestManifestByLocalDirForNestedModules(t *testing.T) {
 	assert.Equal(t, "app-a", m.Modules[0].Name())
 }
 
+func TestManifestByLocalDirForAnEmptyRepo(t *testing.T) {
+	clean()
+	abs, err := filepath.Abs(".tmp/repo")
+	check(t, err)
+
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitModule("app-a"))
+
+	m, err := ManifestByLocalDir(abs, false)
+
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "app-a", m.Modules[0].Name())
+	assert.Equal(t, "local", m.Modules[0].Version())
+}
+
 func TestVersionOfLocalDirManifest(t *testing.T) {
 	// All modules should have the fixed versin string "local" as
 	// for manifest derived from local directory.

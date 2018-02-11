@@ -77,9 +77,12 @@ func ManifestByDiff(dir, from, to string) (*Manifest, error) {
 
 // ManifestByLocalDir returns the manifest of the diff between the local branch and the working directory
 func ManifestByLocalDir(dir string, all bool) (*Manifest, error) {
-	return buildManifest(dir, func(repo *git.Repository) (*Manifest, error) {
-		return fromDirectory(repo, dir, "local", all)
-	})
+	repo, err := openRepo(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	return fromDirectory(repo, dir, "local", all)
 }
 
 // ManifestByHead returns the manifest for head of the current branch.
