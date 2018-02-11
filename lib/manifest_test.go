@@ -380,8 +380,22 @@ func TestManifestByLocalDirForAnEmptyRepo(t *testing.T) {
 	assert.Equal(t, "local", m.Modules[0].Version())
 }
 
+func TestManifestByLocalDirForNonRepoDir(t *testing.T) {
+	clean()
+	abs, err := filepath.Abs(".tmp/repo")
+	check(t, err)
+	check(t, os.MkdirAll(".tmp/repo", 0755))
+
+	m, err := ManifestByLocalDir(abs, false)
+
+	assert.EqualError(t, err, fmt.Sprintf(msgFailedOpenRepo, abs))
+	assert.EqualError(t, (err.(*e.E)).InnerError(), fmt.Sprintf("could not find repository from '%s'", abs))
+	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())
+	assert.Nil(t, m)
+}
+
 func TestVersionOfLocalDirManifest(t *testing.T) {
-	// All modules should have the fixed versin string "local" as
+	// All modules should have the fixed version string "local" as
 	// for manifest derived from local directory.
 	clean()
 	abs, err := filepath.Abs(".tmp/repo")
