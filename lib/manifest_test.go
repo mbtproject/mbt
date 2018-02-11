@@ -373,6 +373,7 @@ func TestManifestByLocalDirForAnEmptyRepo(t *testing.T) {
 	check(t, repo.InitModule("app-a"))
 
 	m, err := ManifestByLocalDir(abs, false)
+	check(t, err)
 
 	assert.Len(t, m.Modules, 1)
 	assert.Equal(t, "app-a", m.Modules[0].Name())
