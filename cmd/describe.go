@@ -12,7 +12,8 @@ import (
 )
 
 var (
-	formatAsJson bool
+	toJSON  bool
+	toGraph bool
 )
 
 func init() {
@@ -27,7 +28,8 @@ func init() {
 	describeDiffCmd.Flags().StringVar(&to, "to", "", "to commit")
 	describeLocalCmd.Flags().BoolVarP(&all, "all", "a", false, "describe all")
 
-	describeCmd.PersistentFlags().BoolVar(&formatAsJson, "json", false, "format output as json")
+	describeCmd.PersistentFlags().BoolVar(&toJSON, "json", false, "format output as json")
+	describeCmd.PersistentFlags().BoolVar(&toGraph, "graph", false, "format output as dot graph")
 	describeCmd.AddCommand(describeCommitCmd)
 	describeCmd.AddCommand(describeBranchCmd)
 	describeCmd.AddCommand(describeHeadCmd)
@@ -46,7 +48,18 @@ var describeCmd = &cobra.Command{
 
 Displays all modules discovered in repo according to the sub command 
 used. This can be used to understand the impact of executing the build 
-command and also to pipe mbt manifest to external tools.
+command.
+
+You can control the output of this command using --json and --graph flags.
+
+--json flag is self explanatory.
+--graph flag outputs the dependency graph in dot format. This can be piped 
+into graphviz tools such as dot to produce a graphical representation of 
+the dependency graph of the repo.
+
+e.g.
+mbt describe head --graph | dot -Tpng > /tmp/graph.png && open /tmp/graph.png
+
 	`,
 }
 
@@ -223,7 +236,7 @@ the to commit.
 const columnWidth = 30
 
 func output(mods lib.Modules) error {
-	if formatAsJson {
+	if toJSON {
 		m := make(map[string]map[string]interface{})
 		for _, a := range mods {
 			v := make(map[string]interface{})
@@ -238,6 +251,8 @@ func output(mods lib.Modules) error {
 			return err
 		}
 		fmt.Println(string(buff))
+	} else if toGraph {
+		fmt.Println(lib.SerializeAsDot(mods))
 	} else {
 		if len(mods) == 0 {
 			fmt.Println("No modules found")
