@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/mbtproject/mbt/e"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -155,7 +156,7 @@ func TestDirtyWorkingDir(t *testing.T) {
 	err = Build(m, os.Stdin, buff, buff, func(a *Module, s BuildStage) {})
 	assert.Error(t, err)
 	assert.Equal(t, "dirty working dir", err.Error())
-	assert.Equal(t, ErrClassUser, (err.(*MbtError)).Class())
+	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())
 }
 
 func TestBuildEnvironment(t *testing.T) {
@@ -196,8 +197,8 @@ func TestNonGitRepo(t *testing.T) {
 	err := Build(m, os.Stdin, os.Stdout, os.Stderr, noopCb)
 
 	assert.EqualError(t, err, "Unable to open repository in .tmp/repo")
-	assert.EqualError(t, (err.(*MbtError)).InnerError(), "could not find repository from '.tmp/repo'")
-	assert.Equal(t, ErrClassUser, (err.(*MbtError)).Class())
+	assert.EqualError(t, (err.(*e.E)).InnerError(), "could not find repository from '.tmp/repo'")
+	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())
 }
 
 func TestBadSha(t *testing.T) {
@@ -213,8 +214,8 @@ func TestBadSha(t *testing.T) {
 	err = Build(m, os.Stdin, os.Stdout, os.Stderr, noopCb)
 
 	assert.EqualError(t, err, fmt.Sprintf(msgInvalidSha, "a"))
-	assert.EqualError(t, (err.(*MbtError)).InnerError(), "encoding/hex: odd length hex string")
-	assert.Equal(t, ErrClassUser, (err.(*MbtError)).Class())
+	assert.EqualError(t, (err.(*e.E)).InnerError(), "encoding/hex: odd length hex string")
+	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())
 }
 
 func TestMissingSha(t *testing.T) {
@@ -231,6 +232,6 @@ func TestMissingSha(t *testing.T) {
 	err = Build(m, os.Stdin, os.Stdout, os.Stderr, noopCb)
 
 	assert.EqualError(t, err, fmt.Sprintf(msgCommitShaNotFound, sha))
-	assert.EqualError(t, (err.(*MbtError)).InnerError(), "object not found - no match for id (22221c5e56794a2af5f59f94512df4c669c77a49)")
-	assert.Equal(t, ErrClassUser, (err.(*MbtError)).Class())
+	assert.EqualError(t, (err.(*e.E)).InnerError(), "object not found - no match for id (22221c5e56794a2af5f59f94512df4c669c77a49)")
+	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())
 }

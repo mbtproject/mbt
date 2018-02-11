@@ -8,6 +8,7 @@
     "words": [
         "deps",
         "Dwim",
+        "errorz",
         "failf",
         "fpath",
         "fsutil",
@@ -26,6 +27,7 @@
         "vapps",
         "vmods",
         "Warnf",
+        "Wrapf",
         "wrapm"
     ],
     // flagWords - list of words to be always considered incorrect

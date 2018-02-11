@@ -2,6 +2,7 @@ package lib
 
 import (
 	git "github.com/libgit2/git2go"
+	"github.com/mbtproject/mbt/e"
 )
 
 // Manifest represents a collection modules in the repository.
@@ -160,7 +161,7 @@ func openRepoSafe(dir string) (*git.Repository, *Manifest, error) {
 
 	empty, err := repo.IsEmpty()
 	if err != nil {
-		return nil, nil, wrap(ErrClassInternal, err)
+		return nil, nil, e.Wrap(ErrClassInternal, err)
 	}
 
 	if empty {

@@ -2,12 +2,13 @@ package lib
 
 import (
 	git "github.com/libgit2/git2go"
+	"github.com/mbtproject/mbt/e"
 )
 
 func openRepo(dir string) (*git.Repository, error) {
 	repo, err := git.OpenRepository(dir)
 	if err != nil {
-		return nil, wrapm(ErrClassUser, err, msgFailedOpenRepo, dir)
+		return nil, e.Wrapf(ErrClassUser, err, msgFailedOpenRepo, dir)
 	}
 	return repo, nil
 }
@@ -18,7 +19,7 @@ func statusCount(repo *git.Repository) (int, error) {
 	})
 
 	if err != nil {
-		return 0, wrap(ErrClassInternal, err)
+		return 0, e.Wrap(ErrClassInternal, err)
 	}
 
 	defer status.Free()
@@ -34,13 +35,13 @@ func isWorkingDirDirty(repo *git.Repository) (bool, error) {
 func getBranchCommit(repo *git.Repository, branch string) (*git.Commit, error) {
 	ref, err := repo.References.Dwim(branch)
 	if err != nil {
-		return nil, wrapm(ErrClassUser, err, msgFailedBranchLookup, branch)
+		return nil, e.Wrapf(ErrClassUser, err, msgFailedBranchLookup, branch)
 	}
 
 	oid := ref.Target()
 	commit, err := repo.LookupCommit(oid)
 	if err != nil {
-		return nil, wrap(ErrClassInternal, err)
+		return nil, e.Wrap(ErrClassInternal, err)
 	}
 
 	return commit, nil
@@ -53,7 +54,7 @@ func getBranchTree(repo *git.Repository, branch string) (*git.Tree, error) {
 	}
 	tree, err := commit.Tree()
 	if err != nil {
-		return nil, wrap(ErrClassInternal, err)
+		return nil, e.Wrap(ErrClassInternal, err)
 	}
 
 	return tree, nil
@@ -62,27 +63,27 @@ func getBranchTree(repo *git.Repository, branch string) (*git.Tree, error) {
 func getDiffFromMergeBase(repo *git.Repository, srcC, dstC *git.Commit) (*git.Diff, error) {
 	baseOid, err := repo.MergeBase(srcC.Id(), dstC.Id())
 	if err != nil {
-		return nil, wrap(ErrClassInternal, err)
+		return nil, e.Wrap(ErrClassInternal, err)
 	}
 
 	baseC, err := repo.LookupCommit(baseOid)
 	if err != nil {
-		return nil, wrap(ErrClassInternal, err)
+		return nil, e.Wrap(ErrClassInternal, err)
 	}
 
 	baseTree, err := baseC.Tree()
 	if err != nil {
-		return nil, wrap(ErrClassInternal, err)
+		return nil, e.Wrap(ErrClassInternal, err)
 	}
 
 	srcTree, err := srcC.Tree()
 	if err != nil {
-		return nil, wrap(ErrClassInternal, err)
+		return nil, e.Wrap(ErrClassInternal, err)
 	}
 
 	diff, err := repo.DiffTreeToTree(baseTree, srcTree, &git.DiffOptions{})
 	if err != nil {
-		return nil, wrap(ErrClassInternal, err)
+		return nil, e.Wrap(ErrClassInternal, err)
 	}
 
 	return diff, err
@@ -91,7 +92,7 @@ func getDiffFromMergeBase(repo *git.Repository, srcC, dstC *git.Commit) (*git.Di
 func getDiffFromIndex(repo *git.Repository) (*git.Diff, error) {
 	index, err := repo.Index()
 	if err != nil {
-		return nil, wrap(ErrClassInternal, err)
+		return nil, e.Wrap(ErrClassInternal, err)
 	}
 
 	// Diff flags below are essential to get a list of
@@ -105,7 +106,7 @@ func getDiffFromIndex(repo *git.Repository) (*git.Diff, error) {
 	})
 
 	if err != nil {
-		return nil, wrap(ErrClassInternal, err)
+		return nil, e.Wrap(ErrClassInternal, err)
 	}
 
 	return diff, err
@@ -114,12 +115,12 @@ func getDiffFromIndex(repo *git.Repository) (*git.Diff, error) {
 func getCommit(repo *git.Repository, commitSha string) (*git.Commit, error) {
 	commitOid, err := git.NewOid(commitSha)
 	if err != nil {
-		return nil, wrapm(ErrClassUser, err, msgInvalidSha, commitSha)
+		return nil, e.Wrapf(ErrClassUser, err, msgInvalidSha, commitSha)
 	}
 
 	commit, err := repo.LookupCommit(commitOid)
 	if err != nil {
-		return nil, wrapm(ErrClassUser, err, msgCommitShaNotFound, commitSha)
+		return nil, e.Wrapf(ErrClassUser, err, msgCommitShaNotFound, commitSha)
 	}
 
 	return commit, nil
@@ -128,12 +129,12 @@ func getCommit(repo *git.Repository, commitSha string) (*git.Commit, error) {
 func getBranchName(repo *git.Repository) (string, error) {
 	head, err := repo.Head()
 	if err != nil {
-		return "", wrap(ErrClassInternal, err)
+		return "", e.Wrap(ErrClassInternal, err)
 	}
 
 	name, err := head.Branch().Name()
 	if err != nil {
-		return "", wrap(ErrClassInternal, err)
+		return "", e.Wrap(ErrClassInternal, err)
 	}
 
 	return name, nil

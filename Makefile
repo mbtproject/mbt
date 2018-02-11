@@ -23,10 +23,11 @@ restore:
 
 .PHONY: test
 test: build_libgit2
-	go test -coverprofile=coverage.out ./lib
-	go test -coverprofile=coverage.out ./cmd
-	go test -coverprofile=coverage.out ./trie
-	go test -coverprofile=coverage.out .
+	go test -covermode=count ./e
+	go test -covermode=count ./lib
+	go test -covermode=count ./cmd
+	go test -covermode=count ./trie
+	go test -covermode=count .
 
 .PHONY: showcover
 showcover:

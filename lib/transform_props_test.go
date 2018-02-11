@@ -3,6 +3,7 @@ package lib
 import (
 	"testing"
 
+	"github.com/mbtproject/mbt/e"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -39,6 +40,6 @@ func TestNonStringKey(t *testing.T) {
 	o, err := transformProps(i)
 
 	assert.EqualError(t, err, "Key is not a string 42")
-	assert.Equal(t, ErrClassInternal, (err.(*MbtError)).Class())
+	assert.Equal(t, ErrClassInternal, (err.(*e.E)).Class())
 	assert.Nil(t, o)
 }

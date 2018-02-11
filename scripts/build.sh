@@ -32,6 +32,7 @@ OUT="mbt_${OS}_${ARCH}"
 make restore &&
 
 # Run tests
+go test ./e -v -covermode=count &&
 go test ./trie -v -covermode=count &&
 go test ./lib -v -covermode=count -coverprofile=coverage.out &&
 if [ ! -z $COVERALLS_TOKEN ] && [ -f ./coverage.out ]; then 

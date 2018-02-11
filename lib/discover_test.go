@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/libgit2/git2go"
+	"github.com/mbtproject/mbt/e"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -55,8 +56,8 @@ func TestMalformedSpec(t *testing.T) {
 	metadata, err := discoverMetadata(repo.Repo, commit)
 	assert.Nil(t, metadata)
 	assert.EqualError(t, err, "error while parsing the spec at app-a/.mbt.yml")
-	assert.EqualError(t, (err.(*MbtError).InnerError()), "yaml: line 1: mapping values are not allowed in this context")
-	assert.Equal(t, ErrClassUser, (err.(*MbtError)).Class())
+	assert.EqualError(t, (err.(*e.E).InnerError()), "yaml: line 1: mapping values are not allowed in this context")
+	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())
 }
 
 func TestMissingBlobs(t *testing.T) {
@@ -77,8 +78,8 @@ func TestMissingBlobs(t *testing.T) {
 
 	assert.Nil(t, metadata)
 	assert.EqualError(t, err, "error while fetching the blob object for app-a/.mbt.yml")
-	assert.EqualError(t, (err.(*MbtError)).InnerError(), "object not found - no match for id (46c63fb17a3e0ed3a90562371640044c9b90bf6c)")
-	assert.Equal(t, ErrClassInternal, (err.(*MbtError)).Class())
+	assert.EqualError(t, (err.(*e.E)).InnerError(), "object not found - no match for id (46c63fb17a3e0ed3a90562371640044c9b90bf6c)")
+	assert.Equal(t, ErrClassInternal, (err.(*e.E)).Class())
 }
 
 func TestMissingTreeObject(t *testing.T) {
@@ -99,8 +100,8 @@ func TestMissingTreeObject(t *testing.T) {
 
 	assert.Nil(t, metadata)
 	assert.EqualError(t, err, "failed to walk the tree object")
-	assert.EqualError(t, (err.(*MbtError)).InnerError(), "object not found - no match for id (f6929fe5c1165232e1ee6c92532f1f2bcf936845)")
-	assert.Equal(t, ErrClassInternal, (err.(*MbtError)).Class())
+	assert.EqualError(t, (err.(*e.E)).InnerError(), "object not found - no match for id (f6929fe5c1165232e1ee6c92532f1f2bcf936845)")
+	assert.Equal(t, ErrClassInternal, (err.(*e.E)).Class())
 }
 
 func TestMissingDependencies(t *testing.T) {
@@ -117,7 +118,7 @@ func TestMissingDependencies(t *testing.T) {
 
 	assert.Nil(t, mods)
 	assert.EqualError(t, err, "dependency not found app-a -> app-b")
-	assert.Equal(t, ErrClassUser, (err.(*MbtError)).Class())
+	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())
 }
 
 func TestModuleNameConflicts(t *testing.T) {
@@ -138,7 +139,7 @@ func TestModuleNameConflicts(t *testing.T) {
 
 	assert.Nil(t, mods)
 	assert.EqualError(t, err, "Module name 'app-a' in directory 'app-b' conflicts with the module in 'app-a' directory")
-	assert.Equal(t, ErrClassUser, (err.(*MbtError)).Class())
+	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())
 }
 
 func TestDirectoryEntriesCalledMbtYml(t *testing.T) {

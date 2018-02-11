@@ -11,6 +11,7 @@ import (
 	"text/template"
 
 	git "github.com/libgit2/git2go"
+	"github.com/mbtproject/mbt/e"
 )
 
 // TemplateData is the data passed into template.
@@ -70,13 +71,13 @@ func ApplyHead(dir, templatePath string, output io.Writer) error {
 func ApplyLocal(dir, templatePath string, output io.Writer) error {
 	absDir, err := filepath.Abs(dir)
 	if err != nil {
-		return wrapm(ErrClassUser, err, msgFailedLocalPath)
+		return e.Wrapf(ErrClassUser, err, msgFailedLocalPath)
 	}
 
 	absTemplatePath := path.Join(absDir, templatePath)
 	c, err := ioutil.ReadFile(absTemplatePath)
 	if err != nil {
-		return wrapm(ErrClassUser, err, msgFailedReadFile, absTemplatePath)
+		return e.Wrapf(ErrClassUser, err, msgFailedReadFile, absTemplatePath)
 	}
 
 	m, err := ManifestByLocalDir(absDir, true)
@@ -90,17 +91,17 @@ func ApplyLocal(dir, templatePath string, output io.Writer) error {
 func applyCore(repo *git.Repository, commit *git.Commit, dir, templatePath string, output io.Writer) error {
 	tree, err := commit.Tree()
 	if err != nil {
-		return wrap(ErrClassInternal, err)
+		return e.Wrap(ErrClassInternal, err)
 	}
 
-	e, err := tree.EntryByPath(templatePath)
+	entry, err := tree.EntryByPath(templatePath)
 	if err != nil {
-		return wrapm(ErrClassUser, err, msgTemplateNotFound, templatePath, commit.Id().String())
+		return e.Wrapf(ErrClassUser, err, msgTemplateNotFound, templatePath, commit.Id().String())
 	}
 
-	b, err := repo.LookupBlob(e.Id)
+	b, err := repo.LookupBlob(entry.Id)
 	if err != nil {
-		return wrap(ErrClassInternal, err)
+		return e.Wrap(ErrClassInternal, err)
 	}
 
 	m, err := fromCommit(repo, dir, commit)
@@ -153,7 +154,7 @@ func processTemplate(buffer []byte, m *Manifest, output io.Writer) error {
 		},
 	}).Parse(string(buffer))
 	if err != nil {
-		return wrapm(ErrClassUser, err, msgFailedTemplateParse)
+		return e.Wrapf(ErrClassUser, err, msgFailedTemplateParse)
 	}
 
 	data := &TemplateData{

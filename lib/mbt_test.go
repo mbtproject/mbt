@@ -9,6 +9,7 @@ import (
 	"time"
 
 	git "github.com/libgit2/git2go"
+	"github.com/mbtproject/mbt/e"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -191,9 +192,9 @@ func clean() {
 
 func check(t *testing.T, err error) {
 	if err != nil {
-		mbtError, ok := err.(*MbtError)
+		ee, ok := err.(*e.E)
 		if ok {
-			err = mbtError.WithExtendedInfo()
+			err = ee.WithExtendedInfo()
 		}
 		t.Fatal(err)
 	}

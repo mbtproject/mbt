@@ -12,6 +12,7 @@ import (
 
 	"github.com/buddyspike/graph"
 	git "github.com/libgit2/git2go"
+	"github.com/mbtproject/mbt/e"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -77,7 +78,7 @@ func (a moduleMetadataSet) toModules() (Modules, error) {
 	g := new(list.List)
 	for _, meta := range a {
 		if conflict, ok := m[meta.spec.Name]; ok {
-			return nil, newErrorf(ErrClassUser, "Module name '%s' in directory '%s' conflicts with the module in '%s' directory", meta.spec.Name, meta.dir, conflict.dir)
+			return nil, e.NewErrorf(ErrClassUser, "Module name '%s' in directory '%s' conflicts with the module in '%s' directory", meta.spec.Name, meta.dir, conflict.dir)
 		}
 		m[meta.spec.Name] = meta
 		g.PushBack(meta)
@@ -88,7 +89,7 @@ func (a moduleMetadataSet) toModules() (Modules, error) {
 	// Topological sort
 	sortedNodes, err := graph.TopSort(g, provider)
 	if err != nil {
-		return nil, wrap(ErrClassInternal, err)
+		return nil, e.Wrap(ErrClassInternal, err)
 	}
 
 	// Step 3
@@ -138,8 +139,8 @@ func calculateVersion(topSorted Modules) Modules {
 				// here because we are processing the list of modules in topological
 				// order. Therefore, version of a dependency would already contain
 				// the version of its dependencies.
-				for _, e := range a.Requires() {
-					io.WriteString(h, e.Version())
+				for _, r := range a.Requires() {
+					io.WriteString(h, r.Version())
 				}
 				a.version = hex.EncodeToString(h.Sum(nil))
 			}
@@ -175,7 +176,7 @@ func (n *moduleMetadataNodeProvider) Child(vertex interface{}, index int) (inter
 		return s, nil
 	}
 
-	return nil, newErrorf(ErrClassUser, "dependency not found %s -> %s", spec.Name, d)
+	return nil, e.NewErrorf(ErrClassUser, "dependency not found %s -> %s", spec.Name, d)
 }
 
 // discoverMetadata walks the git tree at a specific commit looking for
@@ -187,7 +188,7 @@ func discoverMetadata(repo *git.Repository, commit *git.Commit) (a moduleMetadat
 
 	tree, err := commit.Tree()
 	if err != nil {
-		failf(ErrClassInternal, err, "failed to fetch commit tree for %s", commit.Id())
+		e.Failf(ErrClassInternal, err, "failed to fetch commit tree for %s", commit.Id())
 	}
 
 	metadataSet := moduleMetadataSet{}
@@ -196,7 +197,7 @@ func discoverMetadata(repo *git.Repository, commit *git.Commit) (a moduleMetadat
 		if entry.Name == ".mbt.yml" && entry.Type == git.ObjectBlob {
 			blob, err := repo.LookupBlob(entry.Id)
 			if err != nil {
-				failf(ErrClassInternal, err, "error while fetching the blob object for %s%s", path, entry.Name)
+				e.Failf(ErrClassInternal, err, "error while fetching the blob object for %s%s", path, entry.Name)
 			}
 
 			hash := ""
@@ -206,7 +207,7 @@ func discoverMetadata(repo *git.Repository, commit *git.Commit) (a moduleMetadat
 				// We are not on the root, take the git sha for parent tree object.
 				dirEntry, err := tree.EntryByPath(p)
 				if err != nil {
-					failf(ErrClassInternal, err, "error while fetching the tree entry for %s", p)
+					e.Failf(ErrClassInternal, err, "error while fetching the tree entry for %s", p)
 				}
 				hash = dirEntry.Id.String()
 			} else {
@@ -216,7 +217,7 @@ func discoverMetadata(repo *git.Repository, commit *git.Commit) (a moduleMetadat
 
 			spec, err := newSpec(blob.Contents())
 			if err != nil {
-				failf(ErrClassUser, err, "error while parsing the spec at %s%s", path, entry.Name)
+				e.Failf(ErrClassUser, err, "error while parsing the spec at %s%s", path, entry.Name)
 			}
 
 			metadataSet = append(metadataSet, newModuleMetadata(p, hash, spec))
@@ -225,7 +226,7 @@ func discoverMetadata(repo *git.Repository, commit *git.Commit) (a moduleMetadat
 	})
 
 	if err != nil {
-		failf(ErrClassInternal, err, "failed to walk the tree object")
+		e.Failf(ErrClassInternal, err, "failed to walk the tree object")
 	}
 
 	return metadataSet, nil
@@ -238,25 +239,25 @@ func discoverMetadataByDir(repo *git.Repository, dir string) (a moduleMetadataSe
 	metadataSet := moduleMetadataSet{}
 	currentDir, err := filepath.Abs(dir)
 	if err != nil {
-		failf(ErrClassInternal, err, "error whilst loading current directory")
+		e.Failf(ErrClassInternal, err, "error whilst loading current directory")
 	}
 
 	walkfunc := func(path string, info os.FileInfo, err error) error {
 		if info.Name() == ".mbt.yml" && info.IsDir() == false {
 			contents, err := ioutil.ReadFile(path)
 			if err != nil {
-				failf(ErrClassInternal, err, "error whilst reading file contents at path %s", path)
+				e.Failf(ErrClassInternal, err, "error whilst reading file contents at path %s", path)
 			}
 
 			spec, err := newSpec(contents)
 			if err != nil {
-				failf(ErrClassUser, err, "error whilst parsing spec at %s", path)
+				e.Failf(ErrClassUser, err, "error whilst parsing spec at %s", path)
 			}
 
 			// reduce the path down to be only relative for the module
 			relPath, err := filepath.Rel(currentDir, filepath.Dir(path))
 			if err != nil {
-				failf(ErrClassInternal, err, "error whilst reading relative path %s", path)
+				e.Failf(ErrClassInternal, err, "error whilst reading relative path %s", path)
 			}
 			dir := strings.Replace(relPath, string(os.PathSeparator), "/", -1)
 			dir = strings.TrimRight(dir, "/")
@@ -270,7 +271,7 @@ func discoverMetadataByDir(repo *git.Repository, dir string) (a moduleMetadataSe
 
 	err = filepath.Walk(dir, walkfunc)
 	if err != nil {
-		failf(ErrClassInternal, err, "failed to walk the directory at path %s", dir)
+		e.Failf(ErrClassInternal, err, "failed to walk the directory at path %s", dir)
 	}
 
 	return metadataSet, err

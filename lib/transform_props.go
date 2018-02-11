@@ -1,5 +1,7 @@
 package lib
 
+import "github.com/mbtproject/mbt/e"
+
 // transformProps is a helper function to convert all map[interface{}]interface{}
 // to map[string]interface{}.
 // Background:
@@ -43,7 +45,7 @@ func transformMaps(m map[interface{}]interface{}) (map[string]interface{}, error
 	for k, v := range m {
 		sk, ok := k.(string)
 		if !ok {
-			return nil, newErrorf(ErrClassInternal, "Key is not a string %v", k)
+			return nil, e.NewErrorf(ErrClassInternal, "Key is not a string %v", k)
 		}
 
 		nv, err := transformIfRequired(v)

@@ -1,6 +1,9 @@
 package lib
 
-import git "github.com/libgit2/git2go"
+import (
+	git "github.com/libgit2/git2go"
+	"github.com/mbtproject/mbt/e"
+)
 
 // IntersectionByCommit returns the manifest of intersection of modules modified
 // between two commits.
@@ -10,7 +13,7 @@ import git "github.com/libgit2/git2go"
 func IntersectionByCommit(dir, first, second string) (Modules, error) {
 	repo, err := git.OpenRepository(dir)
 	if err != nil {
-		return nil, wrapm(ErrClassUser, err, msgFailedOpenRepo, dir)
+		return nil, e.Wrapf(ErrClassUser, err, msgFailedOpenRepo, dir)
 	}
 
 	fc, err := getCommit(repo, first)
@@ -34,7 +37,7 @@ func IntersectionByCommit(dir, first, second string) (Modules, error) {
 func IntersectionByBranch(dir, first, second string) (Modules, error) {
 	repo, err := git.OpenRepository(dir)
 	if err != nil {
-		return nil, wrapm(ErrClassUser, err, msgFailedOpenRepo, dir)
+		return nil, e.Wrapf(ErrClassUser, err, msgFailedOpenRepo, dir)
 	}
 
 	fc, err := getBranchCommit(repo, first)
@@ -53,12 +56,12 @@ func IntersectionByBranch(dir, first, second string) (Modules, error) {
 func intersectionCore(repo *git.Repository, first, second *git.Commit) (Modules, error) {
 	baseOid, err := repo.MergeBase(first.Id(), second.Id())
 	if err != nil {
-		return nil, wrap(ErrClassInternal, err)
+		return nil, e.Wrap(ErrClassInternal, err)
 	}
 
 	base, err := repo.LookupCommit(baseOid)
 	if err != nil {
-		return nil, wrap(ErrClassInternal, err)
+		return nil, e.Wrap(ErrClassInternal, err)
 	}
 
 	firstSet, err := modulesInDiff(repo, first, base)

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/mbtproject/mbt/e"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -687,8 +688,8 @@ func TestNonRepository(t *testing.T) {
 
 	assert.Nil(t, m)
 	assert.EqualError(t, err, fmt.Sprintf(msgFailedOpenRepo, ".tmp/repo"))
-	assert.EqualError(t, (err.(*MbtError)).InnerError(), "could not find repository from '.tmp/repo'")
-	assert.Equal(t, ErrClassUser, (err.(*MbtError)).Class())
+	assert.EqualError(t, (err.(*e.E)).InnerError(), "could not find repository from '.tmp/repo'")
+	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())
 }
 
 func TestOrderOfModules(t *testing.T) {

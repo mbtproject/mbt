@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/mbtproject/mbt/e"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -116,7 +117,7 @@ func TestIncorrectTemplatePath(t *testing.T) {
 	err = ApplyCommit(".tmp/repo", repo.LastCommit.String(), "foo/template.tmpl", output)
 
 	assert.EqualError(t, err, fmt.Sprintf(msgTemplateNotFound, "foo/template.tmpl", repo.LastCommit.String()))
-	assert.Equal(t, ErrClassUser, (err.(*MbtError)).Class())
+	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())
 	assert.Equal(t, "", output.String())
 }
 
@@ -135,8 +136,8 @@ func TestBadTemplate(t *testing.T) {
 	err = ApplyCommit(".tmp/repo", repo.LastCommit.String(), "template.tmpl", output)
 
 	assert.EqualError(t, err, msgFailedTemplateParse)
-	assert.EqualError(t, (err.(*MbtError)).InnerError(), "template: template:2: unexpected EOF")
-	assert.Equal(t, ErrClassUser, (err.(*MbtError)).Class())
+	assert.EqualError(t, (err.(*e.E)).InnerError(), "template: template:2: unexpected EOF")
+	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())
 	assert.Equal(t, "", output.String())
 }
 

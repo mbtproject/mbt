@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/mbtproject/mbt/e"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -67,8 +68,8 @@ func TestInvalidBranch(t *testing.T) {
 
 	assert.Nil(t, c)
 	assert.EqualError(t, err, fmt.Sprintf(msgFailedBranchLookup, "foo"))
-	assert.EqualError(t, (err.(*MbtError)).InnerError(), "no reference found for shorthand 'foo'")
-	assert.Equal(t, ErrClassUser, (err.(*MbtError)).Class())
+	assert.EqualError(t, (err.(*e.E)).InnerError(), "no reference found for shorthand 'foo'")
+	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())
 }
 
 func TestBranchName(t *testing.T) {

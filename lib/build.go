@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	git "github.com/libgit2/git2go"
+	"github.com/mbtproject/mbt/e"
 	"gopkg.in/sirupsen/logrus.v1"
 )
 
@@ -30,7 +31,7 @@ const (
 func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCallback func(mod *Module, s BuildStage)) error {
 	repo, err := git.OpenRepository(m.Dir)
 	if err != nil {
-		return wrapm(ErrClassUser, err, "Unable to open repository in %s", m.Dir)
+		return e.Wrapf(ErrClassUser, err, "Unable to open repository in %s", m.Dir)
 	}
 
 	dirty, err := isWorkingDirDirty(repo)
@@ -39,7 +40,7 @@ func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCal
 	}
 
 	if dirty {
-		return newError(ErrClassUser, "dirty working dir")
+		return e.NewError(ErrClassUser, "dirty working dir")
 	}
 
 	commit, err := getCommit(repo, m.Sha)
@@ -49,13 +50,13 @@ func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCal
 
 	tree, err := commit.Tree()
 	if err != nil {
-		return wrap(ErrClassInternal, err)
+		return e.Wrap(ErrClassInternal, err)
 	}
 
 	// TODO: Confirm the strategy is correct
 	err = repo.CheckoutTree(tree, defaultCheckoutOptions)
 	if err != nil {
-		return wrap(ErrClassInternal, err)
+		return e.Wrap(ErrClassInternal, err)
 	}
 
 	defer checkoutHead(repo)
@@ -123,7 +124,7 @@ func buildOne(manifest *Manifest, mod *Module, stdin io.Reader, stdout, stderr i
 	cmd.Args = append(cmd.Args, build.Args...)
 	err := cmd.Run()
 	if err != nil {
-		return wrapm(ErrClassUser, err, msgFailedBuild, mod.Name())
+		return e.Wrapf(ErrClassUser, err, msgFailedBuild, mod.Name())
 	}
 	return nil
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/buddyspike/graph"
 	git "github.com/libgit2/git2go"
+	"github.com/mbtproject/mbt/e"
 	"github.com/mbtproject/mbt/trie"
 )
 
@@ -152,7 +153,7 @@ func (l Modules) expandRequiredByDependencies() (Modules, error) {
 	// Top sort it by requiredBy chain.
 	allItems, err := graph.TopSort(g, &requiredByNodeProvider{})
 	if err != nil {
-		return nil, wrap(ErrClassInternal, err)
+		return nil, e.Wrap(ErrClassInternal, err)
 	}
 
 	// Step 3
@@ -160,8 +161,8 @@ func (l Modules) expandRequiredByDependencies() (Modules, error) {
 	// because we top sorted by requiredBy chain.
 	r := make([]*Module, allItems.Len())
 	i := allItems.Len() - 1
-	for e := allItems.Front(); e != nil; e = e.Next() {
-		r[i] = e.Value.(*Module)
+	for ele := allItems.Front(); ele != nil; ele = ele.Next() {
+		r[i] = ele.Value.(*Module)
 		i--
 	}
 
@@ -176,13 +177,13 @@ func (l Modules) expandRequiresDependencies() (Modules, error) {
 
 	items, err := graph.TopSort(g, &requiresNodeProvider{})
 	if err != nil {
-		return nil, wrap(ErrClassInternal, err)
+		return nil, e.Wrap(ErrClassInternal, err)
 	}
 
 	r := make([]*Module, items.Len())
 	i := 0
-	for e := items.Front(); e != nil; e = e.Next() {
-		r[i] = e.Value.(*Module)
+	for ele := items.Front(); ele != nil; ele = ele.Next() {
+		r[i] = ele.Value.(*Module)
 		i++
 	}
 
@@ -289,7 +290,7 @@ func reduceToDiff(modules Modules, diff *git.Diff) (Modules, error) {
 	}, git.DiffDetailFiles)
 
 	if err != nil {
-		return nil, wrap(ErrClassInternal, err)
+		return nil, e.Wrap(ErrClassInternal, err)
 	}
 
 	for _, m := range modules {
