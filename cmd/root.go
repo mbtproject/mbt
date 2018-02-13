@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -45,6 +46,10 @@ See help for individual commands for more information.
 				return err
 			}
 			in = cwd
+		}
+
+		if debug {
+			logrus.SetLevel(logrus.DebugLevel)
 		}
 		return nil
 	},

@@ -7,6 +7,7 @@ import (
 
 	"github.com/buddyspike/graph"
 	git "github.com/libgit2/git2go"
+	"github.com/mbtproject/mbt/dtrace"
 	"github.com/mbtproject/mbt/e"
 	"github.com/mbtproject/mbt/trie"
 )
@@ -285,6 +286,7 @@ func reduceToDiff(modules Modules, diff *git.Diff) (Modules, error) {
 		// for case sensitive file systems.
 		// Perhaps we can read core.ignorecase configuration value
 		// in git and adjust accordingly.
+		dtrace.Printf("Indexing change %s", delta.NewFile.Path)
 		t.Add(strings.ToLower(delta.NewFile.Path))
 		return nil, nil
 	}, git.DiffDetailFiles)
@@ -294,6 +296,8 @@ func reduceToDiff(modules Modules, diff *git.Diff) (Modules, error) {
 	}
 
 	for _, m := range modules {
+		mpath := fmt.Sprintf("%s/", m.Path())
+		dtrace.Printf("Filtering module %s", mpath)
 		if t.Find(fmt.Sprintf("%s/", m.Path())).Success {
 			filtered = append(filtered, m)
 		} else {
