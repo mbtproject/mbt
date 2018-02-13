@@ -773,3 +773,57 @@ func TestAppsWithSamePrefix(t *testing.T) {
 	assert.Len(t, m.Modules, 1)
 	assert.Equal(t, "app-aa", m.Modules[0].Name())
 }
+
+func TestDiffingForCaseSensitivityOfModulePath(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitModule("App-A"))
+	check(t, repo.Commit("first"))
+	c1 := repo.LastCommit
+
+	check(t, repo.WriteContent("App-A/foo", "bar"))
+	check(t, repo.Commit("second"))
+	c2 := repo.LastCommit
+
+	m, err := ManifestByDiff(".tmp/repo", c1.String(), c2.String())
+	check(t, err)
+
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "App-A", m.Modules[0].Name())
+}
+
+func TestDiffingForCaseSensitivityOfFileDependency(t *testing.T) {
+	clean()
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitModuleWithOptions("App-A", &Spec{
+		Name:             "App-A",
+		FileDependencies: []string{"Dir1/Foo.js", "dir2/foo.js"},
+	}))
+
+	check(t, repo.Commit("first"))
+	c1 := repo.LastCommit
+
+	check(t, repo.WriteContent("dir1/foo.js", "bar"))
+	check(t, repo.Commit("second"))
+	c2 := repo.LastCommit
+
+	m, err := ManifestByDiff(".tmp/repo", c1.String(), c2.String())
+	check(t, err)
+
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "App-A", m.Modules[0].Name())
+
+	check(t, repo.WriteContent("Dir2/FOO.js", "bar"))
+	check(t, repo.Commit("third"))
+	c3 := repo.LastCommit
+
+	m, err = ManifestByDiff(".tmp/repo", c2.String(), c3.String())
+	check(t, err)
+
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "App-A", m.Modules[0].Name())
+}

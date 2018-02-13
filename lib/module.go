@@ -286,9 +286,9 @@ func reduceToDiff(modules Modules, diff *git.Diff) (Modules, error) {
 		// for case sensitive file systems.
 		// Perhaps we can read core.ignorecase configuration value
 		// in git and adjust accordingly.
-		nfPath := strings.ToLower(delta.NewFile.Path)
-		dtrace.Printf("Indexing change %s", nfPath)
-		t.Add(nfPath)
+		nfp := strings.ToLower(delta.NewFile.Path)
+		dtrace.Printf("Index change %s", nfp)
+		t.Add(nfp)
 		return nil, nil
 	}, git.DiffDetailFiles)
 
@@ -297,13 +297,15 @@ func reduceToDiff(modules Modules, diff *git.Diff) (Modules, error) {
 	}
 
 	for _, m := range modules {
-		mpath := strings.ToLower(fmt.Sprintf("%s/", m.Path()))
-		dtrace.Printf("Filtering module %s", mpath)
-		if t.Find(mpath).Success {
+		mp := strings.ToLower(fmt.Sprintf("%s/", m.Path()))
+		dtrace.Printf("Filter by module path %s", mp)
+		if t.Find(mp).Success {
 			filtered = append(filtered, m)
 		} else {
 			for _, p := range m.FileDependencies() {
-				if t.Find(strings.ToLower(p)).Success {
+				fdp := strings.ToLower(p)
+				dtrace.Printf("Filter by file dependency path %s", fdp)
+				if t.Find(fdp).Success {
 					filtered = append(filtered, m)
 				}
 			}

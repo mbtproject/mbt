@@ -4,6 +4,7 @@
     "Recurse",
     "Wrapf",
     "deps",
+    "dtrace",
     "errorz",
     "failf",
     "initialises",
