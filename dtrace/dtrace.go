@@ -2,6 +2,7 @@ package dtrace
 
 import (
 	"fmt"
+	"path/filepath"
 	"runtime"
 
 	"github.com/sirupsen/logrus"
@@ -19,9 +20,9 @@ func Printf(format string, args ...interface{}) {
 		frames := runtime.CallersFrames(pcs)
 		frame, _ := frames.Next()
 		function = frame.Function
-		file = frame.File
+		file = filepath.Base(frame.File)
 		line = frame.Line
 	}
 
-	logrus.Debugf(fmt.Sprintf("%s (@%s.%s, %v)", format, function, file, line), args...)
+	logrus.Debugf(fmt.Sprintf("%s (@%s %s,%v)", format, function, file, line), args...)
 }
