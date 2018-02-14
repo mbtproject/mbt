@@ -10,6 +10,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type TC struct {
+	Template string
+	Expected string
+}
+
 func TestApplyBranch(t *testing.T) {
 	clean()
 	repo, err := createTestRepository(".tmp/repo")
@@ -175,26 +180,31 @@ func TestCustomTemplateFuncs(t *testing.T) {
 		},
 	}))
 
-	check(t, repo.WriteContent("template.tmpl", `
-{{- if contains (property (module "app-a") "tags") "a"}}foo{{- end}}
-{{- if contains (property (module "app-b") "tags") "a"}}foo{{- end}}
-{{- if contains (property (module "app-a") "dags") "a"}}foo{{- end}}
-{{- if contains (property (module "app-a") "tags") "d"}}foo{{- end}}
-{{- if contains (property (module "app-a") "numbers") "1"}}foo{{- end}}
-{{- if contains (property (module "app-a") "nested.tags") "a"}}foo{{- end}}
-{{- if contains (property (module "app-a") "nested.bags") "a"}}foo{{- end}}
-{{- if contains (property (module "app-a") "tags.tags") "a"}}foo{{- end}}
-{{- if contains (property (module "app-a") "nested.") "a"}}foo{{- end}}
-{{- if contains (property (module "app-a") "nested") "a"}}foo{{- end}}
-{{- propertyOr (module "app-a") "foo" "car"}}
-{{- propertyOr (module "app-a") "foo.bar" "foo"}}
-{{- propertyOr (module "app-b") "foo" "foo"}}
-`))
-	check(t, repo.Commit("first"))
+	cases := []TC{
+		TC{Template: `{{- if contains (property (module "app-a") "tags") "a"}}yes{{- end}}`, Expected: "yes"},
+		TC{Template: `{{- if contains (property (module "app-b") "tags") "a"}}yes{{- end}}`, Expected: ""},
+		TC{Template: `{{- if contains (property (module "app-a") "dags") "a"}}yes{{- end}}`, Expected: ""},
+		TC{Template: `{{- if contains (property (module "app-a") "tags") "d"}}yes{{- end}}`, Expected: ""},
+		TC{Template: `{{- if contains (property (module "app-a") "numbers") "1"}}yes{{- end}}`, Expected: ""},
+		TC{Template: `{{- if contains (property (module "app-a") "numbers") 1}}yes{{- end}}`, Expected: "yes"},
+		TC{Template: `{{- if contains (property (module "app-a") "nested.tags") "a"}}yes{{- end}}`, Expected: "yes"},
+		TC{Template: `{{- if contains (property (module "app-a") "nested.bags") "a"}}yes{{- end}}`, Expected: ""},
+		TC{Template: `{{- if contains (property (module "app-a") "tags.tags") "a"}}yes{{- end}}`, Expected: ""},
+		TC{Template: `{{- if contains (property (module "app-a") "nested.") "a"}}yes{{- end}}`, Expected: ""},
+		TC{Template: `{{- if contains (property (module "app-a") "nested") "a"}}yes{{- end}}`, Expected: ""},
+		TC{Template: `{{- propertyOr (module "app-a") "foo" "car"}}`, Expected: "bar"},
+		TC{Template: `{{- propertyOr (module "app-a") "foo.bar" "car"}}`, Expected: "car"},
+		TC{Template: `{{- propertyOr (module "app-b") "foo" "car"}}`, Expected: "car"},
+	}
 
-	output := new(bytes.Buffer)
-	err = ApplyCommit(".tmp/repo", repo.LastCommit.String(), "template.tmpl", output)
-	check(t, err)
+	for _, c := range cases {
+		check(t, repo.WriteContent("template.tmpl", c.Template))
+		check(t, repo.Commit("Update"))
 
-	assert.Equal(t, "foofoobarfoofoo\n", output.String())
+		output := new(bytes.Buffer)
+		err = ApplyCommit(".tmp/repo", repo.LastCommit.String(), "template.tmpl", output)
+		check(t, err)
+
+		assert.Equal(t, c.Expected, output.String(), "Failed test case %s", c.Template)
+	}
 }

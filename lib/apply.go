@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"text/template"
 
@@ -132,16 +131,13 @@ func processTemplate(buffer []byte, m *Manifest, output io.Writer) error {
 
 			return resolveProperty(m.Properties(), strings.Split(n, "."), def)
 		},
-		"contains": func(container interface{}, item string) bool {
+		"contains": func(container interface{}, item interface{}) bool {
 			if container == nil {
 				return false
 			}
+
 			a, ok := container.([]interface{})
-			if ok {
-				if reflect.TypeOf(a).Elem().AssignableTo(reflect.TypeOf(item)) {
-					return false
-				}
-			} else {
+			if !ok {
 				return false
 			}
 
@@ -150,6 +146,7 @@ func processTemplate(buffer []byte, m *Manifest, output io.Writer) error {
 					return true
 				}
 			}
+
 			return false
 		},
 	}).Parse(string(buffer))
