@@ -176,7 +176,8 @@ func TestCustomTemplateFuncs(t *testing.T) {
 			"nested": map[string]interface{}{
 				"tags": []string{"a", "b", "c"},
 			},
-			"foo": "bar",
+			"empty": []int{},
+			"foo":   "bar",
 		},
 	}))
 
@@ -187,6 +188,7 @@ func TestCustomTemplateFuncs(t *testing.T) {
 		TC{Template: `{{- if contains (property (module "app-a") "tags") "d"}}yes{{- end}}`, Expected: ""},
 		TC{Template: `{{- if contains (property (module "app-a") "numbers") "1"}}yes{{- end}}`, Expected: ""},
 		TC{Template: `{{- if contains (property (module "app-a") "numbers") 1}}yes{{- end}}`, Expected: "yes"},
+		TC{Template: `{{- if contains (property (module "app-a") "empty") 1}}yes{{- end}}`, Expected: ""},
 		TC{Template: `{{- if contains (property (module "app-a") "nested.tags") "a"}}yes{{- end}}`, Expected: "yes"},
 		TC{Template: `{{- if contains (property (module "app-a") "nested.bags") "a"}}yes{{- end}}`, Expected: ""},
 		TC{Template: `{{- if contains (property (module "app-a") "tags.tags") "a"}}yes{{- end}}`, Expected: ""},
@@ -195,6 +197,11 @@ func TestCustomTemplateFuncs(t *testing.T) {
 		TC{Template: `{{- propertyOr (module "app-a") "foo" "car"}}`, Expected: "bar"},
 		TC{Template: `{{- propertyOr (module "app-a") "foo.bar" "car"}}`, Expected: "car"},
 		TC{Template: `{{- propertyOr (module "app-b") "foo" "car"}}`, Expected: "car"},
+		TC{Template: `{{- join (property (module "app-a") "tags") "%v" "-"}}`, Expected: "a-b-c"},
+		TC{Template: `{{- join (property (module "app-b") "tags") "%v" "-"}}`, Expected: ""},
+		TC{Template: `{{- join (property (module "app-a") "numbers") "%v" "-"}}`, Expected: "1-2-3"},
+		TC{Template: `{{- join (property (module "app-a") "empty") "%v" "-"}}`, Expected: ""},
+		TC{Template: `{{- join (property (module "app-a") "bar") "%v" "-"}}`, Expected: ""},
 	}
 
 	for _, c := range cases {

@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -148,6 +149,23 @@ func processTemplate(buffer []byte, m *Manifest, output io.Writer) error {
 			}
 
 			return false
+		},
+		"join": func(container interface{}, format string, sep string) string {
+			if container == nil {
+				return ""
+			}
+
+			a, ok := container.([]interface{})
+			if !ok {
+				return ""
+			}
+
+			strs := make([]string, 0, len(a))
+			for _, i := range a {
+				strs = append(strs, fmt.Sprintf(format, i))
+			}
+
+			return strings.Join(strs, sep)
 		},
 	}).Parse(string(buffer))
 	if err != nil {
