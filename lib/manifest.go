@@ -126,6 +126,9 @@ func fromDirectory(repo *git.Repository, dir, sha string, all bool) (*Manifest, 
 	var err error
 	if all == false {
 		vmods, err = modulesInDirectoryDiff(repo, dir)
+		if err == nil {
+			vmods, err = vmods.expandRequiredByDependencies()
+		}
 	} else {
 		vmods, err = modulesInDirectory(repo, dir)
 	}
