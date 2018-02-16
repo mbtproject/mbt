@@ -261,7 +261,7 @@ func modulesInDirectoryDiff(repo *git.Repository, dir string) (Modules, error) {
 		return nil, err
 	}
 
-	return m, nil
+	return m.expandRequiredByDependencies()
 }
 
 func modulesInDirectory(repo *git.Repository, dir string) (Modules, error) {

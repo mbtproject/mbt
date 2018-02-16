@@ -425,6 +425,43 @@ func TestVersionOfLocalDirManifest(t *testing.T) {
 	assert.Equal(t, "local", m.Modules[1].Version())
 }
 
+func TestLocalDependencyChange(t *testing.T) {
+	clean()
+	abs, err := filepath.Abs(".tmp/repo")
+	check(t, err)
+
+	repo, err := createTestRepository(".tmp/repo")
+	check(t, err)
+
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.InitModuleWithOptions("app-b", &Spec{
+		Name:         "app-b",
+		Dependencies: []string{"app-a"},
+	}))
+	check(t, repo.InitModuleWithOptions("app-c", &Spec{
+		Name:         "app-c",
+		Dependencies: []string{"app-b"},
+	}))
+	check(t, repo.InitModuleWithOptions("app-d", &Spec{
+		Name:         "app-d",
+		Dependencies: []string{"app-c"},
+	}))
+	check(t, repo.Commit("first"))
+
+	check(t, repo.WriteContent("app-b/foo", "bar"))
+
+	m, err := ManifestByLocalDir(abs, false)
+	check(t, err)
+
+	assert.Equal(t, 3, len(m.Modules))
+	assert.Equal(t, "app-b", m.Modules[0].Name())
+	assert.Equal(t, "local", m.Modules[0].Version())
+	assert.Equal(t, "app-c", m.Modules[1].Name())
+	assert.Equal(t, "local", m.Modules[1].Version())
+	assert.Equal(t, "app-d", m.Modules[2].Name())
+	assert.Equal(t, "local", m.Modules[2].Version())
+}
+
 func TestDependencyChange(t *testing.T) {
 	clean()
 	repo, err := createTestRepository(".tmp/repo")
