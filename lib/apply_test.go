@@ -33,7 +33,7 @@ func TestApplyBranch(t *testing.T) {
 	check(t, repo.Commit("second"))
 
 	output := new(bytes.Buffer)
-	check(t, ApplyBranch(".tmp/repo", "template.tmpl", "feature", output))
+	check(t, NewWorld(t, ".tmp/repo").System.ApplyBranch("template.tmpl", "feature", output))
 
 	assert.Equal(t, "app-a,app-b,\n", output.String())
 }
@@ -55,7 +55,7 @@ func TestApplyCommit(t *testing.T) {
 	check(t, repo.Commit("second"))
 
 	output := new(bytes.Buffer)
-	check(t, ApplyCommit(".tmp/repo", repo.LastCommit.String(), "template.tmpl", output))
+	check(t, NewWorld(t, ".tmp/repo").System.ApplyCommit(repo.LastCommit.String(), "template.tmpl", output))
 
 	assert.Equal(t, "app-a,app-b,\n", output.String())
 }
@@ -78,7 +78,7 @@ func TestApplyHead(t *testing.T) {
 	check(t, repo.Commit("second"))
 
 	output := new(bytes.Buffer)
-	check(t, ApplyHead(".tmp/repo", "template.tmpl", output))
+	check(t, NewWorld(t, ".tmp/repo").System.ApplyHead("template.tmpl", output))
 
 	assert.Equal(t, "app-a,app-b,\n", output.String())
 }
@@ -100,7 +100,7 @@ func TestApplyLocal(t *testing.T) {
 	check(t, repo.Commit("second"))
 
 	output := new(bytes.Buffer)
-	check(t, ApplyLocal(".tmp/repo", "template.tmpl", output))
+	check(t, NewWorld(t, ".tmp/repo").System.ApplyLocal("template.tmpl", output))
 
 	assert.Equal(t, "app-a,app-b,\n", output.String())
 }
@@ -119,7 +119,7 @@ func TestIncorrectTemplatePath(t *testing.T) {
 	check(t, repo.Commit("first"))
 
 	output := new(bytes.Buffer)
-	err = ApplyCommit(".tmp/repo", repo.LastCommit.String(), "foo/template.tmpl", output)
+	err = NewWorld(t, ".tmp/repo").System.ApplyCommit(repo.LastCommit.String(), "foo/template.tmpl", output)
 
 	assert.EqualError(t, err, fmt.Sprintf(msgTemplateNotFound, "foo/template.tmpl", repo.LastCommit.String()))
 	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())
@@ -138,7 +138,7 @@ func TestBadTemplate(t *testing.T) {
 	check(t, repo.Commit("first"))
 
 	output := new(bytes.Buffer)
-	err = ApplyCommit(".tmp/repo", repo.LastCommit.String(), "template.tmpl", output)
+	err = NewWorld(t, ".tmp/repo").System.ApplyCommit(repo.LastCommit.String(), "template.tmpl", output)
 
 	assert.EqualError(t, err, msgFailedTemplateParse)
 	assert.EqualError(t, (err.(*e.E)).InnerError(), "template: template:2: unexpected EOF")
@@ -158,7 +158,7 @@ func TestEnvironmentVariables(t *testing.T) {
 	os.Setenv("EXTERNAL_VALUE", "FOO")
 
 	output := new(bytes.Buffer)
-	check(t, ApplyCommit(".tmp/repo", repo.LastCommit.String(), "template.tmpl", output))
+	check(t, NewWorld(t, ".tmp/repo").System.ApplyCommit(repo.LastCommit.String(), "template.tmpl", output))
 
 	assert.Equal(t, "FOO", output.String())
 }
@@ -209,7 +209,7 @@ func TestCustomTemplateFuncs(t *testing.T) {
 		check(t, repo.Commit("Update"))
 
 		output := new(bytes.Buffer)
-		err = ApplyCommit(".tmp/repo", repo.LastCommit.String(), "template.tmpl", output)
+		err = NewWorld(t, ".tmp/repo").System.ApplyCommit(repo.LastCommit.String(), "template.tmpl", output)
 		check(t, err)
 
 		assert.Equal(t, c.Expected, output.String(), "Failed test case %s", c.Template)

@@ -11,30 +11,78 @@ import (
 
 	git "github.com/libgit2/git2go"
 	"github.com/mbtproject/mbt/e"
-	"gopkg.in/sirupsen/logrus.v1"
 )
-
-// BuildStage is an enum to indicate various stages of the build.
-type BuildStage = int
 
 var defaultCheckoutOptions = &git.CheckoutOpts{
 	Strategy: git.CheckoutSafe,
 }
 
-const (
-	BuildStageBeforeBuild = iota
-	BuildStageAfterBuild
-	BuildStageSkipBuild
-)
-
-// Build runs the build for the modules in specified manifest.
-func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCallback func(mod *Module, s BuildStage)) error {
-	repo, err := git.OpenRepository(m.Dir)
+func (s *stdSystem) BuildBranch(name string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error {
+	m, err := s.ManifestByBranch(name)
 	if err != nil {
-		return e.Wrapf(ErrClassUser, err, "Unable to open repository in %s", m.Dir)
+		return err
 	}
 
-	dirty, err := isWorkingDirDirty(repo)
+	return build(s.Repo, m, stdin, stdout, stderr, callback, s.Log)
+}
+
+func (s *stdSystem) BuildPr(src, dst string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error {
+	m, err := s.ManifestByPr(src, dst)
+	if err != nil {
+		return err
+	}
+
+	return build(s.Repo, m, stdin, stdout, stderr, callback, s.Log)
+}
+
+func (s *stdSystem) BuildDiff(from, to string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error {
+	m, err := s.ManifestByDiff(from, to)
+	if err != nil {
+		return err
+	}
+
+	return build(s.Repo, m, stdin, stdout, stderr, callback, s.Log)
+}
+
+func (s *stdSystem) BuildCurrentBranch(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error {
+	m, err := s.ManifestByCurrentBranch()
+	if err != nil {
+		return err
+	}
+
+	return build(s.Repo, m, stdin, stdout, stderr, callback, s.Log)
+}
+
+func (s *stdSystem) BuildCommit(commit string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error {
+	m, err := s.ManifestByCommit(commit)
+	if err != nil {
+		return err
+	}
+
+	return build(s.Repo, m, stdin, stdout, stderr, callback, s.Log)
+}
+
+func (s *stdSystem) BuildWorkspace(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error {
+	m, err := s.ManifestByWorkspace()
+	if err != nil {
+		return err
+	}
+
+	return buildDir(m, stdin, stdout, stderr, callback, s.Log)
+}
+
+func (s *stdSystem) BuildWorkspaceChanges(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error {
+	m, err := s.ManifestByWorkspaceChanges()
+	if err != nil {
+		return err
+	}
+
+	return buildDir(m, stdin, stdout, stderr, callback, s.Log)
+}
+
+// Build runs the build for the modules in specified manifest.
+func build(repo Repo, m *Manifest, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback, log Log) error {
+	dirty, err := repo.IsDirtyWorkspace()
 	if err != nil {
 		return err
 	}
@@ -43,43 +91,38 @@ func Build(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCal
 		return e.NewError(ErrClassUser, "dirty working dir")
 	}
 
-	commit, err := getCommit(repo, m.Sha)
+	commit, err := repo.GetCommit(m.Sha)
 	if err != nil {
 		return err
 	}
 
-	tree, err := commit.Tree()
-	if err != nil {
-		return e.Wrap(ErrClassInternal, err)
-	}
+	defer checkoutHead(repo, log)
 
 	// TODO: Confirm the strategy is correct
-	err = repo.CheckoutTree(tree, defaultCheckoutOptions)
+	err = repo.Checkout(commit)
 	if err != nil {
 		return e.Wrap(ErrClassInternal, err)
 	}
-
-	defer checkoutHead(repo)
 
 	for _, a := range m.Modules {
 		if !canBuildHere(a) {
-			buildStageCallback(a, BuildStageSkipBuild)
+			callback(a, BuildStageSkipBuild)
 			continue
 		}
 
-		buildStageCallback(a, BuildStageBeforeBuild)
+		callback(a, BuildStageBeforeBuild)
 		err := buildOne(m, a, stdin, stdout, stderr)
 		if err != nil {
 			return err
 		}
-		buildStageCallback(a, BuildStageAfterBuild)
+		callback(a, BuildStageAfterBuild)
 	}
 
 	return nil
 }
 
 // BuildDir runs the build for the modules in the specified directory.
-func BuildDir(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCallback func(mod *Module, s BuildStage)) error {
+func buildDir(m *Manifest, stdin io.Reader, stdout, stderr io.Writer, buildStageCallback BuildStageCallback, log Log) error {
 	for _, a := range m.Modules {
 		if !canBuildHere(a) {
 			buildStageCallback(a, BuildStageSkipBuild)
@@ -134,9 +177,9 @@ func canBuildHere(mod *Module) bool {
 	return ok
 }
 
-func checkoutHead(repo *git.Repository) {
-	err := repo.CheckoutHead(&git.CheckoutOpts{Strategy: git.CheckoutForce})
+func checkoutHead(repo Repo, log Log) {
+	err := repo.CheckoutHead()
 	if err != nil {
-		logrus.Warnf("failed to checkout head: %s", err)
+		log.Warnf("Failed to checkout head: %s", err)
 	}
 }

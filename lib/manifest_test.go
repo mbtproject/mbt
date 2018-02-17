@@ -1,12 +1,8 @@
 package lib
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
 	"testing"
 
-	"github.com/mbtproject/mbt/e"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,14 +11,12 @@ func TestSingleModDir(t *testing.T) {
 
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
-
 	err = repo.InitModule("app-a")
 	check(t, err)
-
 	err = repo.Commit("first")
 	check(t, err)
 
-	m, err := ManifestByBranch(".tmp/repo", "master")
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByBranch("master")
 	check(t, err)
 
 	assert.Len(t, m.Modules, 1)
@@ -36,14 +30,12 @@ func TestNonModContent(t *testing.T) {
 
 	err = repo.InitModule("app-a")
 	check(t, err)
-
 	err = repo.WriteContent("content/index.html", "hello")
 	check(t, err)
-
 	err = repo.Commit("first")
 	check(t, err)
 
-	m, err := ManifestByBranch(".tmp/repo", "master")
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByBranch("master")
 	check(t, err)
 
 	assert.Len(t, m.Modules, 1)
@@ -57,7 +49,7 @@ func TestNestedAppDir(t *testing.T) {
 	check(t, repo.InitModule("a/b/c/app-a"))
 	check(t, repo.Commit("first"))
 
-	m, err := ManifestByBranch(".tmp/repo", "master")
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByBranch("master")
 	check(t, err)
 
 	assert.Len(t, m.Modules, 1)
@@ -73,7 +65,7 @@ func TestModsDirInModDir(t *testing.T) {
 	check(t, repo.InitModule("app-a/app-b"))
 	check(t, repo.Commit("first"))
 
-	m, err := ManifestByBranch(".tmp/repo", "master")
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByBranch("master")
 	check(t, err)
 
 	assert.Len(t, m.Modules, 2)
@@ -91,7 +83,7 @@ func TestEmptyRepo(t *testing.T) {
 
 	check(t, repo.InitModule("app-a"))
 
-	m, err := ManifestByBranch(".tmp/repo", "master")
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByBranch("master")
 	check(t, err)
 
 	assert.Len(t, m.Modules, 0)
@@ -113,14 +105,14 @@ func TestDiffingTwoBranches(t *testing.T) {
 
 	featureTip := repo.LastCommit
 
-	m, err := ManifestByPr(".tmp/repo", "feature", "master")
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByPr("feature", "master")
 	check(t, err)
 
 	assert.Len(t, m.Modules, 1)
 	assert.Equal(t, featureTip.String(), m.Sha)
 	assert.Equal(t, "app-b", m.Modules[0].Name())
 
-	m, err = ManifestByPr(".tmp/repo", "master", "feature")
+	m, err = NewWorld(t, ".tmp/repo").System.ManifestByPr("master", "feature")
 	check(t, err)
 
 	assert.Len(t, m.Modules, 0)
@@ -142,13 +134,13 @@ func TestDiffingTwoProgressedBranches(t *testing.T) {
 	check(t, repo.InitModule("app-c"))
 	check(t, repo.Commit("third"))
 
-	m, err := ManifestByPr(".tmp/repo", "feature", "master")
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByPr("feature", "master")
 	check(t, err)
 
 	assert.Len(t, m.Modules, 1)
 	assert.Equal(t, "app-b", m.Modules[0].Name())
 
-	m, err = ManifestByPr(".tmp/repo", "master", "feature")
+	m, err = NewWorld(t, ".tmp/repo").System.ManifestByPr("master", "feature")
 	check(t, err)
 
 	assert.Len(t, m.Modules, 1)
@@ -168,7 +160,7 @@ func TestDiffingWithMultipleChangesToSameMod(t *testing.T) {
 	check(t, repo.WriteContent("app-a/file2", "world"))
 	check(t, repo.Commit("third"))
 
-	m, err := ManifestByPr(".tmp/repo", "feature", "master")
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByPr("feature", "master")
 	check(t, err)
 
 	assert.Len(t, m.Modules, 1)
@@ -187,7 +179,7 @@ func TestDiffingForDeletes(t *testing.T) {
 	check(t, repo.Remove("app-a/file1"))
 	check(t, repo.Commit("second"))
 
-	m, err := ManifestByPr(".tmp/repo", "feature", "master")
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByPr("feature", "master")
 	check(t, err)
 
 	assert.Len(t, m.Modules, 1)
@@ -206,7 +198,7 @@ func TestDiffingForRenames(t *testing.T) {
 	check(t, repo.Rename("app-a/file1", "app-a/file2"))
 	check(t, repo.Commit("second"))
 
-	m, err := ManifestByPr(".tmp/repo", "feature", "master")
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByPr("feature", "master")
 	check(t, err)
 
 	assert.Len(t, m.Modules, 1)
@@ -221,7 +213,7 @@ func TestModOnRoot(t *testing.T) {
 	check(t, repo.InitModuleWithOptions("", &Spec{Name: "root-app"}))
 	check(t, repo.Commit("first"))
 
-	m, err := ManifestByBranch(".tmp/repo", "master")
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByBranch("master")
 	check(t, err)
 
 	assert.Len(t, m.Modules, 1)
@@ -244,13 +236,13 @@ func TestManifestByDiff(t *testing.T) {
 	check(t, repo.Commit("second"))
 	c2 := repo.LastCommit
 
-	m, err := ManifestByDiff(".tmp/repo", c1.String(), c2.String())
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByDiff(c1.String(), c2.String())
 	check(t, err)
 
 	assert.Len(t, m.Modules, 1)
 	assert.Equal(t, "app-a", m.Modules[0].Name())
 
-	m, err = ManifestByDiff(".tmp/repo", c2.String(), c1.String())
+	m, err = NewWorld(t, ".tmp/repo").System.ManifestByDiff(c2.String(), c1.String())
 	check(t, err)
 
 	assert.Len(t, m.Modules, 0)
@@ -264,7 +256,7 @@ func TestManifestByHead(t *testing.T) {
 	check(t, repo.Commit("first"))
 	check(t, repo.SwitchToBranch("feature"))
 
-	m, err := ManifestByHead(".tmp/repo")
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByCurrentBranch()
 	check(t, err)
 
 	assert.Equal(t, "app-a", m.Modules[0].Name())
@@ -272,8 +264,6 @@ func TestManifestByHead(t *testing.T) {
 
 func TestManifestByLocalDirForUpdates(t *testing.T) {
 	clean()
-	abs, err := filepath.Abs(".tmp/repo")
-	check(t, err)
 
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
@@ -282,11 +272,11 @@ func TestManifestByLocalDirForUpdates(t *testing.T) {
 	check(t, repo.WriteContent("app-a/test.txt", "test contents"))
 	check(t, repo.Commit("first"))
 
-	m, err := ManifestByLocalDir(abs, false)
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByWorkspaceChanges()
 	check(t, err)
 
 	assert.Equal(t, "local", m.Sha)
-	assert.Equal(t, abs, m.Dir)
+	assert.Equal(t, ".tmp/repo", m.Dir)
 
 	// currently no modules changed locally
 	assert.Equal(t, 0, len(m.Modules))
@@ -294,7 +284,7 @@ func TestManifestByLocalDirForUpdates(t *testing.T) {
 	// change the file, expect 1 module to be returned
 	check(t, repo.WriteContent("app-a/test.txt", "amended contents"))
 
-	m, err = ManifestByLocalDir(abs, false)
+	m, err = NewWorld(t, ".tmp/repo").System.ManifestByWorkspaceChanges()
 	check(t, err)
 
 	assert.Len(t, m.Modules, 1)
@@ -304,9 +294,6 @@ func TestManifestByLocalDirForUpdates(t *testing.T) {
 
 func TestManifestByLocalDirForAddition(t *testing.T) {
 	clean()
-	abs, err := filepath.Abs(".tmp/repo")
-	check(t, err)
-
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
@@ -315,7 +302,7 @@ func TestManifestByLocalDirForAddition(t *testing.T) {
 	check(t, repo.Commit("first"))
 
 	check(t, repo.InitModule("app-b"))
-	m, err := ManifestByLocalDir(abs, false)
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByWorkspaceChanges()
 	check(t, err)
 
 	assert.Len(t, m.Modules, 1)
@@ -325,9 +312,6 @@ func TestManifestByLocalDirForAddition(t *testing.T) {
 
 func TestManifestByLocalDirForConversion(t *testing.T) {
 	clean()
-	abs, err := filepath.Abs(".tmp/repo")
-	check(t, err)
-
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
@@ -335,7 +319,7 @@ func TestManifestByLocalDirForConversion(t *testing.T) {
 	check(t, repo.Commit("first"))
 
 	check(t, repo.InitModule("app-a"))
-	m, err := ManifestByLocalDir(abs, false)
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByWorkspaceChanges()
 	check(t, err)
 
 	assert.Len(t, m.Modules, 1)
@@ -344,9 +328,6 @@ func TestManifestByLocalDirForConversion(t *testing.T) {
 
 func TestManifestByLocalDirForNestedModules(t *testing.T) {
 	clean()
-	abs, err := filepath.Abs(".tmp/repo")
-	check(t, err)
-
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
@@ -355,7 +336,7 @@ func TestManifestByLocalDirForNestedModules(t *testing.T) {
 	check(t, repo.InitModule("src/app-a"))
 	check(t, repo.WriteContent("src/app-a/test.txt", "test contents"))
 
-	m, err := ManifestByLocalDir(abs, false)
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByWorkspaceChanges()
 	check(t, err)
 
 	assert.Len(t, m.Modules, 1)
@@ -364,15 +345,12 @@ func TestManifestByLocalDirForNestedModules(t *testing.T) {
 
 func TestManifestByLocalDirForAnEmptyRepo(t *testing.T) {
 	clean()
-	abs, err := filepath.Abs(".tmp/repo")
-	check(t, err)
-
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
 	check(t, repo.InitModule("app-a"))
 
-	m, err := ManifestByLocalDir(abs, false)
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByWorkspaceChanges()
 	check(t, err)
 
 	assert.Len(t, m.Modules, 1)
@@ -380,27 +358,10 @@ func TestManifestByLocalDirForAnEmptyRepo(t *testing.T) {
 	assert.Equal(t, "local", m.Modules[0].Version())
 }
 
-func TestManifestByLocalDirForNonRepoDir(t *testing.T) {
-	clean()
-	abs, err := filepath.Abs(".tmp/repo")
-	check(t, err)
-	check(t, os.MkdirAll(".tmp/repo", 0755))
-
-	m, err := ManifestByLocalDir(abs, false)
-
-	assert.EqualError(t, err, fmt.Sprintf(msgFailedOpenRepo, abs))
-	assert.EqualError(t, (err.(*e.E)).InnerError(), fmt.Sprintf("could not find repository from '%s'", abs))
-	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())
-	assert.Nil(t, m)
-}
-
 func TestVersionOfLocalDirManifest(t *testing.T) {
 	// All modules should have the fixed version string "local" as
 	// for manifest derived from local directory.
 	clean()
-	abs, err := filepath.Abs(".tmp/repo")
-	check(t, err)
-
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
@@ -412,11 +373,11 @@ func TestVersionOfLocalDirManifest(t *testing.T) {
 	}))
 	check(t, repo.Commit("first"))
 
-	m, err := ManifestByLocalDir(abs, true)
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByWorkspace()
 	check(t, err)
 
 	assert.Equal(t, "local", m.Sha)
-	assert.Equal(t, abs, m.Dir)
+	assert.Equal(t, ".tmp/repo", m.Dir)
 
 	assert.Equal(t, 2, len(m.Modules))
 	assert.Equal(t, "app-a", m.Modules[0].Name())
@@ -427,9 +388,6 @@ func TestVersionOfLocalDirManifest(t *testing.T) {
 
 func TestLocalDependencyChange(t *testing.T) {
 	clean()
-	abs, err := filepath.Abs(".tmp/repo")
-	check(t, err)
-
 	repo, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
@@ -450,7 +408,7 @@ func TestLocalDependencyChange(t *testing.T) {
 
 	check(t, repo.WriteContent("app-b/foo", "bar"))
 
-	m, err := ManifestByLocalDir(abs, false)
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByWorkspaceChanges()
 	check(t, err)
 
 	assert.Equal(t, 3, len(m.Modules))
@@ -479,7 +437,7 @@ func TestDependencyChange(t *testing.T) {
 	check(t, repo.Commit("second"))
 	c2 := repo.LastCommit
 
-	m, err := ManifestByDiff(".tmp/repo", c1.String(), c2.String())
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByDiff(c1.String(), c2.String())
 	check(t, err)
 
 	assert.Len(t, m.Modules, 2)
@@ -508,7 +466,7 @@ func TestIndirectDependencyChange(t *testing.T) {
 	check(t, repo.Commit("second"))
 	c2 := repo.LastCommit
 
-	m, err := ManifestByDiff(".tmp/repo", c1.String(), c2.String())
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByDiff(c1.String(), c2.String())
 	check(t, err)
 
 	assert.Len(t, m.Modules, 3)
@@ -534,7 +492,7 @@ func TestDiffOfDependentChange(t *testing.T) {
 	check(t, repo.Commit("second"))
 	c2 := repo.LastCommit
 
-	m, err := ManifestByDiff(".tmp/repo", c1.String(), c2.String())
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByDiff(c1.String(), c2.String())
 	check(t, err)
 
 	assert.Len(t, m.Modules, 1)
@@ -551,14 +509,14 @@ func TestVersionOfIndependentModules(t *testing.T) {
 	check(t, repo.Commit("first"))
 	c1 := repo.LastCommit
 
-	m1, err := ManifestBySha(".tmp/repo", c1.String())
+	m1, err := NewWorld(t, ".tmp/repo").System.ManifestByCommit(c1.String())
 	check(t, err)
 
 	check(t, repo.WriteContent("app-a/foo", "hello"))
 	check(t, repo.Commit("second"))
 	c2 := repo.LastCommit
 
-	m2, err := ManifestBySha(".tmp/repo", c2.String())
+	m2, err := NewWorld(t, ".tmp/repo").System.ManifestByCommit(c2.String())
 	check(t, err)
 
 	assert.Equal(t, m1.Modules[1].Version(), m2.Modules[1].Version())
@@ -578,14 +536,14 @@ func TestVersionOfDependentModules(t *testing.T) {
 	check(t, repo.Commit("first"))
 	c1 := repo.LastCommit
 
-	m1, err := ManifestBySha(".tmp/repo", c1.String())
+	m1, err := NewWorld(t, ".tmp/repo").System.ManifestByCommit(c1.String())
 	check(t, err)
 
 	check(t, repo.WriteContent("app-a/foo", "hello"))
 	check(t, repo.Commit("second"))
 	c2 := repo.LastCommit
 
-	m2, err := ManifestBySha(".tmp/repo", c2.String())
+	m2, err := NewWorld(t, ".tmp/repo").System.ManifestByCommit(c2.String())
 	check(t, err)
 
 	assert.NotEqual(t, m1.Modules[0].Version(), m2.Modules[0].Version())
@@ -610,14 +568,14 @@ func TestVersionOfIndirectlyDependentModules(t *testing.T) {
 	check(t, repo.Commit("first"))
 	c1 := repo.LastCommit
 
-	m1, err := ManifestBySha(".tmp/repo", c1.String())
+	m1, err := NewWorld(t, ".tmp/repo").System.ManifestByCommit(c1.String())
 	check(t, err)
 
 	check(t, repo.WriteContent("app-a/foo", "hello"))
 	check(t, repo.Commit("second"))
 	c2 := repo.LastCommit
 
-	m2, err := ManifestBySha(".tmp/repo", c2.String())
+	m2, err := NewWorld(t, ".tmp/repo").System.ManifestByCommit(c2.String())
 	check(t, err)
 
 	assert.NotEqual(t, m1.Modules[0].Version(), m2.Modules[0].Version())
@@ -644,7 +602,7 @@ func TestChangeToFileDependency(t *testing.T) {
 	check(t, repo.Commit("second"))
 	c2 := repo.LastCommit.String()
 
-	m, err := ManifestByDiff(".tmp/repo", c1, c2)
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByDiff(c1, c2)
 	check(t, err)
 
 	assert.Len(t, m.Modules, 1)
@@ -677,7 +635,7 @@ func TestFileDependencyInADependentModule(t *testing.T) {
 	check(t, repo.Commit("second"))
 	c2 := repo.LastCommit.String()
 
-	m, err := ManifestByDiff(".tmp/repo", c1, c2)
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByDiff(c1, c2)
 	check(t, err)
 
 	assert.Len(t, m.Modules, 2)
@@ -710,7 +668,7 @@ func TestDependentOfAModuleWithFileDependency(t *testing.T) {
 	check(t, repo.Commit("second"))
 	c2 := repo.LastCommit.String()
 
-	m, err := ManifestByDiff(".tmp/repo", c1, c2)
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByDiff(c1, c2)
 	check(t, err)
 
 	assert.Len(t, m.Modules, 2)
@@ -733,32 +691,20 @@ func TestManifestBySha(t *testing.T) {
 
 	c2 := repo.LastCommit
 
-	m, err := ManifestBySha(".tmp/repo", c1.String())
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByCommit(c1.String())
 	check(t, err)
 
 	assert.Len(t, m.Modules, 1)
 	assert.Equal(t, c1.String(), m.Sha)
 	assert.Equal(t, "app-a", m.Modules[0].Name())
 
-	m, err = ManifestBySha(".tmp/repo", c2.String())
+	m, err = NewWorld(t, ".tmp/repo").System.ManifestByCommit(c2.String())
 	check(t, err)
 
 	assert.Len(t, m.Modules, 2)
 	assert.Equal(t, c2.String(), m.Sha)
 	assert.Equal(t, "app-a", m.Modules[0].Name())
 	assert.Equal(t, "app-b", m.Modules[1].Name())
-}
-
-func TestNonRepository(t *testing.T) {
-	clean()
-	check(t, os.MkdirAll(".tmp/repo", 0755))
-
-	m, err := ManifestByBranch(".tmp/repo", "master")
-
-	assert.Nil(t, m)
-	assert.EqualError(t, err, fmt.Sprintf(msgFailedOpenRepo, ".tmp/repo"))
-	assert.EqualError(t, (err.(*e.E)).InnerError(), "could not find repository from '.tmp/repo'")
-	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())
 }
 
 func TestOrderOfModules(t *testing.T) {
@@ -779,7 +725,7 @@ func TestOrderOfModules(t *testing.T) {
 	check(t, repo.InitModule("app-c"))
 	check(t, repo.Commit("first"))
 
-	m, err := ManifestByBranch(".tmp/repo", "master")
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByBranch("master")
 	check(t, err)
 
 	assert.Len(t, m.Modules, 3)
@@ -804,7 +750,7 @@ func TestAppsWithSamePrefix(t *testing.T) {
 	check(t, repo.Commit("third"))
 	c2 := repo.LastCommit
 
-	m, err := ManifestByDiff(".tmp/repo", c1.String(), c2.String())
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByDiff(c1.String(), c2.String())
 	check(t, err)
 
 	assert.Len(t, m.Modules, 1)
@@ -824,7 +770,7 @@ func TestDiffingForCaseSensitivityOfModulePath(t *testing.T) {
 	check(t, repo.Commit("second"))
 	c2 := repo.LastCommit
 
-	m, err := ManifestByDiff(".tmp/repo", c1.String(), c2.String())
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByDiff(c1.String(), c2.String())
 	check(t, err)
 
 	assert.Len(t, m.Modules, 1)
@@ -848,7 +794,7 @@ func TestDiffingForCaseSensitivityOfFileDependency(t *testing.T) {
 	check(t, repo.Commit("second"))
 	c2 := repo.LastCommit
 
-	m, err := ManifestByDiff(".tmp/repo", c1.String(), c2.String())
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByDiff(c1.String(), c2.String())
 	check(t, err)
 
 	assert.Len(t, m.Modules, 1)
@@ -858,7 +804,7 @@ func TestDiffingForCaseSensitivityOfFileDependency(t *testing.T) {
 	check(t, repo.Commit("third"))
 	c3 := repo.LastCommit
 
-	m, err = ManifestByDiff(".tmp/repo", c2.String(), c3.String())
+	m, err = NewWorld(t, ".tmp/repo").System.ManifestByDiff(c2.String(), c3.String())
 	check(t, err)
 
 	assert.Len(t, m.Modules, 1)

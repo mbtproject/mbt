@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 
+	"github.com/mbtproject/mbt/lib"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -19,6 +20,7 @@ var (
 	kind   string
 	all    bool
 	debug  bool
+	system lib.System
 )
 
 func init() {
@@ -40,7 +42,11 @@ See help for individual commands for more information.
 	`,
 	SilenceUsage: true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		if cmd.Use != "version" && in == "" {
+		if cmd.Use == "version" {
+			return nil
+		}
+
+		if in == "" {
 			cwd, err := os.Getwd()
 			if err != nil {
 				return err
@@ -48,9 +54,14 @@ See help for individual commands for more information.
 			in = cwd
 		}
 
+		level := lib.LogLevelNormal
 		if debug {
 			logrus.SetLevel(logrus.DebugLevel)
+			level = lib.LogLevelDebug
 		}
-		return nil
+
+		var err error
+		system, err = lib.NewSystem(in, level)
+		return err
 	},
 }

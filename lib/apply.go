@@ -10,7 +10,6 @@ import (
 	"strings"
 	"text/template"
 
-	git "github.com/libgit2/git2go"
 	"github.com/mbtproject/mbt/e"
 )
 
@@ -22,54 +21,34 @@ type TemplateData struct {
 	Modules map[string]*Module
 }
 
-// ApplyBranch applies the repository manifest to specified template.
-func ApplyBranch(dir, templatePath, branch string, output io.Writer) error {
-	repo, err := openRepo(dir)
+func (s *stdSystem) ApplyBranch(templatePath, branch string, output io.Writer) error {
+	commit, err := s.Repo.BranchCommit(branch)
 	if err != nil {
 		return err
 	}
-
-	commit, err := getBranchCommit(repo, branch)
-	if err != nil {
-		return err
-	}
-
-	return applyCore(repo, commit, dir, templatePath, output)
+	return s.applyCore(commit, templatePath, output)
 }
 
-// ApplyCommit applies the repository manifest to specified template.
-func ApplyCommit(dir, sha, templatePath string, output io.Writer) error {
-	repo, err := openRepo(dir)
+func (s *stdSystem) ApplyCommit(commit string, templatePath string, output io.Writer) error {
+	c, err := s.Repo.GetCommit(commit)
 	if err != nil {
 		return err
 	}
-
-	commit, err := getCommit(repo, sha)
-	if err != nil {
-		return err
-	}
-
-	return applyCore(repo, commit, dir, templatePath, output)
+	return s.applyCore(c, templatePath, output)
 }
 
 // ApplyHead applies the repository manifest to specified template.
-func ApplyHead(dir, templatePath string, output io.Writer) error {
-	repo, err := openRepo(dir)
+func (s *stdSystem) ApplyHead(templatePath string, output io.Writer) error {
+	branch, err := s.Repo.CurrentBranch()
 	if err != nil {
 		return err
 	}
 
-	commit, err := getHeadCommit(repo)
-	if err != nil {
-		return err
-	}
-
-	return applyCore(repo, commit, dir, templatePath, output)
+	return s.ApplyBranch(templatePath, branch, output)
 }
 
-// ApplyLocal applies local directory manifest over an specified template
-func ApplyLocal(dir, templatePath string, output io.Writer) error {
-	absDir, err := filepath.Abs(dir)
+func (s *stdSystem) ApplyLocal(templatePath string, output io.Writer) error {
+	absDir, err := filepath.Abs(s.Repo.Path())
 	if err != nil {
 		return e.Wrapf(ErrClassUser, err, msgFailedLocalPath)
 	}
@@ -80,7 +59,7 @@ func ApplyLocal(dir, templatePath string, output io.Writer) error {
 		return e.Wrapf(ErrClassUser, err, msgFailedReadFile, absTemplatePath)
 	}
 
-	m, err := ManifestByLocalDir(absDir, true)
+	m, err := s.ManifestBuilder().ByWorkspace()
 	if err != nil {
 		return err
 	}
@@ -88,28 +67,18 @@ func ApplyLocal(dir, templatePath string, output io.Writer) error {
 	return processTemplate(c, m, output)
 }
 
-func applyCore(repo *git.Repository, commit *git.Commit, dir, templatePath string, output io.Writer) error {
-	tree, err := commit.Tree()
+func (s *stdSystem) applyCore(commit Commit, templatePath string, output io.Writer) error {
+	b, err := s.Repo.BlobContentsFromTree(commit, templatePath)
 	if err != nil {
-		return e.Wrap(ErrClassInternal, err)
+		return e.Wrapf(ErrClassUser, err, msgTemplateNotFound, templatePath, commit)
 	}
 
-	entry, err := tree.EntryByPath(templatePath)
-	if err != nil {
-		return e.Wrapf(ErrClassUser, err, msgTemplateNotFound, templatePath, commit.Id().String())
-	}
-
-	b, err := repo.LookupBlob(entry.Id)
-	if err != nil {
-		return e.Wrap(ErrClassInternal, err)
-	}
-
-	m, err := fromCommit(repo, dir, commit)
+	m, err := s.MB.ByCommit(commit)
 	if err != nil {
 		return err
 	}
 
-	return processTemplate(b.Contents(), m, output)
+	return processTemplate(b, m, output)
 }
 
 func processTemplate(buffer []byte, m *Manifest, output io.Writer) error {

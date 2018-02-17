@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/mbtproject/mbt/lib"
 	"github.com/spf13/cobra"
 )
 
@@ -52,7 +51,7 @@ var applyBranchCmd = &cobra.Command{
 		}
 
 		return applyCore(func(to string, output io.Writer) error {
-			return lib.ApplyBranch(in, to, branch, output)
+			return system.ApplyBranch(to, branch, output)
 		})
 	}),
 }
@@ -72,7 +71,7 @@ Commit SHA must be the complete 40 character SHA1 string.
 		commit := args[0]
 
 		return applyCore(func(to string, output io.Writer) error {
-			return lib.ApplyCommit(in, commit, to, output)
+			return system.ApplyCommit(commit, to, output)
 		})
 	}),
 }
@@ -85,7 +84,7 @@ var applyHeadCmd = &cobra.Command{
 	`,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		return applyCore(func(to string, output io.Writer) error {
-			return lib.ApplyHead(in, to, output)
+			return system.ApplyHead(to, output)
 		})
 	}),
 }
@@ -99,7 +98,7 @@ This command is useful for testing pending changes in workspace.
 	`,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		return applyCore(func(to string, output io.Writer) error {
-			return lib.ApplyLocal(in, to, output)
+			return system.ApplyLocal(to, output)
 		})
 	}),
 }

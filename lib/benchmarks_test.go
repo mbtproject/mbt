@@ -38,10 +38,11 @@ func benchmarkReduceToDiff(modulesCount, deltaCount int, b *testing.B) {
 	repo.Commit("second")
 	c2 := repo.LastCommit
 
+	world := NewBenchmarkWorld(b, ".tmp/repo")
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, err = ManifestByDiff(".tmp/repo", c1.String(), c2.String())
+		_, err = world.System.ManifestByDiff(c1.String(), c2.String())
 		if err != nil {
 			b.Fatalf("%v", err)
 		}

@@ -1,12 +1,11 @@
 package lib
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
-	"github.com/libgit2/git2go"
 	"github.com/mbtproject/mbt/e"
-
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,7 +15,7 @@ func TestDependencyLinks(t *testing.T) {
 	c := newModuleMetadata("app-c", "c", &Spec{Name: "app-c"})
 
 	s := moduleMetadataSet{a, b, c}
-	mods, err := s.toModules()
+	mods, err := toModules(s)
 	check(t, err)
 	m := mods.indexByName()
 
@@ -33,7 +32,7 @@ func TestVersionCalculation(t *testing.T) {
 	b := newModuleMetadata("app-b", "b", &Spec{Name: "app-b"})
 
 	s := moduleMetadataSet{a, b}
-	mods, err := s.toModules()
+	mods, err := toModules(s)
 	check(t, err)
 	m := mods.indexByName()
 
@@ -50,10 +49,11 @@ func TestMalformedSpec(t *testing.T) {
 	check(t, repo.WriteContent("app-a/.mbt.yml", "blah:blah\nblah::"))
 	check(t, repo.Commit("first"))
 
-	commit, err := repo.Repo.LookupCommit(repo.LastCommit)
+	world := NewWorld(t, ".tmp/repo")
+	lc, err := world.Repo.GetCommit(repo.LastCommit.String())
 	check(t, err)
+	metadata, err := world.Discover.ModulesInCommit(lc)
 
-	metadata, err := discoverMetadata(repo.Repo, commit)
 	assert.Nil(t, metadata)
 	assert.EqualError(t, err, "error while parsing the spec at app-a/.mbt.yml")
 	assert.EqualError(t, (err.(*e.E).InnerError()), "yaml: line 1: mapping values are not allowed in this context")
@@ -68,17 +68,17 @@ func TestMissingBlobs(t *testing.T) {
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
 
-	commit, err := repo.Repo.LookupCommit(repo.LastCommit)
+	world := NewWorld(t, ".tmp/repo")
+	lc, err := world.Repo.GetCommit(repo.LastCommit.String())
 	check(t, err)
 
 	check(t, os.RemoveAll(".tmp/repo/.git/objects"))
 	check(t, os.Mkdir(".tmp/repo/.git/objects", 0755))
 
-	metadata, err := discoverMetadata(repo.Repo, commit)
-
+	metadata, err := world.Discover.ModulesInCommit(lc)
 	assert.Nil(t, metadata)
-	assert.EqualError(t, err, "error while fetching the blob object for app-a/.mbt.yml")
-	assert.EqualError(t, (err.(*e.E)).InnerError(), "object not found - no match for id (46c63fb17a3e0ed3a90562371640044c9b90bf6c)")
+	assert.EqualError(t, err, fmt.Sprintf(msgFailedTreeLoad, repo.LastCommit.String()))
+	assert.EqualError(t, (err.(*e.E)).InnerError(), fmt.Sprintf("object not found - no match for id (32980cb34a5e42c0ff4e4920204206c492c8d487)"))
 	assert.Equal(t, ErrClassInternal, (err.(*e.E)).Class())
 }
 
@@ -91,15 +91,15 @@ func TestMissingTreeObject(t *testing.T) {
 	check(t, repo.Commit("first"))
 	check(t, os.RemoveAll(".tmp/repo/.git/objects/f6"))
 
-	r, err := git.OpenRepository(".tmp/repo")
-	check(t, err)
-	commit, err := r.LookupCommit(repo.LastCommit)
+	world := NewWorld(t, ".tmp/repo")
+	lc, err := world.Repo.GetCommit(repo.LastCommit.String())
 	check(t, err)
 
-	metadata, err := discoverMetadata(r, commit)
+	metadata, err := world.Discover.ModulesInCommit(lc)
 
+	treeID := "32980cb34a5e42c0ff4e4920204206c492c8d487"
 	assert.Nil(t, metadata)
-	assert.EqualError(t, err, "failed to walk the tree object")
+	assert.EqualError(t, err, fmt.Sprintf(msgFailedTreeWalk, treeID))
 	assert.EqualError(t, (err.(*e.E)).InnerError(), "object not found - no match for id (f6929fe5c1165232e1ee6c92532f1f2bcf936845)")
 	assert.Equal(t, ErrClassInternal, (err.(*e.E)).Class())
 }
@@ -114,7 +114,7 @@ func TestMissingDependencies(t *testing.T) {
 		},
 	}}
 
-	mods, err := s.toModules()
+	mods, err := toModules(s)
 
 	assert.Nil(t, mods)
 	assert.EqualError(t, err, "dependency not found app-a -> app-b")
@@ -135,7 +135,7 @@ func TestModuleNameConflicts(t *testing.T) {
 		},
 	}
 
-	mods, err := s.toModules()
+	mods, err := toModules(s)
 
 	assert.Nil(t, mods)
 	assert.EqualError(t, err, "Module name 'app-a' in directory 'app-b' conflicts with the module in 'app-a' directory")
@@ -151,12 +151,12 @@ func TestDirectoryEntriesCalledMbtYml(t *testing.T) {
 	check(t, repo.WriteContent(".mbt.yml/foo", "blah"))
 	check(t, repo.Commit("first"))
 
-	commit, err := repo.Repo.LookupCommit(repo.LastCommit)
+	world := NewWorld(t, ".tmp/repo")
+	lc, err := world.Repo.GetCommit(repo.LastCommit.String())
+	check(t, err)
+	modules, err := world.Discover.ModulesInCommit(lc)
 	check(t, err)
 
-	metadata, err := discoverMetadata(repo.Repo, commit)
-	check(t, err)
-
-	assert.Len(t, metadata, 1)
-	assert.Equal(t, "app-a", metadata[0].spec.Name)
+	assert.Len(t, modules, 1)
+	assert.Equal(t, "app-a", modules[0].Name())
 }

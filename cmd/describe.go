@@ -75,7 +75,7 @@ If branch name is not specified assumes 'master'.
 		if len(args) > 0 {
 			branch = args[0]
 		}
-		m, err := lib.ManifestByBranch(in, branch)
+		m, err := system.ManifestByBranch(branch)
 		if err != nil {
 			return err
 		}
@@ -91,7 +91,7 @@ var describeHeadCmd = &cobra.Command{
 
 `,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
-		m, err := lib.ManifestByHead(in)
+		m, err := system.ManifestByCurrentBranch()
 		if err != nil {
 			return err
 		}
@@ -108,7 +108,17 @@ var describeLocalCmd = &cobra.Command{
 This includes the modules in uncommitted changes.
 `,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
-		m, err := lib.ManifestByLocalDir(in, all)
+		var (
+			m   *lib.Manifest
+			err error
+		)
+
+		if all {
+			m, err = system.ManifestByWorkspace()
+		} else {
+			m, err = system.ManifestByWorkspaceChanges()
+		}
+
 		if err != nil {
 			return err
 		}
@@ -135,7 +145,7 @@ the tip of dst branch.
 			return errors.New("requires dest")
 		}
 
-		m, err := lib.ManifestByPr(in, src, dst)
+		m, err := system.ManifestByPr(src, dst)
 		if err != nil {
 			return err
 		}
@@ -158,7 +168,7 @@ Commit SHA must be the complete 40 character SHA1 string.
 
 		commit := args[0]
 
-		m, err := lib.ManifestBySha(in, commit)
+		m, err := system.ManifestByCommit(commit)
 		if err != nil {
 			return err
 		}
@@ -191,9 +201,9 @@ var describeIntersectionCmd = &cobra.Command{
 
 		switch kind {
 		case "branch":
-			mods, err = lib.IntersectionByBranch(in, first, second)
+			mods, err = system.IntersectionByBranch(first, second)
 		case "commit":
-			mods, err = lib.IntersectionByCommit(in, first, second)
+			mods, err = system.IntersectionByCommit(first, second)
 		default:
 			err = errors.New("not a valid kind - available options are 'branch' and 'commit'")
 		}
@@ -224,7 +234,7 @@ the to commit.
 			return errors.New("requires to commit")
 		}
 
-		m, err := lib.ManifestByDiff(in, from, to)
+		m, err := system.ManifestByDiff(from, to)
 		if err != nil {
 			return err
 		}
@@ -252,7 +262,7 @@ func output(mods lib.Modules) error {
 		}
 		fmt.Println(string(buff))
 	} else if toGraph {
-		fmt.Println(lib.SerializeAsDot(mods))
+		fmt.Println(mods.SerializeAsDot())
 	} else {
 		if len(mods) == 0 {
 			fmt.Println("No modules found")

@@ -7,7 +7,7 @@ import (
 
 // SerializeAsDot converts specified modules into a dot graph
 // that can be used for visualization with gv package.
-func SerializeAsDot(mods Modules) string {
+func (mods Modules) SerializeAsDot() string {
 	paths := []string{}
 
 	for _, m := range mods {

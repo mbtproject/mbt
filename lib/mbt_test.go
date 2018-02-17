@@ -199,3 +199,49 @@ func check(t *testing.T, err error) {
 		t.Fatal(err)
 	}
 }
+
+type World struct {
+	Log             Log
+	Repo            Repo
+	Discover        Discover
+	ManifestBuilder ManifestBuilder
+	System          System
+}
+
+func NewWorld(t *testing.T, repo string) *World {
+	log := NewStdLog(LogLevelNormal)
+	r, err := NewLibgitRepo(repo, log)
+	check(t, err)
+
+	discover := NewDiscover(r, log)
+	reducer := NewReducer(log)
+	mb := NewManifestBuilder(r, reducer, discover, log)
+
+	return &World{
+		Log:             log,
+		Repo:            r,
+		Discover:        discover,
+		ManifestBuilder: mb,
+		System:          initSystem(log, r, mb, discover, reducer),
+	}
+}
+
+func NewBenchmarkWorld(b *testing.B, repo string) *World {
+	log := NewStdLog(LogLevelNormal)
+	r, err := NewLibgitRepo(repo, log)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	discover := NewDiscover(r, log)
+	reducer := NewReducer(log)
+	mb := NewManifestBuilder(r, reducer, discover, log)
+
+	return &World{
+		Log:             log,
+		Repo:            r,
+		Discover:        discover,
+		ManifestBuilder: mb,
+		System:          initSystem(log, r, mb, discover, reducer),
+	}
+}
