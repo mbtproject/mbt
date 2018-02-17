@@ -2,31 +2,10 @@ package lib
 
 import (
 	"container/list"
-	"fmt"
-	"strings"
 
 	"github.com/buddyspike/graph"
-	git "github.com/libgit2/git2go"
-	"github.com/mbtproject/mbt/dtrace"
 	"github.com/mbtproject/mbt/e"
-	"github.com/mbtproject/mbt/trie"
 )
-
-// Module represents a single module in the repository.
-type Module struct {
-	name             string
-	path             string
-	build            map[string]*BuildCmd
-	hash             string
-	version          string
-	properties       map[string]interface{}
-	requires         Modules
-	requiredBy       Modules
-	fileDependencies []string
-}
-
-// Modules is an array of Module.
-type Modules []*Module
 
 // Name returns the name of the module.
 func (a *Module) Name() string {
@@ -189,123 +168,4 @@ func (l Modules) expandRequiresDependencies() (Modules, error) {
 	}
 
 	return r, nil
-}
-
-func modulesInCommit(repo *git.Repository, commit *git.Commit) (Modules, error) {
-	metadataSet, err := discoverMetadata(repo, commit)
-	if err != nil {
-		return nil, err
-	}
-
-	vmods, err := metadataSet.toModules()
-	if err != nil {
-		return nil, err
-	}
-
-	return vmods, nil
-}
-
-func modulesInDiff(repo *git.Repository, to, from *git.Commit) (Modules, error) {
-	diff, err := getDiffFromMergeBase(repo, to, from)
-	if err != nil {
-		return nil, err
-	}
-
-	a, err := modulesInCommit(repo, to)
-	if err != nil {
-		return nil, err
-	}
-
-	return reduceToDiff(a, diff)
-}
-
-func modulesInDiffWithDepGraph(repo *git.Repository, to, from *git.Commit, reversed bool) (Modules, error) {
-	mods, err := modulesInDiff(repo, to, from)
-	if err != nil {
-		return nil, err
-	}
-
-	if reversed {
-		mods, err = mods.expandRequiredByDependencies()
-	} else {
-		mods, err = mods.expandRequiresDependencies()
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	return mods, nil
-}
-
-func modulesInDiffWithDependents(repo *git.Repository, to, from *git.Commit) (Modules, error) {
-	return modulesInDiffWithDepGraph(repo, to, from, true)
-}
-
-func modulesInDiffWithDependencies(repo *git.Repository, to, from *git.Commit) (Modules, error) {
-	return modulesInDiffWithDepGraph(repo, to, from, false)
-}
-
-func modulesInDirectoryDiff(repo *git.Repository, dir string) (Modules, error) {
-	modules, err := modulesInDirectory(repo, dir)
-	if err != nil {
-		return nil, err
-	}
-
-	diff, err := getDiffFromIndex(repo)
-	if err != nil {
-		return nil, err
-	}
-
-	return reduceToDiff(modules, diff)
-}
-
-func modulesInDirectory(repo *git.Repository, dir string) (Modules, error) {
-	metadata, err := discoverMetadataByDir(repo, dir)
-	if err != nil {
-		return nil, err
-	}
-
-	modules, err := metadata.toModules()
-	if err != nil {
-		return nil, err
-	}
-
-	return modules, nil
-}
-
-func reduceToDiff(modules Modules, diff *git.Diff) (Modules, error) {
-	t := trie.NewTrie()
-	filtered := make(Modules, 0)
-	err := diff.ForEach(func(delta git.DiffDelta, num float64) (git.DiffForEachHunkCallback, error) {
-		// Current comparison is case insensitive. This is problematic
-		// for case sensitive file systems.
-		// Perhaps we can read core.ignorecase configuration value
-		// in git and adjust accordingly.
-		nfp := strings.ToLower(delta.NewFile.Path)
-		dtrace.Printf("Index change %s", nfp)
-		t.Add(nfp)
-		return nil, nil
-	}, git.DiffDetailFiles)
-
-	if err != nil {
-		return nil, e.Wrap(ErrClassInternal, err)
-	}
-
-	for _, m := range modules {
-		mp := strings.ToLower(fmt.Sprintf("%s/", m.Path()))
-		dtrace.Printf("Filter by module path %s", mp)
-		if t.Find(mp).Success {
-			filtered = append(filtered, m)
-		} else {
-			for _, p := range m.FileDependencies() {
-				fdp := strings.ToLower(p)
-				dtrace.Printf("Filter by file dependency path %s", fdp)
-				if t.Find(fdp).Success {
-					filtered = append(filtered, m)
-				}
-			}
-		}
-	}
-
-	return filtered, nil
 }

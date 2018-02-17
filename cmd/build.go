@@ -35,12 +35,7 @@ var buildHead = &cobra.Command{
 
 `,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
-		m, err := lib.ManifestByHead(in)
-		if err != nil {
-			return err
-		}
-
-		return build(m)
+		return system.BuildCurrentBranch(os.Stdin, os.Stdout, os.Stderr, buildStageCB)
 	}),
 }
 
@@ -59,12 +54,7 @@ If branch name is not specified, the command assumes 'master'.
 			branch = args[0]
 		}
 
-		m, err := lib.ManifestByBranch(in, branch)
-		if err != nil {
-			return err
-		}
-
-		return build(m)
+		return system.BuildBranch(branch, os.Stdin, os.Stdout, os.Stderr, buildStageCB)
 	}),
 }
 
@@ -90,12 +80,7 @@ builds their dependents.
 			return errors.New("requires dest")
 		}
 
-		m, err := lib.ManifestByPr(in, src, dst)
-		if err != nil {
-			return err
-		}
-
-		return build(m)
+		return system.BuildPr(src, dst, os.Stdin, os.Stdout, os.Stderr, buildStageCB)
 	}),
 }
 
@@ -122,12 +107,7 @@ Commit SHA must be the complete 40 character SHA1 string.
 			return errors.New("requires to commit")
 		}
 
-		m, err := lib.ManifestByDiff(in, from, to)
-		if err != nil {
-			return err
-		}
-
-		return build(m)
+		return system.BuildDiff(from, to, os.Stdin, os.Stdout, os.Stderr, buildStageCB)
 	}),
 }
 
@@ -143,12 +123,7 @@ var buildCommit = &cobra.Command{
 
 		commit := args[0]
 
-		m, err := lib.ManifestBySha(in, commit)
-		if err != nil {
-			return err
-		}
-
-		return build(m)
+		return system.BuildCommit(commit, os.Stdin, os.Stdout, os.Stderr, buildStageCB)
 	}),
 }
 
@@ -161,35 +136,21 @@ Local builds always uses a fixed version identifier - 'local'.
 Specify the --all flag to build all modules in current workspace. 
 	`,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
-		m, err := lib.ManifestByLocalDir(in, all)
-		if err != nil {
-			return err
+		if all {
+			return system.BuildWorkspace(os.Stdin, os.Stdout, os.Stderr, buildStageCB)
 		}
 
-		return buildDir(m)
+		return system.BuildWorkspaceChanges(os.Stdin, os.Stdout, os.Stderr, buildStageCB)
 	}),
 }
 
-func build(m *lib.Manifest) error {
-	return lib.Build(m, os.Stdin, os.Stdout, os.Stderr, func(a *lib.Module, s lib.BuildStage) {
-		switch s {
-		case lib.BuildStageBeforeBuild:
-			logrus.Infof("BUILD %s in %s for %s", a.Name(), a.Path(), a.Version())
-		case lib.BuildStageSkipBuild:
-			logrus.Infof("SKIP %s in %s for %s", a.Name(), a.Path(), a.Version())
-		}
-	})
-}
-
-func buildDir(m *lib.Manifest) error {
-	return lib.BuildDir(m, os.Stdin, os.Stdout, os.Stderr, func(a *lib.Module, s lib.BuildStage) {
-		switch s {
-		case lib.BuildStageBeforeBuild:
-			logrus.Infof("BUILD %s in %s for %s", a.Name(), a.Path(), a.Version())
-		case lib.BuildStageSkipBuild:
-			logrus.Infof("SKIP %s in %s for %s", a.Name(), a.Path(), a.Version())
-		}
-	})
+func buildStageCB(a *lib.Module, s lib.BuildStage) {
+	switch s {
+	case lib.BuildStageBeforeBuild:
+		logrus.Infof("BUILD %s in %s for %s", a.Name(), a.Path(), a.Version())
+	case lib.BuildStageSkipBuild:
+		logrus.Infof("SKIP %s in %s for %s", a.Name(), a.Path(), a.Version())
+	}
 }
 
 var buildCommand = &cobra.Command{

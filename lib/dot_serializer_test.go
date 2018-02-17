@@ -29,10 +29,10 @@ func TestGraph(t *testing.T) {
 
 	check(t, repo.Commit("first"))
 
-	m, err := ManifestByHead(".tmp/repo")
+	m, err := NewWorld(t, ".tmp/repo").ManifestBuilder.ByCurrentBranch()
 	check(t, err)
 
-	s := SerializeAsDot(m.Modules)
+	s := m.Modules.SerializeAsDot()
 
 	assert.Equal(t, `digraph mbt {
   "lib-a"
@@ -47,10 +47,10 @@ func TestSerializeAsDotOfAnEmptyRepo(t *testing.T) {
 	_, err := createTestRepository(".tmp/repo")
 	check(t, err)
 
-	m, err := ManifestByHead(".tmp/repo")
+	m, err := NewWorld(t, ".tmp/repo").ManifestBuilder.ByCurrentBranch()
 	check(t, err)
 
-	s := SerializeAsDot(m.Modules)
+	s := m.Modules.SerializeAsDot()
 
 	assert.Equal(t, `digraph mbt {
   
