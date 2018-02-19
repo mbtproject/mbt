@@ -27,6 +27,7 @@ test: build_libgit2
 	go test -covermode=count ./lib
 	go test -covermode=count ./cmd
 	go test -covermode=count ./trie
+	go test -covermode=count ./intercept
 	go test -covermode=count .
 
 .PHONY: showcover

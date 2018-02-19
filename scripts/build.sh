@@ -46,12 +46,13 @@ OUT="mbt_${OS}_${ARCH}"
 make restore 
 
 # Run linter
-lint *.go ./e ./dtrace ./trie ./lib
+lint *.go ./e ./dtrace ./trie ./intercept ./lib 
 
 # Run tests
 go test ./e -v -covermode=count 
 go test ./dtrace -v -covermode=count 
 go test ./trie -v -covermode=count 
+go test ./intercept -v -covermode=count 
 go test ./lib -v -covermode=count -coverprofile=coverage.out 
 if [ ! -z $COVERALLS_TOKEN ] && [ -f ./coverage.out ]; then 
   $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
@@ -62,7 +63,7 @@ shasum -a 1 -p "build/${OUT}" | cut -d ' ' -f 1 > "build/${OUT}.sha1"
 
 # Run go vet (this should happen after the build)
 go tool vet ./*.go
-go tool vet ./e ./dtrace ./trie ./lib
+go tool vet ./e ./dtrace ./trie ./intercept ./lib 
 
 echo "testing the bin"
 "./build/${OUT}" version

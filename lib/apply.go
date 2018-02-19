@@ -5,7 +5,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -53,7 +52,7 @@ func (s *stdSystem) ApplyLocal(templatePath string, output io.Writer) error {
 		return e.Wrapf(ErrClassUser, err, msgFailedLocalPath)
 	}
 
-	absTemplatePath := path.Join(absDir, templatePath)
+	absTemplatePath := filepath.Join(absDir, templatePath)
 	c, err := ioutil.ReadFile(absTemplatePath)
 	if err != nil {
 		return e.Wrapf(ErrClassUser, err, msgFailedReadFile, absTemplatePath)

@@ -7,11 +7,6 @@ import (
 	"github.com/mbtproject/mbt/trie"
 )
 
-// Reducer reduces a given modules set to impacted set from a diff delta
-type Reducer interface {
-	Reduce(modules Modules, deltas []*DiffDelta) (Modules, error)
-}
-
 type stdReducer struct {
 	Log Log
 }
