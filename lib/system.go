@@ -127,6 +127,11 @@ type Discover interface {
 	ModulesInWorkspace() (Modules, error)
 }
 
+// Reducer reduces a given modules set to impacted set from a diff delta
+type Reducer interface {
+	Reduce(modules Modules, deltas []*DiffDelta) (Modules, error)
+}
+
 /** Manifest Interface **/
 
 // Manifest represents a collection modules in the repository.
@@ -162,9 +167,11 @@ type BuildStage = int
 const (
 	// BuildStageBeforeBuild is the stage before executing module build command
 	BuildStageBeforeBuild = iota
+
 	// BuildStageAfterBuild is the stage after executing the module build command
 	BuildStageAfterBuild
-	// BuildStageSkipBuild is when module building is skipped due to lack of maching building command
+
+	// BuildStageSkipBuild is when module building is skipped due to lack of matching building command
 	BuildStageSkipBuild
 )
 
@@ -177,19 +184,19 @@ type BuildStageCallback func(mod *Module, s BuildStage)
 // of this package
 type System interface {
 	// ApplyBranch applies the manifest of specified branch over a template.
-	// Template is retrived from the commit tree of last commit of that branch.
+	// Template is retrieved from the commit tree of last commit of that branch.
 	ApplyBranch(templatePath, branch string, output io.Writer) error
 
 	// ApplyCommit applies the manifest of specified commit over a template.
-	// Template is retrived from the commit tree of the specified commit.
+	// Template is retrieved from the commit tree of the specified commit.
 	ApplyCommit(sha, templatePath string, output io.Writer) error
 
 	// ApplyHead applies the manifest of current branch over a template.
-	// Template is retrived from the commit tree of last commit current branch.
+	// Template is retrieved from the commit tree of last commit current branch.
 	ApplyHead(templatePath string, output io.Writer) error
 
 	// ApplyLocal applies the manifest of local workspace.
-	// Template is retrived from the current workspace.
+	// Template is retrieved from the current workspace.
 	ApplyLocal(templatePath string, output io.Writer) error
 
 	// BuildBranch builds the specifed branch.
