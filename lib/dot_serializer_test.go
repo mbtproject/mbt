@@ -35,6 +35,7 @@ func TestGraph(t *testing.T) {
 	s := m.Modules.SerializeAsDot()
 
 	assert.Equal(t, `digraph mbt {
+  node [shape=box fillcolor=powderblue style=filled fontcolor=black];
   "lib-a"
   "lib-b" -> "lib-a"
   "app-a" -> "lib-b"
@@ -53,6 +54,7 @@ func TestSerializeAsDotOfAnEmptyRepo(t *testing.T) {
 	s := m.Modules.SerializeAsDot()
 
 	assert.Equal(t, `digraph mbt {
+  node [shape=box fillcolor=powderblue style=filled fontcolor=black];
   
 }`, s)
 }

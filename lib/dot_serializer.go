@@ -21,6 +21,7 @@ func (mods Modules) SerializeAsDot() string {
 	}
 
 	return fmt.Sprintf(`digraph mbt {
+  node [shape=box fillcolor=powderblue style=filled fontcolor=black];
   %s
 }`, strings.Join(paths, "\n  "))
 }
