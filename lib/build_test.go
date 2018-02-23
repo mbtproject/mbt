@@ -16,8 +16,7 @@ func noopCb(a *Module, s BuildStage) {}
 func TestBuildExecution(t *testing.T) {
 	clean()
 
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteShellScript("app-a/build.sh", "echo app-a built"))
@@ -38,8 +37,7 @@ func TestBuildExecution(t *testing.T) {
 func TestBuildDirExecution(t *testing.T) {
 	clean()
 
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteShellScript("app-a/build.sh", "echo app-a built"))
@@ -60,8 +58,7 @@ func TestBuildDirExecution(t *testing.T) {
 func TestBuildSkip(t *testing.T) {
 	clean()
 
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	switch runtime.GOOS {
 	case "linux", "darwin":
@@ -98,8 +95,7 @@ func TestBuildSkip(t *testing.T) {
 
 func TestBuildBranch(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteShellScript("app-a/build.sh", "echo built app-a"))
@@ -126,8 +122,7 @@ func TestBuildBranch(t *testing.T) {
 
 func TestBuildDiff(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteShellScript("app-a/build.sh", "echo built app-a"))
@@ -156,8 +151,7 @@ func TestBuildDiff(t *testing.T) {
 
 func TestBuildPr(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteShellScript("app-a/build.sh", "echo built app-a"))
@@ -184,8 +178,7 @@ func TestBuildPr(t *testing.T) {
 
 func TestBuildWorkspace(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteShellScript("app-a/build.sh", "echo built app-a"))
@@ -290,8 +283,7 @@ func TestBuildWorkspaceChangesForManifestFailure(t *testing.T) {
 }
 func TestDirtyWorkingDir(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("app-a/foo", "a"))
@@ -302,7 +294,7 @@ func TestDirtyWorkingDir(t *testing.T) {
 	check(t, repo.WriteContent("app-a/foo", "b"))
 
 	buff := new(bytes.Buffer)
-	err = NewWorld(t, ".tmp/repo").System.BuildCurrentBranch(os.Stdin, buff, buff, func(a *Module, s BuildStage) {})
+	err := NewWorld(t, ".tmp/repo").System.BuildCurrentBranch(os.Stdin, buff, buff, func(a *Module, s BuildStage) {})
 	assert.Error(t, err)
 	assert.Equal(t, "dirty working dir", err.Error())
 	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())
@@ -310,8 +302,7 @@ func TestDirtyWorkingDir(t *testing.T) {
 
 func TestBuildEnvironment(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModuleWithOptions("app-a", &Spec{
 		Name: "app-a",
@@ -340,13 +331,12 @@ func TestBuildEnvironment(t *testing.T) {
 
 func TestBadSha(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
 
-	err = NewWorld(t, ".tmp/repo").System.BuildCommit("a", os.Stdin, os.Stdout, os.Stderr, noopCb)
+	err := NewWorld(t, ".tmp/repo").System.BuildCommit("a", os.Stdin, os.Stdout, os.Stderr, noopCb)
 
 	assert.EqualError(t, err, fmt.Sprintf(msgInvalidSha, "a"))
 	assert.EqualError(t, (err.(*e.E)).InnerError(), "encoding/hex: odd length hex string")
@@ -355,14 +345,13 @@ func TestBadSha(t *testing.T) {
 
 func TestMissingSha(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
 
 	sha := "22221c5e56794a2af5f59f94512df4c669c77a49"
-	err = NewWorld(t, ".tmp/repo").System.BuildCommit(sha, os.Stdin, os.Stdout, os.Stderr, noopCb)
+	err := NewWorld(t, ".tmp/repo").System.BuildCommit(sha, os.Stdin, os.Stdout, os.Stderr, noopCb)
 
 	assert.EqualError(t, err, fmt.Sprintf(msgCommitShaNotFound, sha))
 	assert.EqualError(t, (err.(*e.E)).InnerError(), "object not found - no match for id (22221c5e56794a2af5f59f94512df4c669c77a49)")

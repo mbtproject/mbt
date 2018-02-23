@@ -9,19 +9,16 @@ func benchmarkReduceToDiff(modulesCount, deltaCount int, b *testing.B) {
 	clean()
 	defer clean()
 
-	repo, err := createTestRepository(".tmp/repo")
-	if err != nil {
-		b.Fatalf("%v", err)
-	}
+	repo := NewTestRepoForBench(b, ".tmp/repo")
 
 	for i := 0; i < modulesCount; i++ {
-		err = repo.InitModule(fmt.Sprintf("app-%v", i))
+		err := repo.InitModule(fmt.Sprintf("app-%v", i))
 		if err != nil {
 			b.Fatalf("%v", err)
 		}
 	}
 
-	err = repo.Commit("first")
+	err := repo.Commit("first")
 	if err != nil {
 		b.Fatalf("%v", err)
 	}

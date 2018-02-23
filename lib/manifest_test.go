@@ -1,6 +1,8 @@
 package lib
 
 import (
+	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,9 +11,8 @@ import (
 func TestSingleModDir(t *testing.T) {
 	clean()
 
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
-	err = repo.InitModule("app-a")
+	repo := NewTestRepo(t, ".tmp/repo")
+	err := repo.InitModule("app-a")
 	check(t, err)
 	err = repo.Commit("first")
 	check(t, err)
@@ -25,10 +26,9 @@ func TestSingleModDir(t *testing.T) {
 
 func TestNonModContent(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
-	err = repo.InitModule("app-a")
+	err := repo.InitModule("app-a")
 	check(t, err)
 	err = repo.WriteContent("content/index.html", "hello")
 	check(t, err)
@@ -43,8 +43,7 @@ func TestNonModContent(t *testing.T) {
 
 func TestNestedAppDir(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("a/b/c/app-a"))
 	check(t, repo.Commit("first"))
@@ -58,8 +57,7 @@ func TestNestedAppDir(t *testing.T) {
 
 func TestModsDirInModDir(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.InitModule("app-a/app-b"))
@@ -78,8 +76,7 @@ func TestModsDirInModDir(t *testing.T) {
 func TestEmptyRepo(t *testing.T) {
 	clean()
 
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 
@@ -92,8 +89,7 @@ func TestEmptyRepo(t *testing.T) {
 func TestDiffingTwoBranches(t *testing.T) {
 	clean()
 
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
@@ -122,8 +118,7 @@ func TestDiffingTwoBranches(t *testing.T) {
 func TestDiffingTwoProgressedBranches(t *testing.T) {
 	clean()
 
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
@@ -149,8 +144,7 @@ func TestDiffingTwoProgressedBranches(t *testing.T) {
 
 func TestDiffingWithMultipleChangesToSameMod(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
@@ -169,8 +163,7 @@ func TestDiffingWithMultipleChangesToSameMod(t *testing.T) {
 
 func TestDiffingForDeletes(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("app-a/file1", "hello world"))
@@ -188,8 +181,7 @@ func TestDiffingForDeletes(t *testing.T) {
 
 func TestDiffingForRenames(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("app-a/file1", "hello world"))
@@ -207,8 +199,7 @@ func TestDiffingForRenames(t *testing.T) {
 
 func TestModOnRoot(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModuleWithOptions("", &Spec{Name: "root-app"}))
 	check(t, repo.Commit("first"))
@@ -224,8 +215,7 @@ func TestModOnRoot(t *testing.T) {
 
 func TestManifestByDiff(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.InitModule("app-b"))
@@ -249,8 +239,7 @@ func TestManifestByDiff(t *testing.T) {
 }
 
 func TestManifestByHead(t *testing.T) {
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
@@ -264,9 +253,7 @@ func TestManifestByHead(t *testing.T) {
 
 func TestManifestByLocalDirForUpdates(t *testing.T) {
 	clean()
-
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("app-a/test.txt", "test contents"))
@@ -294,8 +281,7 @@ func TestManifestByLocalDirForUpdates(t *testing.T) {
 
 func TestManifestByLocalDirForAddition(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("app-a/test.txt", "test contents"))
@@ -312,8 +298,7 @@ func TestManifestByLocalDirForAddition(t *testing.T) {
 
 func TestManifestByLocalDirForConversion(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.WriteContent("app-a/test.txt", "test contents"))
 	check(t, repo.Commit("first"))
@@ -328,8 +313,7 @@ func TestManifestByLocalDirForConversion(t *testing.T) {
 
 func TestManifestByLocalDirForNestedModules(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.WriteContent("README.md", "test contents"))
 	check(t, repo.Commit("first"))
@@ -345,8 +329,7 @@ func TestManifestByLocalDirForNestedModules(t *testing.T) {
 
 func TestManifestByLocalDirForAnEmptyRepo(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 
@@ -362,8 +345,7 @@ func TestVersionOfLocalDirManifest(t *testing.T) {
 	// All modules should have the fixed version string "local" as
 	// for manifest derived from local directory.
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("app-a/test.txt", "test contents"))
@@ -388,8 +370,7 @@ func TestVersionOfLocalDirManifest(t *testing.T) {
 
 func TestLocalDependencyChange(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.InitModuleWithOptions("app-b", &Spec{
@@ -422,8 +403,7 @@ func TestLocalDependencyChange(t *testing.T) {
 
 func TestDependencyChange(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.InitModuleWithOptions("app-b", &Spec{
@@ -447,8 +427,7 @@ func TestDependencyChange(t *testing.T) {
 
 func TestIndirectDependencyChange(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.InitModuleWithOptions("app-b", &Spec{
@@ -477,8 +456,7 @@ func TestIndirectDependencyChange(t *testing.T) {
 
 func TestDiffOfDependentChange(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.InitModuleWithOptions("app-b", &Spec{
@@ -501,8 +479,7 @@ func TestDiffOfDependentChange(t *testing.T) {
 
 func TestVersionOfIndependentModules(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.InitModule("app-b"))
@@ -525,8 +502,7 @@ func TestVersionOfIndependentModules(t *testing.T) {
 
 func TestVersionOfDependentModules(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.InitModuleWithOptions("app-b", &Spec{
@@ -552,8 +528,7 @@ func TestVersionOfDependentModules(t *testing.T) {
 
 func TestVersionOfIndirectlyDependentModules(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.InitModuleWithOptions("app-b", &Spec{
@@ -585,8 +560,7 @@ func TestVersionOfIndirectlyDependentModules(t *testing.T) {
 
 func TestChangeToFileDependency(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.WriteContent("shared/file", "a"))
 	check(t, repo.InitModule("app-a"))
@@ -616,8 +590,7 @@ func TestFileDependencyInADependentModule(t *testing.T) {
 		behavior nevertheless.
 	*/
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("app-a/file", "a"))
@@ -645,8 +618,7 @@ func TestFileDependencyInADependentModule(t *testing.T) {
 
 func TestDependentOfAModuleWithFileDependency(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.WriteContent("shared/file", "a"))
 	check(t, repo.InitModuleWithOptions("app-a", &Spec{
@@ -678,8 +650,7 @@ func TestDependentOfAModuleWithFileDependency(t *testing.T) {
 
 func TestManifestBySha(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
@@ -709,8 +680,7 @@ func TestManifestBySha(t *testing.T) {
 
 func TestOrderOfModules(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModuleWithOptions("app-a", &Spec{
 		Name:         "app-a",
@@ -736,8 +706,7 @@ func TestOrderOfModules(t *testing.T) {
 
 func TestAppsWithSamePrefix(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-aa"))
 	check(t, repo.Commit("first"))
@@ -759,8 +728,7 @@ func TestAppsWithSamePrefix(t *testing.T) {
 
 func TestDiffingForCaseSensitivityOfModulePath(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("App-A"))
 	check(t, repo.Commit("first"))
@@ -779,8 +747,7 @@ func TestDiffingForCaseSensitivityOfModulePath(t *testing.T) {
 
 func TestDiffingForCaseSensitivityOfFileDependency(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModuleWithOptions("App-A", &Spec{
 		Name:             "App-A",
@@ -809,4 +776,167 @@ func TestDiffingForCaseSensitivityOfFileDependency(t *testing.T) {
 
 	assert.Len(t, m.Modules, 1)
 	assert.Equal(t, "App-A", m.Modules[0].Name())
+}
+
+func TestByDiffForDiscoverFailure(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.Commit("first"))
+
+	w := NewWorld(t, ".tmp/repo")
+	w.Discover.Interceptor.Config("ModulesInCommit").Return(Modules(nil), errors.New("doh"))
+
+	_, err := w.System.ManifestByDiff(repo.LastCommit.String(), repo.LastCommit.String())
+	assert.EqualError(t, err, "doh")
+}
+
+func TestByDiffForMergeBaseFailure(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.Commit("first"))
+
+	w := NewWorld(t, ".tmp/repo")
+	w.Repo.Interceptor.Config("DiffMergeBase").Return([]*DiffDelta(nil), errors.New("doh"))
+
+	_, err := w.System.ManifestByDiff(repo.LastCommit.String(), repo.LastCommit.String())
+	assert.EqualError(t, err, "doh")
+}
+
+func TestByDiffForReduceFailure(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.Commit("first"))
+
+	w := NewWorld(t, ".tmp/repo")
+	w.Reducer.Interceptor.Config("Reduce").Return(Modules(nil), errors.New("doh"))
+
+	_, err := w.System.ManifestByDiff(repo.LastCommit.String(), repo.LastCommit.String())
+	assert.EqualError(t, err, "doh")
+}
+
+func TestByPrForInvalidSrcBranch(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.Commit("first"))
+
+	w := NewWorld(t, ".tmp/repo")
+	_, err := w.System.ManifestByPr("master", "feature")
+	assert.EqualError(t, err, fmt.Sprintf(msgFailedBranchLookup, "feature"))
+}
+
+func TestByPrForInvalidDstBranch(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.Commit("first"))
+
+	w := NewWorld(t, ".tmp/repo")
+	_, err := w.System.ManifestByPr("feature", "master")
+	assert.EqualError(t, err, fmt.Sprintf(msgFailedBranchLookup, "feature"))
+}
+
+func TestByCommitForDiscoverFailure(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.Commit("first"))
+
+	w := NewWorld(t, ".tmp/repo")
+	w.Discover.Interceptor.Config("ModulesInCommit").Return(Commit(nil), errors.New("doh"))
+
+	_, err := w.System.ManifestByCommit(repo.LastCommit.String())
+	assert.EqualError(t, err, "doh")
+}
+
+func TestByBranchForInvalidBranch(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.Commit("first"))
+
+	w := NewWorld(t, ".tmp/repo")
+	_, err := w.System.ManifestByBranch("feature")
+	assert.EqualError(t, err, fmt.Sprintf(msgFailedBranchLookup, "feature"))
+}
+
+func TestByCurrentBranchForResolutionFailure(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.Commit("first"))
+
+	w := NewWorld(t, ".tmp/repo")
+	w.Repo.Interceptor.Config("CurrentBranch").Return("", errors.New("doh"))
+
+	_, err := w.System.ManifestByCurrentBranch()
+	assert.EqualError(t, err, "doh")
+}
+
+func TestByWorkspaceForDiscoverFailure(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.Commit("first"))
+
+	w := NewWorld(t, ".tmp/repo")
+	w.Discover.Interceptor.Config("ModulesInWorkspace").Return((Modules)(nil), errors.New("doh"))
+
+	_, err := w.System.ManifestByWorkspace()
+	assert.EqualError(t, err, "doh")
+}
+
+func TestByWorkspaceChangesForDiscoverFailure(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.Commit("first"))
+
+	w := NewWorld(t, ".tmp/repo")
+	w.Discover.Interceptor.Config("ModulesInWorkspace").Return((Modules)(nil), errors.New("doh"))
+
+	_, err := w.System.ManifestByWorkspaceChanges()
+	assert.EqualError(t, err, "doh")
+}
+
+func TestByWorkspaceChangesForDiffFailure(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.Commit("first"))
+
+	w := NewWorld(t, ".tmp/repo")
+	w.Repo.Interceptor.Config("DiffWorkspace").Return([]*DiffDelta(nil), errors.New("doh"))
+
+	_, err := w.System.ManifestByWorkspaceChanges()
+	assert.EqualError(t, err, "doh")
+}
+
+func TestByWorkspaceChangesForReduceFailure(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.Commit("first"))
+
+	w := NewWorld(t, ".tmp/repo")
+	w.Reducer.Interceptor.Config("Reduce").Return((Modules)(nil), errors.New("doh"))
+
+	_, err := w.System.ManifestByWorkspaceChanges()
+	assert.EqualError(t, err, "doh")
+}
+
+func TestByXxxForEmptyRepoEvaluationFailure(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.Commit("first"))
+
+	w := NewWorld(t, ".tmp/repo")
+	w.Repo.Interceptor.Config("IsEmpty").Return(false, errors.New("doh"))
+
+	_, err := w.System.ManifestByCurrentBranch()
+	assert.EqualError(t, err, "doh")
 }

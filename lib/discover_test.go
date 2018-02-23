@@ -42,8 +42,7 @@ func TestVersionCalculation(t *testing.T) {
 
 func TestMalformedSpec(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("app-a/.mbt.yml", "blah:blah\nblah::"))
@@ -62,8 +61,7 @@ func TestMalformedSpec(t *testing.T) {
 
 func TestMissingBlobs(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
@@ -84,16 +82,15 @@ func TestMissingBlobs(t *testing.T) {
 
 func TestMissingTreeObject(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
-	check(t, os.RemoveAll(".tmp/repo/.git/objects/f6"))
 
 	world := NewWorld(t, ".tmp/repo")
 	lc, err := world.Repo.GetCommit(repo.LastCommit.String())
 	check(t, err)
+	check(t, os.RemoveAll(".tmp/repo/.git/objects/f6"))
 
 	metadata, err := world.Discover.ModulesInCommit(lc)
 
@@ -144,8 +141,7 @@ func TestModuleNameConflicts(t *testing.T) {
 
 func TestDirectoryEntriesCalledMbtYml(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent(".mbt.yml/foo", "blah"))

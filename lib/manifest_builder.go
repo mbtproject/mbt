@@ -1,9 +1,5 @@
 package lib
 
-import (
-	"github.com/mbtproject/mbt/e"
-)
-
 // NewManifestBuilder creates a new ManifestBuilder
 func NewManifestBuilder(repo Repo, reducer Reducer, discover Discover, log Log) ManifestBuilder {
 	return &stdManifestBuilder{Repo: repo, Discover: discover, Log: log, Reducer: reducer}
@@ -22,22 +18,22 @@ func (b *stdManifestBuilder) ByDiff(from, to Commit) (*Manifest, error) {
 	return b.buildManifest(func() (*Manifest, error) {
 		mods, err := b.Discover.ModulesInCommit(to)
 		if err != nil {
-			return nil, e.Wrap(ErrClassInternal, err)
+			return nil, err
 		}
 
 		deltas, err := b.Repo.DiffMergeBase(from, to)
 		if err != nil {
-			return nil, e.Wrap(ErrClassInternal, err)
+			return nil, err
 		}
 
 		mods, err = b.Reducer.Reduce(mods, deltas)
 		if err != nil {
-			return nil, e.Wrap(ErrClassInternal, err)
+			return nil, err
 		}
 
 		mods, err = mods.expandRequiredByDependencies()
 		if err != nil {
-			return nil, e.Wrap(ErrClassInternal, err)
+			return nil, err
 		}
 
 		return &Manifest{Dir: b.Repo.Path(), Modules: mods, Sha: to.ID()}, nil
@@ -48,12 +44,12 @@ func (b *stdManifestBuilder) ByPr(src, dst string) (*Manifest, error) {
 	return b.buildManifest(func() (*Manifest, error) {
 		from, err := b.Repo.BranchCommit(dst)
 		if err != nil {
-			return nil, e.Wrap(ErrClassInternal, err)
+			return nil, err
 		}
 
 		to, err := b.Repo.BranchCommit(src)
 		if err != nil {
-			return nil, e.Wrap(ErrClassInternal, err)
+			return nil, err
 		}
 
 		return b.ByDiff(from, to)

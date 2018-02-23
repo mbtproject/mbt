@@ -8,8 +8,7 @@ import (
 
 func TestGraph(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	// Create indirect dependency graph
 	check(t, repo.InitModule("lib-a"))

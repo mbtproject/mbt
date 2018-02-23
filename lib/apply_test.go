@@ -19,8 +19,7 @@ type TC struct {
 
 func TestApplyBranch(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("template.tmpl", `
@@ -42,8 +41,7 @@ func TestApplyBranch(t *testing.T) {
 
 func TestApplyCommit(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("template.tmpl", `
@@ -64,8 +62,7 @@ func TestApplyCommit(t *testing.T) {
 
 func TestApplyHead(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("template.tmpl", `
@@ -87,8 +84,7 @@ func TestApplyHead(t *testing.T) {
 
 func TestApplyLocal(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("template.tmpl", `
@@ -109,8 +105,7 @@ func TestApplyLocal(t *testing.T) {
 
 func TestIncorrectTemplatePath(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("template.tmpl", `
@@ -121,7 +116,7 @@ func TestIncorrectTemplatePath(t *testing.T) {
 	check(t, repo.Commit("first"))
 
 	output := new(bytes.Buffer)
-	err = NewWorld(t, ".tmp/repo").System.ApplyCommit(repo.LastCommit.String(), "foo/template.tmpl", output)
+	err := NewWorld(t, ".tmp/repo").System.ApplyCommit(repo.LastCommit.String(), "foo/template.tmpl", output)
 
 	assert.EqualError(t, err, fmt.Sprintf(msgTemplateNotFound, "foo/template.tmpl", repo.LastCommit.String()))
 	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())
@@ -130,8 +125,7 @@ func TestIncorrectTemplatePath(t *testing.T) {
 
 func TestBadTemplate(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("template.tmpl", `
@@ -140,7 +134,7 @@ func TestBadTemplate(t *testing.T) {
 	check(t, repo.Commit("first"))
 
 	output := new(bytes.Buffer)
-	err = NewWorld(t, ".tmp/repo").System.ApplyCommit(repo.LastCommit.String(), "template.tmpl", output)
+	err := NewWorld(t, ".tmp/repo").System.ApplyCommit(repo.LastCommit.String(), "template.tmpl", output)
 
 	assert.EqualError(t, err, msgFailedTemplateParse)
 	assert.EqualError(t, (err.(*e.E)).InnerError(), "template: template:2: unexpected EOF")
@@ -150,8 +144,7 @@ func TestBadTemplate(t *testing.T) {
 
 func TestEnvironmentVariables(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("template.tmpl", "{{.Env.EXTERNAL_VALUE}}"))
@@ -167,8 +160,7 @@ func TestEnvironmentVariables(t *testing.T) {
 
 func TestCustomTemplateFuncs(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModuleWithOptions("app-a", &Spec{
 		Name: "app-a",
@@ -213,7 +205,7 @@ func TestCustomTemplateFuncs(t *testing.T) {
 		check(t, repo.Commit("Update"))
 
 		output := new(bytes.Buffer)
-		err = NewWorld(t, ".tmp/repo").System.ApplyCommit(repo.LastCommit.String(), "template.tmpl", output)
+		err := NewWorld(t, ".tmp/repo").System.ApplyCommit(repo.LastCommit.String(), "template.tmpl", output)
 		check(t, err)
 
 		assert.Equal(t, c.Expected, output.String(), "Failed test case %s", c.Template)
@@ -222,8 +214,7 @@ func TestCustomTemplateFuncs(t *testing.T) {
 
 func TestCustomTemplateFuncsForModulesWithoutProperties(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModuleWithOptions("app-a", &Spec{Name: "app-a"}))
 
@@ -257,7 +248,7 @@ func TestCustomTemplateFuncsForModulesWithoutProperties(t *testing.T) {
 		check(t, repo.Commit("Update"))
 
 		output := new(bytes.Buffer)
-		err = NewWorld(t, ".tmp/repo").System.ApplyCommit(repo.LastCommit.String(), "template.tmpl", output)
+		err := NewWorld(t, ".tmp/repo").System.ApplyCommit(repo.LastCommit.String(), "template.tmpl", output)
 		check(t, err)
 
 		assert.Equal(t, c.Expected, output.String(), "Failed test case %s", c.Template)

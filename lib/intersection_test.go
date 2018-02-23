@@ -8,8 +8,7 @@ import (
 
 func TestIntersectionWithElements(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.InitModule("app-b"))
@@ -45,8 +44,7 @@ func TestIntersectionWithElements(t *testing.T) {
 
 func TestIntersectionWithoutElements(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.InitModule("app-b"))
@@ -79,8 +77,7 @@ func TestIntersectionWithoutElements(t *testing.T) {
 
 func TestIntersectionByBranchWithElements(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.InitModule("app-b"))
@@ -112,8 +109,7 @@ func TestIntersectionByBranchWithElements(t *testing.T) {
 
 func TestIntersectionWithDependencies(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModuleWithOptions("app-a", &Spec{Name: "app-a", Dependencies: []string{"app-c"}}))
 	check(t, repo.InitModule("app-b"))
@@ -145,8 +141,7 @@ func TestIntersectionWithDependencies(t *testing.T) {
 
 func TestIntersctionOfTwoChangesWithSharedDependency(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModuleWithOptions("app-a", &Spec{Name: "app-a", Dependencies: []string{"app-c"}}))
 	check(t, repo.InitModuleWithOptions("app-b", &Spec{Name: "app-b", Dependencies: []string{"app-c"}}))

@@ -10,13 +10,12 @@ import (
 
 func TestInvalidBranch(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
 
-	_, err = NewWorld(t, ".tmp/repo").Repo.BranchCommit("foo")
+	_, err := NewWorld(t, ".tmp/repo").Repo.BranchCommit("foo")
 
 	assert.EqualError(t, err, fmt.Sprintf(msgFailedBranchLookup, "foo"))
 	assert.EqualError(t, (err.(*e.E)).InnerError(), "no reference found for shorthand 'foo'")
@@ -26,8 +25,7 @@ func TestInvalidBranch(t *testing.T) {
 func TestBranchName(t *testing.T) {
 	clean()
 
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
@@ -42,8 +40,7 @@ func TestBranchName(t *testing.T) {
 func TestDiffByIndex(t *testing.T) {
 	clean()
 
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("app-a/test.txt", "test contents"))
@@ -59,8 +56,7 @@ func TestDiffByIndex(t *testing.T) {
 
 func TestDirtyWorkspaceForUntracked(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("app-a/foo", "a"))
@@ -73,8 +69,7 @@ func TestDirtyWorkspaceForUntracked(t *testing.T) {
 
 func TestDirtyWorkspaceForUpdates(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("app-a/foo", "a"))
@@ -90,8 +85,7 @@ func TestDirtyWorkspaceForUpdates(t *testing.T) {
 
 func TestDirtyWorkspaceForRenames(t *testing.T) {
 	clean()
-	repo, err := createTestRepository(".tmp/repo")
-	check(t, err)
+	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("app-a/foo", "a"))

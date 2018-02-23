@@ -188,6 +188,14 @@ func createTestRepository(dir string) (*TestRepository, error) {
 	return &TestRepository{dir, repo, nil, "master"}, nil
 }
 
+func NewTestRepoForBench(b *testing.B, dir string) *TestRepository {
+	repo, err := createTestRepository(dir)
+	if err != nil {
+		b.Fatalf("%v", err)
+	}
+	return repo
+}
+
 func NewTestRepo(t *testing.T, dir string) *TestRepository {
 	repo, err := createTestRepository(dir)
 	check(t, err)
