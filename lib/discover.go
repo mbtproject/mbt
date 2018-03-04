@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/buddyspike/graph"
 	yaml "github.com/go-yaml/yaml"
 	"github.com/mbtproject/mbt/e"
+	"github.com/mbtproject/mbt/graph"
 )
 
 // moduleMetadata represents the information about modules
