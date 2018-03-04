@@ -4,7 +4,7 @@ import (
 	"errors"
 	"os"
 
-	"gopkg.in/sirupsen/logrus.v1"
+	"github.com/sirupsen/logrus"
 
 	"github.com/mbtproject/mbt/lib"
 	"github.com/spf13/cobra"
