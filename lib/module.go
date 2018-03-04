@@ -3,8 +3,8 @@ package lib
 import (
 	"container/list"
 
-	"github.com/buddyspike/graph"
 	"github.com/mbtproject/mbt/e"
+	"github.com/mbtproject/mbt/graph"
 )
 
 // Name returns the name of the module.
