@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
+	yaml "github.com/go-yaml/yaml"
 	git "github.com/libgit2/git2go"
 	"github.com/mbtproject/mbt/e"
 	"github.com/mbtproject/mbt/intercept"
-	yaml "gopkg.in/yaml.v2"
 )
 
 type TestRepository struct {

@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/buddyspike/graph"
+	yaml "github.com/go-yaml/yaml"
 	"github.com/mbtproject/mbt/e"
-	yaml "gopkg.in/yaml.v2"
 )
 
 // moduleMetadata represents the information about modules
