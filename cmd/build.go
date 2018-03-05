@@ -63,11 +63,11 @@ var buildPr = &cobra.Command{
 	Short: "Build the modules changed in dst branch relatively to src branch",
 	Long: `Build the modules changed in dst branch relatively to src branch
 
-This command works out the merge base for src and dst branches and 
-builds all modules impacted by the diff between merge base and 
-the tip of dst branch.	
+This command works out the merge base for src and dst branches and
+builds all modules impacted by the diff between merge base and
+the tip of dst branch.
 
-In addition to the modules impacted by changes, this command also 
+In addition to the modules impacted by changes, this command also
 builds their dependents.
 
 	`,
@@ -89,11 +89,11 @@ var buildDiff = &cobra.Command{
 	Short: "Build the modules changed between from and to commits",
 	Long: `Build the modules chanaged between from and to commits
 
-Works out the merge base for from and to commits and 
-builds all modules which have been changed between merge base and 
+Works out the merge base for from and to commits and
+builds all modules which have been changed between merge base and
 to commit.
 
-In addition to the modules impacted by changes, this command also 
+In addition to the modules impacted by changes, this command also
 builds their dependents.
 
 Commit SHA must be the complete 40 character SHA1 string.
@@ -133,7 +133,7 @@ var buildLocal = &cobra.Command{
 	Long: `Build all modules in uncommitted changes in current workspace
 
 Local builds always uses a fixed version identifier - 'local'.
-Specify the --all flag to build all modules in current workspace. 
+Specify the --all flag to build all modules in current workspace.
 	`,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if all {
@@ -156,9 +156,9 @@ func buildStageCB(a *lib.Module, s lib.BuildStage) {
 var buildCommand = &cobra.Command{
 	Use:   "build",
 	Short: "Main command for building the repository",
-	Long: `Main command for building the repository 
+	Long: `Main command for building the repository
 
-Execute the build according to the specified sub command. 
+Execute the build according to the specified sub command.
 See sub command help for more information.
 `,
 }

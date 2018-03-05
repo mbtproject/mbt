@@ -46,27 +46,26 @@ var describeCmd = &cobra.Command{
 	Short: "Describe the modules in the repo",
 	Long: `Describe the modules in the repo
 
-Displays all modules discovered in repo according to the sub command 
-used. This can be used to understand the impact of executing the build 
+Displays all modules discovered in repo according to the sub command
+used. This can be used to understand the impact of executing the build
 command.
 
 You can control the output of this command using --json and --graph flags.
 
 --json flag is self explanatory.
---graph flag outputs the dependency graph in dot format. This can be piped 
-into graphviz tools such as dot to produce a graphical representation of 
+--graph flag outputs the dependency graph in dot format. This can be piped
+into graphviz tools such as dot to produce a graphical representation of
 the dependency graph of the repo.
 
 e.g.
 mbt describe head --graph | dot -Tpng > /tmp/graph.png && open /tmp/graph.png
-
-	`,
+`,
 }
 
 var describeBranchCmd = &cobra.Command{
 	Use:   "branch <branch>",
 	Short: "Describe all modules in the tip of the given branch",
-	Long: `Describe all modules in the tip of the given branch 
+	Long: `Describe all modules in the tip of the given branch
 
 If branch name is not specified assumes 'master'.
 `,
@@ -104,7 +103,7 @@ var describeLocalCmd = &cobra.Command{
 	Use:   "local",
 	Short: "Describe all modules in current workspace",
 	Long: `Describe all modules in current workspace
-	
+
 This includes the modules in uncommitted changes.
 `,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
@@ -132,9 +131,9 @@ var describePrCmd = &cobra.Command{
 	Short: "Describe the modules changed between src and dst branches",
 	Long: `Describe the modules changed between src and dst branches
 
-Works out the merge base for src and dst branches and 
-displays all modules which have been changed between merge base and 
-the tip of dst branch.	
+Works out the merge base for src and dst branches and
+displays all modules which have been changed between merge base and
+the tip of dst branch.
 `,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if src == "" {
@@ -181,8 +180,7 @@ var describeIntersectionCmd = &cobra.Command{
 	Use:   "intersection --kind <branch|commit> --first <first> --second <second>",
 	Short: "Describe the common modules changed in two commit trees",
 	Long: `Describe the common modules changed in two commit trees
-	
-	`,
+`,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if kind == "" {
 			return errors.New("requires the kind argument")
@@ -221,9 +219,9 @@ var describeDiffCmd = &cobra.Command{
 	Short: "Describe the modules in the diff between from and to commits",
 	Long: `Describe the modules in the diff between from and to commits
 
-Works out the merge base for from and to commits and 
-displays all modules which have been changed between merge base and 
-the to commit.	
+Works out the merge base for from and to commits and
+displays all modules which have been changed between merge base and
+the to commit.
 `,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if from == "" {

@@ -9,7 +9,7 @@ build_libgit2:
 	./scripts/build_libgit2.sh
 
 .PHONY: build
-build: clean 
+build: clean
 	./scripts/build.sh
 
 .PHONY: clean

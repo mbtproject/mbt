@@ -1,11 +1,11 @@
 #!/bin/sh
 
-# 
+#
 # Use this utility to import libgit2 and git2go sources into
 # vendor directory.
 #
 
-set -e 
+set -e
 
 DIR="$(pwd)"
 GIT2GO_PATH=vendor/github.com/libgit2/git2go

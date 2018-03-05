@@ -25,14 +25,14 @@ func init() {
 var applyCmd = &cobra.Command{
 	Use:   "apply",
 	Short: "Main command for applying the repository manifest over a template",
-	Long: `Main command for applying the repository manifest over a template 
+	Long: `Main command for applying the repository manifest over a template
 
-Manifest contains information about all modules in the repository. 
+Manifest contains information about all modules in the repository.
 It is a data structure created by inspecting .mbt.yml files.
 It contains the information about the modules stored within the repository therefore,
 can be used for generating artifacts such as deployment scripts.
 
-Apply command transforms the specified go template with the manifest. 
+Apply command transforms the specified go template with the manifest.
 
 Template must be committed to the repository.
 	`,
@@ -41,7 +41,7 @@ Template must be committed to the repository.
 var applyBranchCmd = &cobra.Command{
 	Use:   "branch <branch>",
 	Short: "Apply the manifest in the tip of the specified branch",
-	Long: `Apply the manifest in the tip of the specified branch 
+	Long: `Apply the manifest in the tip of the specified branch
 
 	`,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
