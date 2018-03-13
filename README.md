@@ -7,11 +7,17 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/mbtproject/mbt)](https://goreportcard.com/report/github.com/mbtproject/mbt)
 [![Coverage Status](https://coveralls.io/repos/github/mbtproject/mbt/badge.svg)](https://coveralls.io/github/mbtproject/mbt)
 
-mbt is a build tool for monorepo. It can do differential builds based on git commits.
-mbt is a cli tool that can run anywhere from dev machines to CI servers. 
+mbt is a built tool for monorepo.
+
+## Features
+
+- Differential Builds
+- Content Based Versioning
+- Build Dependency Management
+- Template Driven Deployments
 
 ## Status
-mbt is production ready. We try our best to maintain semver. 
+mbt is production ready. We try our best to maintain semver.
 Visit [Github issues](https://github.com/mbtproject/mbt/issues) for support.
 
 ## Install
@@ -37,21 +43,21 @@ chmod +x /usr/local/bin/mbt
 
 ## About
 
-In the context of `mbt`, term 'Module' is used to refer to a part of source 
+In the context of `mbt`, term 'Module' is used to refer to a part of source
 tree that can be developed, built and released independently.
-Modules can be built with different programming languages and their 
-native build tools. 
+Modules can be built with different programming languages and their
+native build tools.
 
-For example, you could have Java modules built with Maven/Gradle, 
-.NET modules built with MSBUILD and NodeJS modules built with npm scripts - all 
-in one repository. 
+For example, you could have Java modules built with Maven/Gradle,
+.NET modules built with MSBUILD and NodeJS modules built with npm scripts - all
+in one repository.
 The idea is, module developers should be able to use the build tools native to their stack.
 
-Each module in a repository is stored in its own directory with a spec file 
+Each module in a repository is stored in its own directory with a spec file
 called `.mbt.yml`. Presence of the spec file indicates `mbt` that the directory
 contains module and how to build it.
 
-## Spec File 
+## Spec File
 `.mbt.yml` file must be in yaml and has the following structure.
 
 ```yaml
@@ -69,12 +75,12 @@ build:              # list of build commands to execute in each platform
 ```
 
 In the preceding spec file, we are basically telling `mbt` that, `module-a`
-can be built by running `npm run build` on OSX, Linux and Windows. With 
-this committed to the repository, we can start using `mbt` cli to build in 
+can be built by running `npm run build` on OSX, Linux and Windows. With
+this committed to the repository, we can start using `mbt` cli to build in
 several ways as shown below.
 
 ```
-# Build the current master branch 
+# Build the current master branch
 mbt build branch
 
 # Build the current branch
@@ -102,29 +108,29 @@ mbt build diff --from <commit sha> --to <commit sha>
 
 ## Dependencies
 ### Module Dependencies
-One advantage of a single repo is that you can share code between multiple modules 
-more effectively. Building this type of dependencies requires some thought. mbt provides 
+One advantage of a single repo is that you can share code between multiple modules
+more effectively. Building this type of dependencies requires some thought. mbt provides
 an easy way to define dependencies between modules and automatically builds the impacted modules
-in topological order. 
+in topological order.
 
 Dependencies are defined in `.mbt.yml` file under 'dependencies' property.
 It accepts an array of module names.
-For example, `module-a` could define a dependency on `module-b` as shown below, 
+For example, `module-a` could define a dependency on `module-b` as shown below,
 so that any time `module-b` is changed, build command for `module-a` is also executed.
 
 ```yaml
-name: module-a 
+name: module-a
 dependencies: [module-b]
 ```
 
 One example of where this could be useful is shared libraries. A shared library
-could be developed independently of its consumers. However, all consumers 
-gets automatically built whenever the shared library is modified. 
+could be developed independently of its consumers. However, all consumers
+gets automatically built whenever the shared library is modified.
 
 ### File Dependencies
-File dependencies are useful in situations where a module should be built 
-when a file(s) stored outside the module directory is modified. As an example, 
-a build script that is used to build multiple modules could define a file 
+File dependencies are useful in situations where a module should be built
+when a file(s) stored outside the module directory is modified. As an example,
+a build script that is used to build multiple modules could define a file
 dependency in order to trigger the build whenever there's a change in build.
 
 File dependencies should specify the path of the file relative to the root
@@ -137,8 +143,8 @@ fileDependencies:
 ```
 
 ## Build Environment
-When `mbt` executes the build command specified for a module, it sets up 
-several important attributes as environment variables. These variables can 
+When `mbt` executes the build command specified for a module, it sets up
+several important attributes as environment variables. These variables can
 be used by the actual build tools in the process.
 
 |Variable Name |Description |
@@ -147,35 +153,35 @@ be used by the actual build tools in the process.
 |MBT_MODULE_VERSION |SHA1 hash calculated based on the content of the module directory and the content of any of its dependencies (recursively) |
 |MBT_BUILD_COMMIT |Git commit SHA of the commit being built |
 
-In addition to the variables listed above, module properties (arbitrary list of 
+In addition to the variables listed above, module properties (arbitrary list of
 key/value pairs described below) is also populated in the form of `MBT_MODULE_PROPERTY_XXX`
 where `XXX` denotes the key.
 
-One useful scenario of these variables would be, a build command that produces a 
-docker image. In that case, we could tag it with `MBT_MODULE_VERSION` so that the 
-image produced as of a particular Git commit SHA can be identified accurately. 
-(We will also discuss how this information can be used to automatically produce 
+One useful scenario of these variables would be, a build command that produces a
+docker image. In that case, we could tag it with `MBT_MODULE_VERSION` so that the
+image produced as of a particular Git commit SHA can be identified accurately.
+(We will also discuss how this information can be used to automatically produce
 deployment artifacts later in this document)
 
 ## Describing the Change
-When working in a dense, modular codebase it is sometimes important to assess 
-the impact of your changes to the overall system. Each `mbt build` command 
-variation has a `mbt describe` counterpart to see what modules are going to 
-to be built. For example, to list modules affected between two git branches, we 
+When working in a dense, modular codebase it is sometimes important to assess
+the impact of your changes to the overall system. Each `mbt build` command
+variation has a `mbt describe` counterpart to see what modules are going to
+to be built. For example, to list modules affected between two git branches, we
 could run:
 
 ```
 mbt describe pr --src <source-branch-name> --dst <destination-branch-name>
-``` 
+```
 
-Furthermore, you can specify `--json` flag to get the output of `describe` 
-formatted in `json` so that it can be easily parsed and used by tools in the 
+Furthermore, you can specify `--json` flag to get the output of `describe`
+formatted in `json` so that it can be easily parsed and used by tools in the
 rest of your CD pipeline.
 
 ## Going Beyond the Build
 `mbt` produces a data structure based on the information presented in `.mbt.yml` files.
-That is what basically drives the build behind scenes. Since it contains 
-information about all modules in a repository, it could also be useful for producing 
+That is what basically drives the build behind scenes. Since it contains
+information about all modules in a repository, it could also be useful for producing
 other assets such as deployment scripts. This can be achieved with `mbt apply` command.
 It gives us the ability to apply module information discovered by `mbt` to a go template
 stored within the repository.
@@ -189,7 +195,7 @@ as shown below.
 {{ end }}
 ```
 
-With this template committed into repo, we could run `mbt apply` in several 
+With this template committed into repo, we could run `mbt apply` in several
 useful ways to produce the list of module names in the repository.
 
 ```
@@ -206,30 +212,30 @@ mbt apply commit <git-commit-sha> --to <path to the template>
 mbt apply local --to <path to the template>
 ```
 
-Output of above commands written to `stdout` by default but can be directed to a 
+Output of above commands written to `stdout` by default but can be directed to a
 file using `--out` argument.
 
-It's hard to imagine useful template transformation scenarios with just the basic 
-information about modules. To make it little bit more flexible, we add a couple 
-user-defined properties the data structure used in template transformation. 
-First one of them is called, `.Env`. This is a map of key/value pairs containing 
+It's hard to imagine useful template transformation scenarios with just the basic
+information about modules. To make it little bit more flexible, we add a couple
+user-defined properties the data structure used in template transformation.
+First one of them is called, `.Env`. This is a map of key/value pairs containing
 arbitrary environment variables provisioned for `mbt` command.
 
-For example, running mbt command with an environment variable as shown below would 
+For example, running mbt command with an environment variable as shown below would
 make the key `TARGET` available with value `PRODUCTION` in  `.Env` property.
 
 ```
 TARGET=PRODUCTION mbt apply branch
 ```
 
-Second property is available in each module and can be specified in `.mbt.yml` 
-file. 
+Second property is available in each module and can be specified in `.mbt.yml`
+file.
 
 ```
 name: module-a
 properties:
   a: foo
-  b: bar 
+  b: bar
 ```
 
 `module-a` shown in above `.mbt.yml` snippet would make properties `a` and `b`
@@ -242,15 +248,15 @@ available to templates via `.Properties` property as illustrated below.
 ```
 
 More realistic example of this capability is demonstrated in [this example repo](
-  https://github.com/mbtproject/demo). It generates docker images for two web 
-applications hosted in nginx, pushes them to specified docker registry and 
+  https://github.com/mbtproject/demo). It generates docker images for two web
+applications hosted in nginx, pushes them to specified docker registry and
 generates a Kubernetes deployment manifest using `mbt apply` command.
 
 ### Template Helpers
 Following helper functions are available when writing templates.
 
 |Helper |Description
-|---|--- 
+|---|---
 |`module <name>` |Find the specified module from modules set discovered in the repo.
 |`property <module> <name>` |Find the specified property in the given module. Standard dot notation can be used to access nested properties (e.g. `a.b.c`).
 |`propertyOr <module> <name> <default>` |Find specified property in the given module or return the designated default value.
@@ -272,7 +278,7 @@ when module "app-a" has the value "a" in it's tags property.
 ## Credits
 `mbt` is powered by these awesome libraries
 - [git2go](https://github.com/libgit2/git2go)
-- [libgit2](https://github.com/libgit2/libgit2) 
+- [libgit2](https://github.com/libgit2/libgit2)
 - [yaml](https://github.com/go-yaml/yaml)
 - [cobra](https://github.com/spf13/cobra)
 - [logrus](https://github.com/sirupsen/logrus)

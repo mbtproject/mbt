@@ -25,6 +25,10 @@ cd %MBT%
 rd /s /q build
 mkdir build
 
+IF "%APPVEYOR_REPO_TAG_NAME%"=="" (
+  go run scripts/update_version.go -custom "%APPVEYOR_REPO_COMMIT%"
+)
+
 go get -t
 go get github.com/stretchr/testify
 
