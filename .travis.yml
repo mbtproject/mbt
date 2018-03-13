@@ -12,7 +12,6 @@ git:
   submodules: false
 deploy:
   on:
-    tags: true
     all_branches: true
   provider: bintray
   user: buddyspike

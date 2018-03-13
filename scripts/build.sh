@@ -36,12 +36,18 @@ export CGO_LDFLAGS="$(pkg-config --libs --static $LIBGIT2_PATH/build/libgit2.pc)
 # Move on to building mbt
 cd $DIR
 
+OUT="mbt_${OS}_${ARCH}"
 VERSION=$TRAVIS_TAG
 if [ -z $VERSION ]; then
-  VERSION="0.0.0"
+  OUT="mbt_dev_${OS}_${ARCH}"
+  if [ ! -z $TRAVIS_COMMIT ]; then
+    VERSION="dev-$(echo $TRAVIS_COMMIT | head -c8)"
+    go run scripts/update_version.go -custom "$VERSION"
+  else
+    VERSION="dev-$(git rev-parse HEAD | head -c8)"
+  fi
 fi
 
-OUT="mbt_${OS}_${ARCH}"
 
 make restore
 
@@ -76,10 +82,14 @@ cat >build/bintray.json << EOL
         "repo": "bin",
         "subject": "buddyspike",
         "desc": "Monorepo Build Tool",
-        "website_url": "https://github.com/mbtproject/mbt", "issue_tracker_url": "https://github.com/mbtproject/mbt/issues", "vcs_url": "https://github.com/buddyspike/mbt.git", "public_download_numbers": true, "public_stats": true }, "version": {
-        "name": "${VERSION}",
-        "gpgSign": false
-    },
+        "website_url": "https://github.com/mbtproject/mbt",
+        "issue_tracker_url": "https://github.com/mbtproject/mbt/issues",
+        "vcs_url": "https://github.com/buddyspike/mbt.git",
+        "public_download_numbers": true, "public_stats": true },
+        "version": {
+          "name": "${VERSION}",
+          "gpgSign": false
+        },
     "files": [ {"includePattern": "build/${OUT}", "uploadPattern": "/${OUT}"} ],
     "publish": true
 }

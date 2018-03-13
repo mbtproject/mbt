@@ -128,16 +128,14 @@ func TestBadTemplate(t *testing.T) {
 	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModule("app-a"))
-	check(t, repo.WriteContent("template.tmpl", `
-{{- range $i, $mod := .Modules}}
-`))
+	check(t, repo.WriteContent("template.tmpl", `{{range $i, $mod := .Modules}}`))
 	check(t, repo.Commit("first"))
 
 	output := new(bytes.Buffer)
 	err := NewWorld(t, ".tmp/repo").System.ApplyCommit(repo.LastCommit.String(), "template.tmpl", output)
 
 	assert.EqualError(t, err, msgFailedTemplateParse)
-	assert.EqualError(t, (err.(*e.E)).InnerError(), "template: template:2: unexpected EOF")
+	assert.EqualError(t, (err.(*e.E)).InnerError(), "template: template:1: unexpected EOF")
 	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())
 	assert.Equal(t, "", output.String())
 }
