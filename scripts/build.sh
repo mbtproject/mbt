@@ -84,7 +84,7 @@ cat >build/bintray.json << EOL
         "desc": "Monorepo Build Tool",
         "website_url": "https://github.com/mbtproject/mbt",
         "issue_tracker_url": "https://github.com/mbtproject/mbt/issues",
-        "vcs_url": "https://github.com/buddyspike/mbt.git",
+        "vcs_url": "https://github.com/mbtproject/mbt.git",
         "public_download_numbers": true, "public_stats": true },
         "version": {
           "name": "${VERSION}",
