@@ -4,7 +4,7 @@ image:
 environment:
   appveyor_repo_tag: true
   BINTRAY_APIKEY:
-    secure: SRz0imDKwe+ssF9RgX+ZsOuoRpz88j57axQuMBUo/263Oqh1qRj39tNjN3NljrXD
+    secure: HYhL/Jc4o1S5+tXN9c0NFFcwXpllXB5ykH0gA2hn4tc7CWLN3LHZszPFwHoO2onc
 clone_folder: '%SYSTEMDRIVE%\gopath\src\github.com\mbtproject\mbt'
 before_build:
   - cmd: mkdir %SYSTEMDRIVE%\downloads
