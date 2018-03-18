@@ -76,13 +76,20 @@ echo "testing the bin"
 "./build/${OUT}" version
 
 if [ ! -z $PUBLISH_TOKEN ]; then
-  echo "publishing..."
+  echo "publishing $OUT"
   curl \
-    -T "build/$OUT" \
     -ubuddyspike:$PUBLISH_TOKEN \
+    -X POST \
+    -H "Content-Type: application/json" \
+    -d "{\"name\": \"$VERSION\", \"description\": \"$VERSION\", \"published\": true}" \
+    "https://api.bintray.com/packages/buddyspike/bin/$OUT/versions"
+
+  curl \
+    -ubuddyspike:$PUBLISH_TOKEN \
+    --progress-bar \
+    -T "build/$OUT" \
     -H "X-Bintray-Package:$OUT" \
     -H "X-Bintray-Version:$VERSION" \
-    "https://api.bintray.com/content/buddyspike/bin/$OUT"
-  echo "published"
+    "https://api.bintray.com/content/buddyspike/bin/$OUT/$VERSION/$VERSION/$OUT?publish=1"
 fi
 
