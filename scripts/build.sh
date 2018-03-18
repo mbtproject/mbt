@@ -75,24 +75,14 @@ go tool vet ./e ./dtrace ./trie ./intercept ./lib
 echo "testing the bin"
 "./build/${OUT}" version
 
-cat >build/bintray.json << EOL
-{
-    "package": {
-      "name": "${OUT}",
-      "repo": "bin",
-      "subject": "buddyspike",
-      "desc": "Monorepo Build Tool",
-      "website_url": "https://github.com/mbtproject/mbt",
-      "issue_tracker_url": "https://github.com/mbtproject/mbt/issues",
-      "vcs_url": "https://github.com/mbtproject/mbt.git",
-      "public_download_numbers": true,
-      "public_stats": true 
-    },
-    "version": {
-      "name": "${VERSION}",
-      "gpgSign": false
-    },
-    "files": [ {"includePattern": "build/${OUT}", "uploadPattern": "/${OUT}"} ],
-    "publish": true
-}
-EOL
+if [ ! -z $PUBLISH_TOKEN ]; then
+  echo "publishing..."
+  curl \
+    -T "build/$OUT" \
+    -ubuddyspike:$PUBLISH_TOKEN \
+    -H "X-Bintray-Package:$OUT" \
+    -H "X-Bintray-Version:$VERSION" \
+    "https://api.bintray.com/content/buddyspike/bin/$OUT"
+  echo "published"
+fi
+
