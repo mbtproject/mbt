@@ -78,18 +78,20 @@ echo "testing the bin"
 cat >build/bintray.json << EOL
 {
     "package": {
-        "name": "${OUT}",
-        "repo": "bin",
-        "subject": "buddyspike",
-        "desc": "Monorepo Build Tool",
-        "website_url": "https://github.com/mbtproject/mbt",
-        "issue_tracker_url": "https://github.com/mbtproject/mbt/issues",
-        "vcs_url": "https://github.com/mbtproject/mbt.git",
-        "public_download_numbers": true, "public_stats": true },
-        "version": {
-          "name": "${VERSION}",
-          "gpgSign": false
-        },
+      "name": "${OUT}",
+      "repo": "bin",
+      "subject": "buddyspike",
+      "desc": "Monorepo Build Tool",
+      "website_url": "https://github.com/mbtproject/mbt",
+      "issue_tracker_url": "https://github.com/mbtproject/mbt/issues",
+      "vcs_url": "https://github.com/mbtproject/mbt.git",
+      "public_download_numbers": true,
+      "public_stats": true 
+    },
+    "version": {
+      "name": "${VERSION}",
+      "gpgSign": false
+    },
     "files": [ {"includePattern": "build/${OUT}", "uploadPattern": "/${OUT}"} ],
     "publish": true
 }
