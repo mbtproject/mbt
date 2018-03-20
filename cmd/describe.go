@@ -277,11 +277,6 @@ func output(mods lib.Modules) error {
 	} else if toGraph {
 		fmt.Println(mods.SerializeAsDot())
 	} else {
-		if len(mods) == 0 {
-			fmt.Println("No modules found")
-			return nil
-		}
-
 		w := tabwriter.NewWriter(os.Stdout, 0, 4, 4, ' ', 0)
 		fmt.Fprintf(w, "Name\tPATH\tVERSION\n")
 		for _, a := range mods {
