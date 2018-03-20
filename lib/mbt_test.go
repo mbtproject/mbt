@@ -317,6 +317,14 @@ func sModules(e interface{}) Modules {
 	return e.(Modules)
 }
 
+func sBuildSummary(e interface{}) *BuildSummary {
+	if e == nil {
+		return nil
+	}
+
+	return e.(*BuildSummary)
+}
+
 type TestRepo struct {
 	Interceptor *intercept.Interceptor
 }
@@ -479,44 +487,45 @@ func (s *TestSystem) ApplyLocal(templatePath string, output io.Writer) error {
 	return sErr(ret[0])
 }
 
-func (s *TestSystem) BuildBranch(name string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error {
+func (s *TestSystem) BuildBranch(name string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
 	ret := s.Interceptor.Call("BuildBranch", name, stdin, stdout, stderr, callback)
-	return sErr(ret[0])
+	return sBuildSummary(ret[0]), sErr(ret[1])
 }
 
-func (s *TestSystem) BuildPr(src, dst string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error {
+func (s *TestSystem) BuildPr(src, dst string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
 	ret := s.Interceptor.Call("BuildPr", src, dst, stdin, stdout, stderr, callback)
-	return sErr(ret[0])
+	return sBuildSummary(ret[0]), sErr(ret[1])
 }
 
-func (s *TestSystem) BuildDiff(from, to string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error {
+func (s *TestSystem) BuildDiff(from, to string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
 	ret := s.Interceptor.Call("BuildDiff", from, to, stdin, stdout, stderr, callback)
-	return sErr(ret[0])
+	return sBuildSummary(ret[0]), sErr(ret[1])
 }
 
-func (s *TestSystem) BuildCurrentBranch(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error {
+func (s *TestSystem) BuildCurrentBranch(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
 	ret := s.Interceptor.Call("BuildCurrentBranch", stdin, stdout, stderr, callback)
-	return sErr(ret[0])
+	return sBuildSummary(ret[0]), sErr(ret[1])
 }
 
-func (s *TestSystem) BuildCommit(commit string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error {
+func (s *TestSystem) BuildCommit(commit string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
 	ret := s.Interceptor.Call("BuildCommit", commit, stdin, stdout, stderr, callback)
-	return sErr(ret[0])
+	return sBuildSummary(ret[0]), sErr(ret[1])
 }
 
-func (s *TestSystem) BuildCommitContent(commit string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error {
+func (s *TestSystem) BuildCommitContent(commit string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
 	ret := s.Interceptor.Call("BuildCommitContent", commit, stdin, stdout, stderr, callback)
-	return sErr(ret[0])
+	return sBuildSummary(ret[0]), sErr(ret[1])
+
 }
 
-func (s *TestSystem) BuildWorkspace(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error {
+func (s *TestSystem) BuildWorkspace(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
 	ret := s.Interceptor.Call("BuildWorkspace", stdin, stdout, stderr, callback)
-	return sErr(ret[0])
+	return sBuildSummary(ret[0]), sErr(ret[1])
 }
 
-func (s *TestSystem) BuildWorkspaceChanges(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error {
+func (s *TestSystem) BuildWorkspaceChanges(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
 	ret := s.Interceptor.Call("BuildWorkspaceChanges", stdin, stdout, stderr, callback)
-	return sErr(ret[0])
+	return sBuildSummary(ret[0]), sErr(ret[1])
 }
 
 func (s *TestSystem) IntersectionByCommit(first, second string) (Modules, error) {

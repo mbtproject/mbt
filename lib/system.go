@@ -172,6 +172,26 @@ type ManifestBuilder interface {
 // BuildStage is an enum to indicate various stages of the build.
 type BuildStage = int
 
+// BuildSummary is a summary of a successful build.
+type BuildSummary struct {
+	// Manifest used to trigger the build
+	Manifest *Manifest
+	// Completed list of the modules built. This list does not
+	// include the modules that were skipped due to
+	// the unavailability of a build command for the
+	// host platform.
+	Completed []*BuildResult
+	// Skipped modules due to the unavailability of a build command for
+	// the host platform
+	Skipped []*Module
+}
+
+// BuildResult is summary for a single module build
+type BuildResult struct {
+	// Module of the build result
+	Module *Module
+}
+
 const (
 	// BuildStageBeforeBuild is the stage before executing module build command
 	BuildStageBeforeBuild = iota
@@ -208,28 +228,28 @@ type System interface {
 	ApplyLocal(templatePath string, output io.Writer) error
 
 	// BuildBranch builds the specifed branch.
-	BuildBranch(name string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error
+	BuildBranch(name string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
 
 	// BuildPr builds changes in 'src' branch since it diverged from 'dst' branch.
-	BuildPr(src, dst string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error
+	BuildPr(src, dst string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
 
 	// Build builds changes between two commits
-	BuildDiff(from, to string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error
+	BuildDiff(from, to string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
 
 	// BuildCurrentBranch builds the current branch.
-	BuildCurrentBranch(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error
+	BuildCurrentBranch(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
 
 	// BuildCommit builds specified commit.
-	BuildCommit(commit string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error
+	BuildCommit(commit string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
 
 	// BuildCommitChanges builds the changes in specified commit
-	BuildCommitContent(commit string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error
+	BuildCommitContent(commit string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
 
 	// BuildWorkspace builds the current workspace.
-	BuildWorkspace(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error
+	BuildWorkspace(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
 
 	// BuildWorkspace builds changes in current workspace.
-	BuildWorkspaceChanges(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error
+	BuildWorkspaceChanges(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
 
 	// IntersectionByCommit returns the manifest of intersection of modules modified
 	// between two commits.
