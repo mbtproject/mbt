@@ -62,6 +62,15 @@ func (s *stdSystem) BuildCommit(commit string, stdin io.Reader, stdout, stderr i
 	return build(s.Repo, m, stdin, stdout, stderr, callback, s.Log)
 }
 
+func (s *stdSystem) BuildCommitContent(commit string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error {
+	m, err := s.ManifestByCommitContent(commit)
+	if err != nil {
+		return err
+	}
+
+	return build(s.Repo, m, stdin, stdout, stderr, callback, s.Log)
+}
+
 func (s *stdSystem) BuildWorkspace(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error {
 	m, err := s.ManifestByWorkspace()
 	if err != nil {

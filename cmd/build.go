@@ -19,6 +19,8 @@ func init() {
 
 	buildLocal.Flags().BoolVarP(&all, "all", "a", false, "all modules")
 
+	buildCommit.Flags().BoolVarP(&content, "content", "c", false, "build the modules impacted by the content of the commit")
+
 	buildCommand.AddCommand(buildBranch)
 	buildCommand.AddCommand(buildPr)
 	buildCommand.AddCommand(buildDiff)
@@ -115,6 +117,9 @@ var buildCommit = &cobra.Command{
 	Use:   "commit <sha>",
 	Short: "Build all modules in the specified commit",
 	Long: `Build all modules in the specified commit
+
+	If --content flag is specified, this command will build just the modules
+	impacted by the specified commit.
 	`,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
@@ -123,6 +128,9 @@ var buildCommit = &cobra.Command{
 
 		commit := args[0]
 
+		if content {
+			return system.BuildCommitContent(commit, os.Stdin, os.Stdout, os.Stderr, buildStageCB)
+		}
 		return system.BuildCommit(commit, os.Stdin, os.Stdout, os.Stderr, buildStageCB)
 	}),
 }

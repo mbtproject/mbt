@@ -940,3 +940,85 @@ func TestByXxxForEmptyRepoEvaluationFailure(t *testing.T) {
 	_, err := w.System.ManifestByCurrentBranch()
 	assert.EqualError(t, err, "doh")
 }
+
+func TestByCommitContentForFirstCommit(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.Commit("first"))
+
+	w := NewWorld(t, ".tmp/repo")
+
+	m, err := w.System.ManifestByCommitContent(repo.LastCommit.String())
+	check(t, err)
+
+	assert.Equal(t, repo.LastCommit.String(), m.Sha)
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "app-a", m.Modules[0].Name())
+}
+
+func TestByCommitContentForCommitWithParent(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.Commit("first"))
+	check(t, repo.InitModule("app-b"))
+	check(t, repo.Commit("second"))
+
+	w := NewWorld(t, ".tmp/repo")
+
+	m, err := w.System.ManifestByCommitContent(repo.LastCommit.String())
+	check(t, err)
+
+	assert.Equal(t, repo.LastCommit.String(), m.Sha)
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "app-b", m.Modules[0].Name())
+}
+
+func TestByCommitContentForDiscoverFailure(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.Commit("first"))
+
+	w := NewWorld(t, ".tmp/repo")
+
+	w.Discover.Interceptor.Config("ModulesInCommit").Return(Modules(nil), errors.New("doh"))
+
+	m, err := w.System.ManifestByCommitContent(repo.LastCommit.String())
+
+	assert.Nil(t, m)
+	assert.EqualError(t, err, "doh")
+}
+
+func TestByCommitContentForRepoFailure(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+	repo.InitModule("app-a")
+	repo.Commit("first")
+
+	w := NewWorld(t, ".tmp/repo")
+	w.Repo.Interceptor.Config("Changes").Return([]*DiffDelta(nil), errors.New("doh"))
+
+	m, err := w.System.ManifestByCommitContent(repo.LastCommit.String())
+
+	assert.Nil(t, m)
+	assert.EqualError(t, err, "doh")
+}
+
+func TestByCommitContentForReducerFailure(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+	repo.InitModule("app-a")
+	repo.Commit("first")
+	repo.InitModule("app-b")
+	repo.Commit("second")
+
+	w := NewWorld(t, ".tmp/repo")
+	w.Reducer.Interceptor.Config("Reduce").Return(Modules(nil), errors.New("doh"))
+
+	m, err := w.System.ManifestByCommitContent(repo.LastCommit.String())
+
+	assert.Nil(t, m)
+	assert.EqualError(t, err, "doh")
+}

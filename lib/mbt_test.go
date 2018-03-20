@@ -158,6 +158,58 @@ func (r *TestRepository) SwitchToBranch(name string) error {
 	})
 }
 
+func (r *TestRepository) SimpleMerge(src, dst string) (*git.Oid, error) {
+	srcRef, err := r.Repo.References.Dwim(src)
+	if err != nil {
+		return nil, err
+	}
+
+	srcCommit, err := r.Repo.LookupCommit(srcRef.Target())
+	if err != nil {
+		return nil, err
+	}
+
+	dstRef, err := r.Repo.References.Dwim(dst)
+	if err != nil {
+		return nil, err
+	}
+
+	dstCommit, err := r.Repo.LookupCommit(dstRef.Target())
+	if err != nil {
+		return nil, err
+	}
+
+	index, err := r.Repo.MergeCommits(dstCommit, srcCommit, nil)
+
+	treeID, err := index.WriteTreeTo(r.Repo)
+	if err != nil {
+		return nil, err
+	}
+
+	mergeTree, err := r.Repo.LookupTree(treeID)
+	if err != nil {
+		return nil, err
+	}
+
+	sig := &git.Signature{
+		Email: "alice@wonderland.com",
+		Name:  "alice",
+		When:  time.Now(),
+	}
+
+	head, err := r.Repo.CreateCommit(dstRef.Name(), sig, sig, "Merged", mergeTree, dstCommit, srcCommit)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.Repo.CheckoutHead(&git.CheckoutOpts{Strategy: git.CheckoutForce})
+	if err != nil {
+		return nil, err
+	}
+
+	return head, err
+}
+
 func (r *TestRepository) Remove(p string) error {
 	return os.RemoveAll(path.Join(r.Dir, p))
 }
@@ -294,6 +346,11 @@ func (r *TestRepo) DiffWorkspace() ([]*DiffDelta, error) {
 	return ret[0].([]*DiffDelta), sErr(ret[1])
 }
 
+func (r *TestRepo) Changes(c Commit) ([]*DiffDelta, error) {
+	ret := r.Interceptor.Call("Changes", c)
+	return ret[0].([]*DiffDelta), sErr(ret[1])
+}
+
 func (r *TestRepo) WalkBlobs(a Commit, callback BlobWalkCallback) error {
 	ret := r.Interceptor.Call("WalkBlobs", a, callback)
 	return sErr(ret[0])
@@ -373,6 +430,11 @@ func (b *TestManifestBuilder) ByCommit(sha Commit) (*Manifest, error) {
 	return sManifest(ret[0]), sErr(ret[1])
 }
 
+func (b *TestManifestBuilder) ByCommitContent(sha Commit) (*Manifest, error) {
+	ret := b.Interceptor.Call("ByCommitContent", sha)
+	return sManifest(ret[0]), sErr(ret[1])
+}
+
 func (b *TestManifestBuilder) ByBranch(name string) (*Manifest, error) {
 	ret := b.Interceptor.Call("ByBranch", name)
 	return sManifest(ret[0]), sErr(ret[1])
@@ -442,6 +504,11 @@ func (s *TestSystem) BuildCommit(commit string, stdin io.Reader, stdout, stderr 
 	return sErr(ret[0])
 }
 
+func (s *TestSystem) BuildCommitContent(commit string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error {
+	ret := s.Interceptor.Call("BuildCommitContent", commit, stdin, stdout, stderr, callback)
+	return sErr(ret[0])
+}
+
 func (s *TestSystem) BuildWorkspace(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error {
 	ret := s.Interceptor.Call("BuildWorkspace", stdin, stdout, stderr, callback)
 	return sErr(ret[0])
@@ -474,6 +541,11 @@ func (s *TestSystem) ManifestByPr(src, dst string) (*Manifest, error) {
 
 func (s *TestSystem) ManifestByCommit(sha string) (*Manifest, error) {
 	ret := s.Interceptor.Call("ManifestByCommit", sha)
+	return sManifest(ret[0]), sErr(ret[1])
+}
+
+func (s *TestSystem) ManifestByCommitContent(sha string) (*Manifest, error) {
+	ret := s.Interceptor.Call("ManifestByCommitContent", sha)
 	return sManifest(ret[0]), sErr(ret[1])
 }
 

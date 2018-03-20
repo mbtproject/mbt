@@ -28,6 +28,8 @@ func init() {
 	describeDiffCmd.Flags().StringVar(&to, "to", "", "to commit")
 	describeLocalCmd.Flags().BoolVarP(&all, "all", "a", false, "describe all")
 
+	describeCommitCmd.Flags().BoolVarP(&content, "content", "c", false, "describe the modules impacted by the changes in commit")
+
 	describeCmd.PersistentFlags().BoolVar(&toJSON, "json", false, "format output as json")
 	describeCmd.PersistentFlags().BoolVar(&toGraph, "graph", false, "format output as dot graph")
 	describeCmd.AddCommand(describeCommitCmd)
@@ -159,6 +161,9 @@ var describeCommitCmd = &cobra.Command{
 	Long: `Describe all modules in the specified commit
 
 Commit SHA must be the complete 40 character SHA1 string.
+
+If --content flag is specified, this command will describe just the modules
+impacted by the specified commit.
 `,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
@@ -167,7 +172,17 @@ Commit SHA must be the complete 40 character SHA1 string.
 
 		commit := args[0]
 
-		m, err := system.ManifestByCommit(commit)
+		var (
+			m   *lib.Manifest
+			err error
+		)
+
+		if content {
+			m, err = system.ManifestByCommitContent(commit)
+		} else {
+			m, err = system.ManifestByCommit(commit)
+		}
+
 		if err != nil {
 			return err
 		}

@@ -57,6 +57,11 @@ type Repo interface {
 	// DiffWorkspace gets the changes in current workspace.
 	// This should include untracked changes.
 	DiffWorkspace() ([]*DiffDelta, error)
+	// Changes returns a an array of DiffDelta objects representing the changes
+	// in the specified commit.
+	// Return an empty array if the specified commit is the first commit
+	// in the repo.
+	Changes(c Commit) ([]*DiffDelta, error)
 	// WalkBlobs invokes the callback for each blob reachable from the commit tree.
 	WalkBlobs(a Commit, callback BlobWalkCallback) error
 	// BlobContents of specified blob.
@@ -149,6 +154,9 @@ type ManifestBuilder interface {
 	ByPr(src, dst string) (*Manifest, error)
 	// ByCommit creates the manifest for the specified commit
 	ByCommit(sha Commit) (*Manifest, error)
+	// ByCommitContent creates the manifest for the content of the
+	// specified commit.
+	ByCommitContent(sha Commit) (*Manifest, error)
 	// ByBranch creates the manifest for the specified branch
 	ByBranch(name string) (*Manifest, error)
 	// ByCurrentBranch creates the manifest for the current branch
@@ -214,6 +222,9 @@ type System interface {
 	// BuildCommit builds specified commit.
 	BuildCommit(commit string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error
 
+	// BuildCommitChanges builds the changes in specified commit
+	BuildCommitContent(commit string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error
+
 	// BuildWorkspace builds the current workspace.
 	BuildWorkspace(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) error
 
@@ -234,14 +245,17 @@ type System interface {
 	// between M and first and M and second.
 	IntersectionByBranch(first, second string) (Modules, error)
 
-	// ByDiff creates the manifest for diff between two commits
+	// ManifestByDiff creates the manifest for diff between two commits
 	ManifestByDiff(from, to string) (*Manifest, error)
 
-	// ByPr creates the manifest for diff between two branches
+	// ManifestByPr creates the manifest for diff between two branches
 	ManifestByPr(src, dst string) (*Manifest, error)
 
-	// ByCommit creates the manifest for the specified commit
+	// ManifestByCommit creates the manifest for the specified commit
 	ManifestByCommit(sha string) (*Manifest, error)
+
+	// ManifestByCommitContent creates the manifest for the content in specified commit
+	ManifestByCommitContent(sha string) (*Manifest, error)
 
 	// ByBranch creates the manifest for the specified branch
 	ManifestByBranch(name string) (*Manifest, error)
