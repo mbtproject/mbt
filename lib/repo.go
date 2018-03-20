@@ -138,6 +138,36 @@ func (r *libgitRepo) DiffWorkspace() ([]*DiffDelta, error) {
 	return deltas(diff)
 }
 
+func (r *libgitRepo) Changes(c Commit) ([]*DiffDelta, error) {
+	commit := c.(*libgitCommit).commit
+	repo := r.Repo
+	t1, err := c.(*libgitCommit).Tree()
+	if err != nil {
+		return nil, err
+	}
+
+	np := commit.ParentCount()
+	r.Log.Debug("Commit %v has %v parents", commit, np)
+	if np == 0 {
+		return []*DiffDelta{}, nil
+	}
+
+	p := commit.Parent(0)
+	r.Log.Debug("Changes are based on parent %v", p)
+
+	t2, err := p.Tree()
+	if err != nil {
+		return nil, e.Wrap(ErrClassInternal, err)
+	}
+
+	d, err := repo.DiffTreeToTree(t1, t2, &git.DiffOptions{})
+	if err != nil {
+		return nil, e.Wrap(ErrClassInternal, err)
+	}
+
+	return deltas(d)
+}
+
 func (r *libgitRepo) WalkBlobs(commit Commit, callback BlobWalkCallback) error {
 	tree, err := commit.(*libgitCommit).Tree()
 	if err != nil {

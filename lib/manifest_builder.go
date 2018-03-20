@@ -67,6 +67,34 @@ func (b *stdManifestBuilder) ByCommit(sha Commit) (*Manifest, error) {
 	})
 }
 
+func (b *stdManifestBuilder) ByCommitContent(sha Commit) (*Manifest, error) {
+	return b.buildManifest(func() (*Manifest, error) {
+		mods, err := b.Discover.ModulesInCommit(sha)
+		if err != nil {
+			return nil, err
+		}
+
+		diff, err := b.Repo.Changes(sha)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(diff) > 0 {
+			mods, err = b.Reducer.Reduce(mods, diff)
+			if err != nil {
+				return nil, err
+			}
+
+			mods, err = mods.expandRequiredByDependencies()
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return &Manifest{Dir: b.Repo.Path(), Modules: mods, Sha: sha.ID()}, nil
+	})
+}
+
 func (b *stdManifestBuilder) ByBranch(name string) (*Manifest, error) {
 	return b.buildManifest(func() (*Manifest, error) {
 		c, err := b.Repo.BranchCommit(name)

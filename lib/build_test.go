@@ -357,3 +357,38 @@ func TestMissingSha(t *testing.T) {
 	assert.EqualError(t, (err.(*e.E)).InnerError(), "object not found - no match for id (22221c5e56794a2af5f59f94512df4c669c77a49)")
 	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())
 }
+
+func TestBuildCommitContent(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.WriteShellScript("app-a/build.sh", "echo built app-a"))
+	check(t, repo.WritePowershellScript("app-a/build.ps1", "write-host built app-a"))
+	check(t, repo.Commit("first"))
+
+	check(t, repo.InitModule("app-b"))
+	check(t, repo.WriteShellScript("app-b/build.sh", "echo built app-b"))
+	check(t, repo.WritePowershellScript("app-b/build.ps1", "write-host built app-b"))
+	check(t, repo.Commit("second"))
+
+	buff := new(bytes.Buffer)
+	check(t, NewWorld(t, ".tmp/repo").System.BuildCommitContent(repo.LastCommit.String(), os.Stdin, buff, buff, noopCb))
+
+	assert.Equal(t, "built app-b\n", buff.String())
+}
+
+func TestBuildCommitContentForManifestFailure(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.Commit("first"))
+
+	w := NewWorld(t, ".tmp/repo")
+	w.ManifestBuilder.Interceptor.Config("ByCommitContent").Return((*Manifest)(nil), errors.New("doh"))
+
+	buff := new(bytes.Buffer)
+	err := w.System.BuildCommitContent(repo.LastCommit.String(), os.Stdin, buff, buff, noopCb)
+
+	assert.EqualError(t, err, "doh")
+}

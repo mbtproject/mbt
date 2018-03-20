@@ -98,3 +98,111 @@ func TestDirtyWorkspaceForRenames(t *testing.T) {
 
 	assert.True(t, dirty)
 }
+
+func TestChangesOfFirstCommit(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+
+	check(t, repo.WriteContent("readme.md", "hello"))
+	check(t, repo.Commit("first"))
+
+	r := NewWorld(t, ".tmp/repo").Repo
+	commit, err := r.GetCommit(repo.LastCommit.String())
+	check(t, err)
+	d, err := r.Changes(commit)
+	check(t, err)
+
+	assert.Empty(t, d)
+}
+
+func TestChangesOfCommitWithOneParent(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+
+	check(t, repo.WriteContent("readme.md", "hello"))
+	check(t, repo.Commit("first"))
+	check(t, repo.WriteContent("contributing.md", "hello"))
+	check(t, repo.Commit("second"))
+
+	r := NewWorld(t, ".tmp/repo").Repo
+	commit, err := r.GetCommit(repo.LastCommit.String())
+	check(t, err)
+
+	d, err := r.Changes(commit)
+	check(t, err)
+
+	assert.Len(t, d, 1)
+	assert.Equal(t, "contributing.md", d[0].NewFile)
+}
+
+func TestChangesOfCommitWithMultipleParents(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+
+	check(t, repo.WriteContent("readme.md", "hello"))
+	check(t, repo.Commit("first"))
+
+	check(t, repo.SwitchToBranch("feature"))
+	check(t, repo.WriteContent("foo", "hello"))
+	check(t, repo.Commit("second"))
+	check(t, repo.WriteContent("bar", "hello"))
+	check(t, repo.Commit("third"))
+
+	check(t, repo.SwitchToBranch("master"))
+	check(t, repo.WriteContent("index.md", "hello"))
+	check(t, repo.Commit("fourth"))
+
+	mergeCommitID, err := repo.SimpleMerge("feature", "master")
+	check(t, err)
+
+	check(t, repo.SwitchToBranch("master"))
+
+	r := NewWorld(t, ".tmp/repo").Repo
+	mergeCommit, err := r.GetCommit(mergeCommitID.String())
+	check(t, err)
+	delta, err := r.Changes(mergeCommit)
+	check(t, err)
+
+	assert.Len(t, delta, 2)
+	assert.Equal(t, "bar", delta[0].NewFile)
+	assert.Equal(t, "foo", delta[1].NewFile)
+}
+
+func TestChangesOfCommitWhereOneParentIsAMergeCommit(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+
+	check(t, repo.WriteContent("readme.md", "hello"))
+	check(t, repo.Commit("first"))
+	check(t, repo.SwitchToBranch("feature-b"))
+
+	check(t, repo.SwitchToBranch("feature-a"))
+	check(t, repo.WriteContent("foo", "hello"))
+	check(t, repo.Commit("second"))
+	check(t, repo.WriteContent("bar", "hello"))
+	check(t, repo.Commit("third"))
+
+	check(t, repo.SwitchToBranch("master"))
+	check(t, repo.WriteContent("index.md", "hello"))
+	check(t, repo.Commit("fourth"))
+
+	check(t, repo.SwitchToBranch("feature-b"))
+	check(t, repo.WriteContent("car", "hello"))
+	check(t, repo.Commit("fifth"))
+
+	_, err := repo.SimpleMerge("feature-a", "master")
+	check(t, err)
+
+	mergeCommitID, err := repo.SimpleMerge("feature-b", "master")
+	check(t, err)
+	check(t, repo.SwitchToBranch("master"))
+
+	r := NewWorld(t, ".tmp/repo").Repo
+	mergeCommit, err := r.GetCommit(mergeCommitID.String())
+	check(t, err)
+	delta, err := r.Changes(mergeCommit)
+	check(t, err)
+
+	assert.Len(t, delta, 1)
+	assert.Equal(t, "car", delta[0].NewFile)
+}

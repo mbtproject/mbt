@@ -18,13 +18,20 @@ func (s *stdSystem) ManifestByPr(src, dst string) (*Manifest, error) {
 	return s.MB.ByPr(src, dst)
 }
 
-// ByCommit creates the manifest for the specified commit
 func (s *stdSystem) ManifestByCommit(sha string) (*Manifest, error) {
 	c, err := s.Repo.GetCommit(sha)
 	if err != nil {
 		return nil, err
 	}
 	return s.MB.ByCommit(c)
+}
+
+func (s *stdSystem) ManifestByCommitContent(sha string) (*Manifest, error) {
+	c, err := s.Repo.GetCommit(sha)
+	if err != nil {
+		return nil, err
+	}
+	return s.MB.ByCommitContent(c)
 }
 
 func (s *stdSystem) ManifestByBranch(name string) (*Manifest, error) {
