@@ -1,7 +1,6 @@
 package lib
 
 import (
-	"container/list"
 	"crypto/sha1"
 	"encoding/hex"
 	"io"
@@ -157,22 +156,33 @@ func newSpec(content []byte) (*Spec, error) {
 // while establishing the dependency links.
 func toModules(a moduleMetadataSet) (Modules, error) {
 	// Step 1
-	// Transform each moduleMetadatadata into moduleMetadataNode for sorting.
+	// Index moduleMetadata by the module name and use it to
+	// create a ModuleMetadataProvider that we can use with TopSort fn.
 	m := make(map[string]*moduleMetadata)
-	g := new(list.List)
+	nodes := make([]interface{}, 0, len(a))
 	for _, meta := range a {
 		if conflict, ok := m[meta.spec.Name]; ok {
 			return nil, e.NewErrorf(ErrClassUser, "Module name '%s' in directory '%s' conflicts with the module in '%s' directory", meta.spec.Name, meta.dir, conflict.dir)
 		}
 		m[meta.spec.Name] = meta
-		g.PushBack(meta)
+		nodes = append(nodes, meta)
 	}
 	provider := newModuleMetadataProvider(m)
 
 	// Step 2
 	// Topological sort
-	sortedNodes, err := graph.TopSort(g, provider)
+	sortedNodes, err := graph.TopSort(provider, nodes...)
 	if err != nil {
+		if cycleErr, ok := err.(*graph.CycleError); ok {
+			var pathStr string
+			for i, v := range cycleErr.Path {
+				if i > 0 {
+					pathStr = pathStr + " -> "
+				}
+				pathStr = pathStr + v.(*moduleMetadata).spec.Name
+			}
+			return nil, e.NewErrorf(ErrClassUser, "Could not produce the module graph due to a cyclic dependency in path: %s", pathStr)
+		}
 		return nil, e.Wrap(ErrClassInternal, err)
 	}
 
@@ -180,10 +190,10 @@ func toModules(a moduleMetadataSet) (Modules, error) {
 	// Now that we have the topologically sorted moduleMetadataNodes
 	// create Module instances with dependency links.
 	mModules := make(map[string]*Module)
-	modules := make(Modules, sortedNodes.Len())
+	modules := make(Modules, len(sortedNodes))
 	i := 0
-	for n := sortedNodes.Front(); n != nil; n = n.Next() {
-		metadata := n.Value.(*moduleMetadata)
+	for _, n := range sortedNodes {
+		metadata := n.(*moduleMetadata)
 		spec := metadata.spec
 		deps := Modules{}
 		for _, d := range spec.Dependencies {

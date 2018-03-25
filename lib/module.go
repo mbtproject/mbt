@@ -1,8 +1,6 @@
 package lib
 
 import (
-	"container/list"
-
 	"github.com/mbtproject/mbt/e"
 	"github.com/mbtproject/mbt/graph"
 )
@@ -124,14 +122,14 @@ func (l Modules) indexByPath() map[string]*Module {
 func (l Modules) expandRequiredByDependencies() (Modules, error) {
 	// Step 1
 	// Create the new list with all nodes
-	g := new(list.List)
+	g := make([]interface{}, 0, len(l))
 	for _, a := range l {
-		g.PushBack(a)
+		g = append(g, a)
 	}
 
 	// Step 2
 	// Top sort it by requiredBy chain.
-	allItems, err := graph.TopSort(g, &requiredByNodeProvider{})
+	allItems, err := graph.TopSort(&requiredByNodeProvider{}, g...)
 	if err != nil {
 		return nil, e.Wrap(ErrClassInternal, err)
 	}
@@ -139,10 +137,10 @@ func (l Modules) expandRequiredByDependencies() (Modules, error) {
 	// Step 3
 	// Copy resulting array in the reverse order
 	// because we top sorted by requiredBy chain.
-	r := make([]*Module, allItems.Len())
-	i := allItems.Len() - 1
-	for ele := allItems.Front(); ele != nil; ele = ele.Next() {
-		r[i] = ele.Value.(*Module)
+	r := make([]*Module, len(allItems))
+	i := len(allItems) - 1
+	for _, ele := range allItems {
+		r[i] = ele.(*Module)
 		i--
 	}
 
@@ -150,20 +148,20 @@ func (l Modules) expandRequiredByDependencies() (Modules, error) {
 }
 
 func (l Modules) expandRequiresDependencies() (Modules, error) {
-	g := new(list.List)
+	g := make([]interface{}, 0, len(l))
 	for _, a := range l {
-		g.PushBack(a)
+		g = append(g, a)
 	}
 
-	items, err := graph.TopSort(g, &requiresNodeProvider{})
+	items, err := graph.TopSort(&requiresNodeProvider{}, g...)
 	if err != nil {
 		return nil, e.Wrap(ErrClassInternal, err)
 	}
 
-	r := make([]*Module, items.Len())
+	r := make([]*Module, len(items))
 	i := 0
-	for ele := items.Front(); ele != nil; ele = ele.Next() {
-		r[i] = ele.Value.(*Module)
+	for _, ele := range items {
+		r[i] = ele.(*Module)
 		i++
 	}
 

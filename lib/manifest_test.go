@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/mbtproject/mbt/e"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -1021,4 +1022,33 @@ func TestByCommitContentForReducerFailure(t *testing.T) {
 
 	assert.Nil(t, m)
 	assert.EqualError(t, err, "doh")
+}
+
+func TestCircularDependencyInCommit(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+	check(t, repo.InitModuleWithOptions("app-a", &Spec{Name: "app-a", Dependencies: []string{"app-b"}}))
+	check(t, repo.InitModuleWithOptions("app-b", &Spec{Name: "app-b", Dependencies: []string{"app-a"}}))
+	check(t, repo.Commit("first"))
+
+	w := NewWorld(t, ".tmp/repo")
+	m, err := w.System.ManifestByCommit(repo.LastCommit.String())
+
+	assert.Nil(t, m)
+	assert.EqualError(t, err, "Could not produce the module graph due to a cyclic dependency in path: app-a -> app-b -> app-a")
+}
+
+func TestCircularDependencyInWorkspace(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+	check(t, repo.InitModuleWithOptions("app-a", &Spec{Name: "app-a", Dependencies: []string{"app-b"}}))
+	check(t, repo.InitModuleWithOptions("app-b", &Spec{Name: "app-b", Dependencies: []string{"app-a"}}))
+	check(t, repo.Commit("first"))
+
+	w := NewWorld(t, ".tmp/repo")
+	m, err := w.System.ManifestByWorkspace()
+
+	assert.Nil(t, m)
+	assert.EqualError(t, err, "Could not produce the module graph due to a cyclic dependency in path: app-a -> app-b -> app-a")
+	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())
 }
