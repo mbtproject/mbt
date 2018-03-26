@@ -52,7 +52,10 @@ See help for individual commands for more information.
 			if err != nil {
 				return err
 			}
-			in = cwd
+			in, err = lib.GitRepoRoot(cwd)
+			if err != nil {
+				return err
+			}
 		}
 
 		level := lib.LogLevelNormal
