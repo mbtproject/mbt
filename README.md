@@ -44,10 +44,14 @@ chmod +x /usr/local/bin/mbt
 
 ## Building Locally
 
-- After clone, run `make build`
-- Then
-  - `make test` Run all unit tests
-  - `make install` Build and install mbt in local bin
+- You need `cmake` and `pkg-config` (latest of course is preferred)
+- Get the code `go get github.com/mbtproject/mbt`
+- Change to source directory `cd $GOPATH/src/github.com/mbtproject/mbt`
+  if you haven't set `$GOPATH`, change it to `~/go` which is the default place used by `go get`.
+  See [this](https://golang.org/cmd/go/#hdr-GOPATH_environment_variable) for more information about `$GOPATH`
+- `make build` will build and run all unit tests
+- `make install` will install the binary in `$GOPATH/bin`
+  Make sure `$GOPATH/bin` is in your path in order to execute the binary
 
 ## About
 
