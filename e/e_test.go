@@ -2,6 +2,7 @@ package e
 
 import (
 	"errors"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -35,8 +36,13 @@ func TestWrappedError(t *testing.T) {
 }
 
 func TestStack(t *testing.T) {
+	ptr, _, _, ok := runtime.Caller(0)
+	assert.True(t, ok)
+
+	frames := runtime.CallersFrames([]uintptr{ptr})
+	f, _ := frames.Next()
 	e := Wrap(ErrClassInternal, errors.New("b"))
-	assert.Equal(t, "github.com/mbtproject/mbt/e.TestStack", e.Stack()[1].Function)
+	assert.Equal(t, f.Function, e.Stack()[1].Function)
 }
 
 func TestExtendedInfo(t *testing.T) {
