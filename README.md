@@ -44,6 +44,8 @@ chmod +x /usr/local/bin/mbt
 
 ## Building Locally
 
+### Linux/OSX
+
 - You need `cmake` and `pkg-config` (latest of course is preferred)
 - Get the code `go get github.com/mbtproject/mbt`
 - Change to source directory `cd $GOPATH/src/github.com/mbtproject/mbt`
@@ -55,6 +57,10 @@ chmod +x /usr/local/bin/mbt
 - Run `make install` to install the binary in `$GOPATH/bin`
 
   Make sure `$GOPATH/bin` is in your path in order to execute the binary
+
+### Windows
+Local builds on Windows is not currently supported. 
+However, the specifics can be found in our CI scripts (`appveyor.yml` and `build_win.bat`)
 
 ## About
 
