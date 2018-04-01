@@ -1,5 +1,11 @@
 package lib
 
+import (
+	"strings"
+
+	"github.com/mbtproject/mbt/utils"
+)
+
 func (s *stdSystem) ManifestByDiff(from, to string) (*Manifest, error) {
 	f, err := s.Repo.GetCommit(from)
 	if err != nil {
@@ -48,4 +54,28 @@ func (s *stdSystem) ManifestByWorkspace() (*Manifest, error) {
 
 func (s *stdSystem) ManifestByWorkspaceChanges() (*Manifest, error) {
 	return s.MB.ByWorkspaceChanges()
+}
+
+// FilterByName reduces the modules in a Manifest to the
+// ones that are matching the terms specified in filter.
+// Multiple terms can be specified as a comma separated
+// string.
+// Comparison is a case insensitive subsequence comparison.
+func (m *Manifest) FilterByName(filter string) *Manifest {
+	filteredModules := make(Modules, 0)
+	filters := strings.Split(filter, ",")
+
+	for _, m := range m.Modules {
+		for _, f := range filters {
+			if utils.IsSubsequence(m.Name(), f, true) {
+				// We've got a match. Append it to the list
+				// and discard rest of the filters for this
+				// module.
+				filteredModules = append(filteredModules, m)
+				break
+			}
+		}
+	}
+
+	return &Manifest{Dir: m.Dir, Modules: filteredModules, Sha: m.Sha}
 }

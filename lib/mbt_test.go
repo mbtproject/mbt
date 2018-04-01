@@ -518,8 +518,8 @@ func (s *TestSystem) BuildCommitContent(commit string, stdin io.Reader, stdout, 
 
 }
 
-func (s *TestSystem) BuildWorkspace(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
-	ret := s.Interceptor.Call("BuildWorkspace", stdin, stdout, stderr, callback)
+func (s *TestSystem) BuildWorkspace(nameFilters string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
+	ret := s.Interceptor.Call("BuildWorkspace", nameFilters, stdin, stdout, stderr, callback)
 	return sBuildSummary(ret[0]), sErr(ret[1])
 }
 

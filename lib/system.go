@@ -246,7 +246,7 @@ type System interface {
 	BuildCommitContent(commit string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
 
 	// BuildWorkspace builds the current workspace.
-	BuildWorkspace(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
+	BuildWorkspace(nameFilters string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
 
 	// BuildWorkspace builds changes in current workspace.
 	BuildWorkspaceChanges(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)

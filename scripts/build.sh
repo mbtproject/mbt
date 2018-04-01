@@ -60,6 +60,7 @@ go test ./dtrace -v -covermode=count
 go test ./trie -v -covermode=count
 go test ./intercept -v -covermode=count
 go test ./graph -v -covermode=count
+go test ./utils -v -covermode=count
 go test ./lib -v -covermode=count -coverprofile=coverage.out
 if [ ! -z $COVERALLS_TOKEN ] && [ -f ./coverage.out ]; then
   $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN

@@ -71,10 +71,14 @@ func (s *stdSystem) BuildCommitContent(commit string, stdin io.Reader, stdout, s
 	return build(s.Repo, m, stdin, stdout, stderr, callback, s.Log)
 }
 
-func (s *stdSystem) BuildWorkspace(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
+func (s *stdSystem) BuildWorkspace(nameFilters string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
 	m, err := s.ManifestByWorkspace()
 	if err != nil {
 		return nil, err
+	}
+
+	if nameFilters != "" {
+		m = m.FilterByName(nameFilters)
 	}
 
 	return buildDir(m, stdin, stdout, stderr, callback, s.Log)

@@ -18,6 +18,7 @@ func init() {
 	buildDiff.Flags().StringVar(&to, "to", "", "to commit")
 
 	buildLocal.Flags().BoolVarP(&all, "all", "a", false, "all modules")
+	buildLocal.Flags().StringVarP(&name, "name", "n", "", "build modules with a name that matches a subsequence filter. Multiple names can be specified as a comma separated string.")
 
 	buildCommit.Flags().BoolVarP(&content, "content", "c", false, "build the modules impacted by the content of the commit")
 
@@ -144,8 +145,8 @@ Local builds always uses a fixed version identifier - 'local'.
 Specify the --all flag to build all modules in current workspace.
 	`,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
-		if all {
-			return summarise(system.BuildWorkspace(os.Stdin, os.Stdout, os.Stderr, buildStageCB))
+		if all || name != "" {
+			return summarise(system.BuildWorkspace(name, os.Stdin, os.Stdout, os.Stderr, buildStageCB))
 		}
 
 		return summarise(system.BuildWorkspaceChanges(os.Stdin, os.Stdout, os.Stderr, buildStageCB))
