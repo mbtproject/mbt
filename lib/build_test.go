@@ -48,7 +48,7 @@ func TestBuildDirExecution(t *testing.T) {
 	stages := make([]BuildStage, 0)
 	stdout := new(bytes.Buffer)
 	stderr := new(bytes.Buffer)
-	_, err := NewWorld(t, ".tmp/repo").System.BuildWorkspace(os.Stdin, stdout, stderr, func(a *Module, s BuildStage) {
+	_, err := NewWorld(t, ".tmp/repo").System.BuildWorkspace("", os.Stdin, stdout, stderr, func(a *Module, s BuildStage) {
 		stages = append(stages, s)
 	})
 	check(t, err)
@@ -185,6 +185,90 @@ func TestBuildPr(t *testing.T) {
 	assert.Equal(t, "", buff.String())
 }
 
+func TestBuildWorkspaceWithNameFilter(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.WriteShellScript("app-a/build.sh", "echo built app-a"))
+	check(t, repo.WritePowershellScript("app-a/build.ps1", "write-host built app-a"))
+	check(t, repo.Commit("first"))
+
+	check(t, repo.InitModule("app-b"))
+	check(t, repo.WriteShellScript("app-b/build.sh", "echo built app-b"))
+	check(t, repo.WritePowershellScript("app-b/build.ps1", "write-host built app-b"))
+
+	buff := new(bytes.Buffer)
+	_, err := NewWorld(t, ".tmp/repo").System.BuildWorkspace("app-a", os.Stdin, buff, buff, func(a *Module, s BuildStage) {})
+	check(t, err)
+
+	assert.Equal(t, "built app-a\n", buff.String())
+}
+
+func TestBuildWorkspaceWithMultipleNameFilters(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.WriteShellScript("app-a/build.sh", "echo built app-a"))
+	check(t, repo.WritePowershellScript("app-a/build.ps1", "write-host built app-a"))
+	check(t, repo.Commit("first"))
+
+	check(t, repo.InitModule("app-b"))
+	check(t, repo.WriteShellScript("app-b/build.sh", "echo built app-b"))
+	check(t, repo.WritePowershellScript("app-b/build.ps1", "write-host built app-b"))
+
+	check(t, repo.InitModule("app-c"))
+	check(t, repo.WriteShellScript("app-c/build.sh", "echo built app-c"))
+	check(t, repo.WritePowershellScript("app-c/build.ps1", "write-host built app-c"))
+
+	buff := new(bytes.Buffer)
+	_, err := NewWorld(t, ".tmp/repo").System.BuildWorkspace("app-a,app-c", os.Stdin, buff, buff, func(a *Module, s BuildStage) {})
+	check(t, err)
+
+	assert.Equal(t, "built app-a\nbuilt app-c\n", buff.String())
+}
+
+func TestBuildWorkspaceWithNameFiltersMatchingSameModule(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.WriteShellScript("app-a/build.sh", "echo built app-a"))
+	check(t, repo.WritePowershellScript("app-a/build.ps1", "write-host built app-a"))
+	check(t, repo.Commit("first"))
+
+	check(t, repo.InitModule("app-b"))
+	check(t, repo.WriteShellScript("app-b/build.sh", "echo built app-b"))
+	check(t, repo.WritePowershellScript("app-b/build.ps1", "write-host built app-b"))
+
+	buff := new(bytes.Buffer)
+	_, err := NewWorld(t, ".tmp/repo").System.BuildWorkspace("app-a,app-a", os.Stdin, buff, buff, func(a *Module, s BuildStage) {})
+	check(t, err)
+
+	assert.Equal(t, "built app-a\n", buff.String())
+}
+
+func TestBuildWorkspaceWithNameFilterThatDoesNotMatchAnyModule(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.WriteShellScript("app-a/build.sh", "echo built app-a"))
+	check(t, repo.WritePowershellScript("app-a/build.ps1", "write-host built app-a"))
+	check(t, repo.Commit("first"))
+
+	check(t, repo.InitModule("app-b"))
+	check(t, repo.WriteShellScript("app-b/build.sh", "echo built app-b"))
+	check(t, repo.WritePowershellScript("app-b/build.ps1", "write-host built app-b"))
+
+	buff := new(bytes.Buffer)
+	_, err := NewWorld(t, ".tmp/repo").System.BuildWorkspace("app-c", os.Stdin, buff, buff, func(a *Module, s BuildStage) {})
+	check(t, err)
+
+	assert.Equal(t, "", buff.String())
+}
+
 func TestBuildWorkspace(t *testing.T) {
 	clean()
 	repo := NewTestRepo(t, ".tmp/repo")
@@ -199,12 +283,11 @@ func TestBuildWorkspace(t *testing.T) {
 	check(t, repo.WritePowershellScript("app-b/build.ps1", "write-host built app-b"))
 
 	buff := new(bytes.Buffer)
-	_, err := NewWorld(t, ".tmp/repo").System.BuildWorkspace(os.Stdin, buff, buff, func(a *Module, s BuildStage) {})
+	_, err := NewWorld(t, ".tmp/repo").System.BuildWorkspace("", os.Stdin, buff, buff, func(a *Module, s BuildStage) {})
 	check(t, err)
 
 	assert.Equal(t, "built app-a\nbuilt app-b\n", buff.String())
 }
-
 func TestBuildWorkspaceChanges(t *testing.T) {
 	clean()
 	repo := NewTestRepo(t, ".tmp/repo")
@@ -291,7 +374,7 @@ func TestBuildWorkspaceForManifestFailure(t *testing.T) {
 
 	w := NewWorld(t, ".tmp/repo")
 	w.ManifestBuilder.Interceptor.Config("ByWorkspace").Return(nil, errors.New("doh"))
-	_, err := w.System.BuildWorkspace(os.Stdin, os.Stdout, os.Stderr, noopCb)
+	_, err := w.System.BuildWorkspace("", os.Stdin, os.Stdout, os.Stderr, noopCb)
 
 	assert.EqualError(t, err, "doh")
 }

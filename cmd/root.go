@@ -18,6 +18,7 @@ var (
 	first   string
 	second  string
 	kind    string
+	name    string
 	all     bool
 	debug   bool
 	content bool

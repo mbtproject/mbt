@@ -27,6 +27,7 @@ func init() {
 	describeDiffCmd.Flags().StringVar(&from, "from", "", "from commit")
 	describeDiffCmd.Flags().StringVar(&to, "to", "", "to commit")
 	describeLocalCmd.Flags().BoolVarP(&all, "all", "a", false, "describe all")
+	describeLocalCmd.Flags().StringVarP(&name, "name", "n", "", "describe modules with a name that matches a subsequence filter. Multiple names can be specified as a comma separated string.")
 
 	describeCommitCmd.Flags().BoolVarP(&content, "content", "c", false, "describe the modules impacted by the changes in commit")
 
@@ -114,8 +115,9 @@ This includes the modules in uncommitted changes.
 			err error
 		)
 
-		if all {
+		if all || name != "" {
 			m, err = system.ManifestByWorkspace()
+			m = m.FilterByName(name)
 		} else {
 			m, err = system.ManifestByWorkspaceChanges()
 		}
