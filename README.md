@@ -62,8 +62,36 @@ chmod +x /usr/local/bin/mbt
 Local builds on Windows is not currently supported. 
 However, the specifics can be found in our CI scripts (`appveyor.yml` and `build_win.bat`)
 
-## About
+## Introduction
 
+Repositories containing source for different software modules traditionally
+confronted with unique build infrastructure problems.
+
+- Build Isolation
+
+  Mainstream build utilities typically trigger builds
+  based on the changes to the repository. 
+  They normally don't provide built-in functionality to build sub-trees that have
+  been modified in single change or a set of them. 
+  Building all modules sometimes to do the trick although the mileage is at the mercy of the complexity
+  of those modules being built. As soon as the builds get
+  more complex this approach becomes unsustainable not
+  only time-wise but also in a commercial sense.
+
+- Versioning
+
+  It is a common practice to use git commit SHA's to 
+  annotate build artifacts so that they can be associated
+  to a particular point in time in the the source control.
+  Any tooling with the ability to build modified sub-trees
+  would have to provide a similar construct for versioning
+  because commit SHA speak for the entire repository as
+  whole.
+
+mbt is built exactly around those two problems but also loaded
+with a few nifty utilities to make it useful for contemporary applications.
+
+## Basics
 In the context of `mbt`, term 'Module' is used to refer to a part of source
 tree that can be developed, built and released independently.
 Modules can be built with different programming languages and their
