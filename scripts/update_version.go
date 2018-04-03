@@ -80,8 +80,8 @@ func main() {
 		}
 	}
 
-	nextVersion = fmt.Sprintf(`"%s"`, nextVersion)
-	newContent := strings.Replace(content, currentVersion, nextVersion, 1)
+	quotedNextVersion := fmt.Sprintf(`"%s"`, nextVersion)
+	newContent := strings.Replace(content, currentVersion, quotedNextVersion, 1)
 
 	err = ioutil.WriteFile("cmd/version.go", []byte(newContent), 0644)
 	if err != nil {
