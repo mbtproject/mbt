@@ -7,13 +7,14 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/mbtproject/mbt)](https://goreportcard.com/report/github.com/mbtproject/mbt)
 [![Coverage Status](https://coveralls.io/repos/github/mbtproject/mbt/badge.svg)](https://coveralls.io/github/mbtproject/mbt)
 
-mbt is a built tool for monorepo.
+mbt is a build tool for monorepo (single repository with many applications).
 
 ## Features
 
 - Differential Builds
 - Content Based Versioning
 - Build Dependency Management
+- Build Dependency Visualisation
 - Template Driven Deployments
 
 ## Status
