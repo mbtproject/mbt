@@ -73,11 +73,11 @@ confronted with unique build infrastructure problems.
   Mainstream build utilities typically trigger builds
   based on the changes to the repository. 
   They normally don't provide built-in functionality to build sub-trees that have
-  been modified in single change or a set of them. 
-  Building all modules sometimes to do the trick although the mileage is at the mercy of the complexity
-  of those modules being built. As soon as the builds get
-  more complex this approach becomes unsustainable not
-  only time-wise but also in a commercial sense.
+  been modified in one or many changes. 
+  Building all modules sometimes do the trick although the 
+  mileage may vary depending on the size and complexity of the build process. 
+  As the source gets bigger and builds get more complex, this approach 
+  becomes unsustainable not only time-wise but also in a commercial sense.
 
 - Versioning
 
