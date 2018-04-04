@@ -198,7 +198,7 @@ func TestDiffingForRenames(t *testing.T) {
 	assert.Equal(t, "app-a", m.Modules[0].Name())
 }
 
-func TestModOnRoot(t *testing.T) {
+func TestModuleOnRoot(t *testing.T) {
 	clean()
 	repo := NewTestRepo(t, ".tmp/repo")
 
@@ -212,6 +212,93 @@ func TestModOnRoot(t *testing.T) {
 	assert.Equal(t, "root-app", m.Modules[0].Name())
 	assert.Equal(t, "", m.Modules[0].Path())
 	assert.Equal(t, repo.LastCommit.String(), m.Modules[0].Version())
+}
+
+func TestModuleOnRootWhenDiffing(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+
+	// Test a change in the root dir
+	check(t, repo.InitModuleWithOptions("", &Spec{Name: "root-app"}))
+	check(t, repo.Commit("first"))
+	first := repo.LastCommit.String()
+
+	check(t, repo.WriteContent("foo", "bar"))
+	check(t, repo.Commit("second"))
+	second := repo.LastCommit.String()
+
+	world := NewWorld(t, ".tmp/repo")
+	m, err := world.System.ManifestByDiff(first, second)
+	check(t, err)
+
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "root-app", m.Modules[0].Name())
+	assert.Equal(t, "", m.Modules[0].Path())
+	assert.Equal(t, second, m.Modules[0].Version())
+
+	// Test a change in a nested dir
+	check(t, repo.WriteContent("dir/foo", "bar"))
+	check(t, repo.Commit("third"))
+	third := repo.LastCommit.String()
+
+	m, err = world.System.ManifestByDiff(second, third)
+	check(t, err)
+
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "root-app", m.Modules[0].Name())
+	assert.Equal(t, "", m.Modules[0].Path())
+	assert.Equal(t, third, m.Modules[0].Version())
+
+	// Test an empty diff
+	m, err = world.System.ManifestByDiff(third, third)
+	check(t, err)
+
+	assert.Len(t, m.Modules, 0)
+}
+
+func TestNestedModules(t *testing.T) {
+	/*
+		Nesting modules is a rare scenario.
+		Although it could be useful to implement common build logic
+		for a sub tree.
+		Current expectation is, if a file changes in a path
+		where modules are nested, all impacted modules should
+		be returned in manifest.
+		Consider the following repo structure
+
+		/
+		|_ .mbt.yml (root module)
+		|_ foo.txt
+		|_ mod-a
+		    |_ .mbt.yml
+		    |_ bar.txt
+
+		Change to foo.txt should return just root module in the manifest.
+		Change to bar.txt on the other hand should return both root module
+		and mod-a.
+	*/
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+
+	check(t, repo.InitModuleWithOptions("", &Spec{Name: "root-app"}))
+	check(t, repo.Commit("first"))
+	first := repo.LastCommit.String()
+
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.Commit("second"))
+	second := repo.LastCommit.String()
+
+	world := NewWorld(t, ".tmp/repo")
+	m, err := world.System.ManifestByDiff(first, second)
+	check(t, err)
+
+	assert.Len(t, m.Modules, 2)
+	assert.Equal(t, "app-a", m.Modules[0].Name())
+	assert.Equal(t, "app-a", m.Modules[0].Path())
+	assert.NotEqual(t, second, m.Modules[0].Version())
+	assert.Equal(t, "root-app", m.Modules[1].Name())
+	assert.Equal(t, "", m.Modules[1].Path())
+	assert.Equal(t, second, m.Modules[1].Version())
 }
 
 func TestManifestByDiff(t *testing.T) {

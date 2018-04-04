@@ -30,7 +30,22 @@ func (r *stdReducer) Reduce(modules Modules, deltas []*DiffDelta) (Modules, erro
 	}
 
 	for _, m := range modules {
-		mp := strings.ToLower(fmt.Sprintf("%s/", m.Path()))
+		mp := m.Path()
+
+		if mp == "" {
+			// Fast path for the root module if there's one.
+			// Root module should match any change.
+			if len(deltas) > 0 {
+				filtered = append(filtered, m)
+			}
+			continue
+		}
+
+		// Append / to the end of module path to make sure
+		// we restrict the search exactly for that path.
+		// for example, change in path a/bb should not
+		// match a module in a/b
+		mp = strings.ToLower(fmt.Sprintf("%s/", m.Path()))
 		r.Log.Debug("Filter by module path %s", mp)
 		if t.Find(mp).Success {
 			filtered = append(filtered, m)
