@@ -2,6 +2,8 @@
 # mbt
 >> The most flexible build tool for monorepo
 
+[Documentation](doc) | [Twitter](https://twitter.com/mbtproject)
+
 [![Build Status](https://travis-ci.org/mbtproject/mbt.svg?branch=release)](https://travis-ci.org/mbtproject/mbt)
 [![Build status](https://ci.appveyor.com/api/projects/status/wy8rhr188t3phqvk?svg=true)](https://ci.appveyor.com/project/mbtproject/mbt)
 [![Go Report Card](https://goreportcard.com/badge/github.com/mbtproject/mbt)](https://goreportcard.com/report/github.com/mbtproject/mbt)
@@ -14,7 +16,7 @@ mbt is a build tool for monorepo (single repository with many applications).
 - Differential Builds
 - Content Based Versioning
 - Build Dependency Management
-- Build Dependency Visualisation
+- Dependency Visualisation
 - Template Driven Deployments
 
 ## Status
@@ -318,9 +320,6 @@ when module "app-a" has the value "a" in it's tags property.
 ```
 {{if contains (property (module "app-a") "tags") "a"}}foo{{end}}
 ```
-
-## CLI Documentation
-[Complete documentation](doc)
 
 ## Demo
 [![asciicast](https://asciinema.org/a/KJxXNgrTs9KZbVV4GYNN5DScC.png)](https://asciinema.org/a/KJxXNgrTs9KZbVV4GYNN5DScC)
