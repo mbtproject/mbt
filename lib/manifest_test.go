@@ -1139,3 +1139,16 @@ func TestCircularDependencyInWorkspace(t *testing.T) {
 	assert.EqualError(t, err, "Could not produce the module graph due to a cyclic dependency in path: app-a -> app-b -> app-a")
 	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())
 }
+
+func TestManifestByWorkspaceChangesForRootModule(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+	check(t, repo.InitModuleWithOptions("", &Spec{Name: "root"}))
+
+	w := NewWorld(t, ".tmp/repo")
+	m, err := w.System.ManifestByWorkspaceChanges()
+	check(t, err)
+
+	assert.Len(t, m.Modules, 1)
+	assert.Equal(t, "root", m.Modules[0].Name())
+}
