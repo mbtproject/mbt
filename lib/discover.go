@@ -126,6 +126,15 @@ func (d *stdDiscover) ModulesInWorkspace() (Modules, error) {
 }
 
 func newModuleMetadata(dir string, hash string, spec *Spec) *moduleMetadata {
+	/*
+		Normalise the module dir. We always use paths
+		relative to the module root. Root is represented
+		as an empty string.
+	*/
+	if dir == "." {
+		dir = ""
+	}
+
 	return &moduleMetadata{
 		dir:  dir,
 		hash: hash,
