@@ -26,7 +26,7 @@ func (r *stdReducer) Reduce(modules Modules, deltas []*DiffDelta) (Modules, erro
 		// in git and adjust accordingly.
 		nfp := strings.ToLower(d.NewFile)
 		r.Log.Debug("Index change %s", nfp)
-		t.Add(nfp)
+		t.Add(nfp, nfp)
 	}
 
 	for _, m := range modules {
@@ -47,13 +47,13 @@ func (r *stdReducer) Reduce(modules Modules, deltas []*DiffDelta) (Modules, erro
 		// match a module in a/b
 		mp = strings.ToLower(fmt.Sprintf("%s/", m.Path()))
 		r.Log.Debug("Filter by module path %s", mp)
-		if t.Find(mp).Success {
+		if t.ContainsPrefix(mp) {
 			filtered = append(filtered, m)
 		} else {
 			for _, p := range m.FileDependencies() {
 				fdp := strings.ToLower(p)
 				r.Log.Debug("Filter by file dependency path %s", fdp)
-				if t.Find(fdp).Success {
+				if t.ContainsPrefix(fdp) {
 					filtered = append(filtered, m)
 				}
 			}

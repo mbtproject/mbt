@@ -16,12 +16,15 @@ type Match struct {
 	// For unsuccessful results (i.e. Success = false), it contains
 	// the closest matching prefix.
 	NearestPrefix string
+	// For complete matches, we also return the value stored in that node.
+	Value interface{}
 }
 
 type node struct {
 	prefix          string
 	isCompleteMatch bool
 	children        map[rune]*node
+	value           interface{}
 }
 
 // NewTrie creates a new instance of Trie.
@@ -36,19 +39,48 @@ func NewTrie() *Trie {
 }
 
 // Add creates a new entry in Trie.
-func (t *Trie) Add(value string) *Trie {
-	addOne(t.root, []rune(value))
+func (t *Trie) Add(key string, value interface{}) *Trie {
+	addOne(t.root, []rune(key), value)
 	return t
 }
 
-// Find searches the specified value in Trie.
-func (t *Trie) Find(value string) *Match {
-	return findCore([]rune(value), t.root)
+// Match searches the specified key in Trie.
+func (t *Trie) Match(key string) *Match {
+	return findCore([]rune(key), t.root)
 }
 
-func addOne(to *node, from []rune) {
+// ContainsPrefix returns true if trie contains the specified key
+// with or without a value.
+func (t *Trie) ContainsPrefix(key string) bool {
+	m := t.Match(key)
+	return m.Success
+}
+
+// ContainsProperPrefix returns true if specified key is a
+// proper prefix of an entry in the trie. A proper prefix of a key is
+// a string that is not an exact match. For example if you store
+// key "aba", both "a" and "ab" are proper prefixes but "aba" is not.
+// In this implementation, empty string is not considered as a
+// proper prefix unless a call to .Add is made with an empty string.
+func (t *Trie) ContainsProperPrefix(key string) bool {
+	m := t.Match(key)
+	return m.Success && !m.IsCompleteMatch
+}
+
+// Find returns the value specified with a given key.
+// If the key is not found or a partial match, it returns
+// an additional boolean value indicating the failure.
+// Empty string will always return true but value may be null
+// unless a call to .Add is made with an empty string and a non nil value.
+func (t *Trie) Find(key string) (interface{}, bool) {
+	m := t.Match(key)
+	return m.Value, m.IsCompleteMatch
+}
+
+func addOne(to *node, from []rune, value interface{}) {
 	if len(from) == 0 {
 		to.isCompleteMatch = true
+		to.value = value
 		return
 	}
 
@@ -62,7 +94,7 @@ func addOne(to *node, from []rune) {
 		to.children[head] = next
 	}
 
-	addOne(next, from[1:])
+	addOne(next, from[1:], value)
 }
 
 func findCore(target []rune, in *node) *Match {
@@ -71,6 +103,7 @@ func findCore(target []rune, in *node) *Match {
 			Success:         true,
 			IsCompleteMatch: in.isCompleteMatch,
 			NearestPrefix:   in.prefix,
+			Value:           in.value,
 		}
 	}
 
