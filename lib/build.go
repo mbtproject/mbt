@@ -109,15 +109,14 @@ func build(repo Repo, m *Manifest, stdin io.Reader, stdout, stderr io.Writer, ca
 		return nil, err
 	}
 
-	defer checkoutHead(repo, log)
-
-	completed := make([]*BuildResult, 0)
-	skipped := make([]*Module, 0)
-	// TODO: Confirm the strategy is correct
-	err = repo.Checkout(commit)
+	oldReference, err := repo.Checkout(commit)
 	if err != nil {
 		return nil, e.Wrap(ErrClassInternal, err)
 	}
+	defer repo.CheckoutReference(oldReference)
+
+	completed := make([]*BuildResult, 0)
+	skipped := make([]*Module, 0)
 
 	for _, a := range m.Modules {
 		if !canBuildHere(a) {
@@ -197,11 +196,4 @@ func buildOne(manifest *Manifest, mod *Module, stdin io.Reader, stdout, stderr i
 func canBuildHere(mod *Module) bool {
 	_, ok := mod.Build()[runtime.GOOS]
 	return ok
-}
-
-func checkoutHead(repo Repo, log Log) {
-	err := repo.CheckoutHead()
-	if err != nil {
-		log.Warnf("Failed to checkout head: %s", err)
-	}
 }
