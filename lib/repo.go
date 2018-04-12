@@ -42,6 +42,10 @@ func (c *libgitCommit) String() string {
 	return c.ID()
 }
 
+type libgitReference struct {
+	reference *git.Reference
+}
+
 type libgitRepo struct {
 	path string
 	Repo *git.Repository
@@ -307,10 +311,18 @@ func (r *libgitRepo) BlobContentsFromTree(commit Commit, path string) ([]byte, e
 	return blob.Contents(), nil
 }
 
-func (r *libgitRepo) Checkout(commit Commit) error {
-	tree, err := commit.(*libgitCommit).Tree()
+func (r *libgitRepo) Checkout(commit Commit) (Reference, error) {
+	ref, err := r.Repo.Head()
 	if err != nil {
-		return e.Wrap(ErrClassInternal, err)
+		return nil, e.Wrap(ErrClassInternal, err)
+	}
+
+	reference := &libgitReference{reference: ref}
+
+	gitCommit := commit.(*libgitCommit)
+	tree, err := gitCommit.Tree()
+	if err != nil {
+		return nil, e.Wrap(ErrClassInternal, err)
 	}
 
 	options := &git.CheckoutOpts{
@@ -319,16 +331,40 @@ func (r *libgitRepo) Checkout(commit Commit) error {
 
 	err = r.Repo.CheckoutTree(tree, options)
 	if err != nil {
-		err = e.Wrap(ErrClassInternal, err)
+		return nil, e.Wrap(ErrClassInternal, err)
 	}
-	return err
+
+	err = r.Repo.SetHeadDetached(gitCommit.commit.Id())
+	if err != nil {
+		return reference, e.Wrap(ErrClassInternal, err)
+	}
+
+	return reference, nil
 }
 
-func (r *libgitRepo) CheckoutHead() error {
-	err := r.Repo.CheckoutHead(&git.CheckoutOpts{Strategy: git.CheckoutForce})
+func (r *libgitRepo) CheckoutReference(reference Reference) error {
+	gitRef := (reference.(*libgitReference)).reference
+	target := gitRef.Target()
+	commit, err := r.Repo.LookupCommit(target)
+	if err != nil {
+		return err
+	}
+
+	tree, err := commit.Tree()
+	if err != nil {
+		return err
+	}
+
+	err = r.Repo.CheckoutTree(tree, &git.CheckoutOpts{Strategy: git.CheckoutForce})
 	if err != nil {
 		return e.Wrap(ErrClassInternal, err)
 	}
+
+	err = r.Repo.SetHead(gitRef.Name())
+	if err != nil {
+		return e.Wrap(ErrClassInternal, err)
+	}
+
 	return nil
 }
 

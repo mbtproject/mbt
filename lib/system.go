@@ -42,6 +42,12 @@ type Commit interface {
 	String() string
 }
 
+// Reference to a tree in the repository.
+// For example, if you consider a git repository
+// this could be pointing to a branch, tag or commit.
+type Reference interface {
+}
+
 // Repo defines the set of interactions with the git repository.
 type Repo interface {
 	// GetCommit returns the commit object for the specified SHA.
@@ -81,10 +87,11 @@ type Repo interface {
 	IsEmpty() (bool, error)
 	// IsDirtyWorkspace returns true if the current workspace has uncommitted changes.
 	IsDirtyWorkspace() (bool, error)
-	// Checkout specified commit in current workspace.
-	Checkout(commit Commit) error
-	// CheckoutHead checkout head commit in current workspace.
-	CheckoutHead() error
+	// Checkout specified commit into workspace.
+	// Also returns a reference to the previous tree pointed by current workspace.
+	Checkout(commit Commit) (Reference, error)
+	// CheckoutReference checks out the specified reference into workspace.
+	CheckoutReference(Reference) error
 	// MergeBase returns the merge base of two commits.
 	MergeBase(a, b Commit) (Commit, error)
 }

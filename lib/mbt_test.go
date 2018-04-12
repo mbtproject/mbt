@@ -67,6 +67,26 @@ func (r *TestRepository) WriteContent(file, content string) error {
 	return ioutil.WriteFile(fpath, []byte(content), 0744)
 }
 
+func (r *TestRepository) AppendContent(file, content string) error {
+	fpath := path.Join(r.Dir, file)
+	dir := path.Dir(fpath)
+	if dir != "" {
+		err := os.MkdirAll(dir, 0755)
+		if err != nil {
+			return err
+		}
+	}
+
+	fd, err := os.OpenFile(fpath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0744)
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+
+	_, err = fd.WriteString(content)
+	return err
+}
+
 func (r *TestRepository) Commit(message string) error {
 	idx, err := r.Repo.Index()
 	if err != nil {
@@ -130,7 +150,7 @@ func (r *TestRepository) Commit(message string) error {
 }
 
 func (r *TestRepository) SwitchToBranch(name string) error {
-	_, err := r.Repo.LookupBranch(name, git.BranchAll)
+	branch, err := r.Repo.LookupBranch(name, git.BranchAll)
 	if err != nil {
 		head, err := r.Repo.Head()
 		if err != nil {
@@ -142,20 +162,55 @@ func (r *TestRepository) SwitchToBranch(name string) error {
 			return err
 		}
 
-		_, err = r.Repo.CreateBranch(name, hc, false)
+		branch, err = r.Repo.CreateBranch(name, hc, false)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = r.Repo.SetHead(fmt.Sprintf("refs/heads/%s", name))
+	commit, err := r.Repo.LookupCommit(branch.Target())
 	if err != nil {
 		return err
 	}
 
-	return r.Repo.CheckoutHead(&git.CheckoutOpts{
-		Strategy: git.CheckoutForce | git.CheckoutRemoveUntracked | git.CheckoutDontWriteIndex,
+	tree, err := commit.Tree()
+	if err != nil {
+		return err
+	}
+
+	err = r.Repo.CheckoutTree(tree, &git.CheckoutOpts{
+		Strategy: git.CheckoutForce,
 	})
+
+	if err != nil {
+		return err
+	}
+
+	return r.Repo.SetHead(fmt.Sprintf("refs/heads/%s", name))
+}
+
+func (r *TestRepository) CheckoutAndDetach(commit string) error {
+	oid, err := git.NewOid(commit)
+	if err != nil {
+		return err
+	}
+
+	gitCommit, err := r.Repo.LookupCommit(oid)
+	if err != nil {
+		return err
+	}
+
+	tree, err := gitCommit.Tree()
+	if err != nil {
+		return err
+	}
+
+	err = r.Repo.CheckoutTree(tree, &git.CheckoutOpts{Strategy: git.CheckoutForce})
+	if err != nil {
+		return err
+	}
+
+	return r.Repo.SetHeadDetached(oid)
 }
 
 func (r *TestRepository) SimpleMerge(src, dst string) (*git.Oid, error) {
@@ -325,6 +380,14 @@ func sBuildSummary(e interface{}) *BuildSummary {
 	return e.(*BuildSummary)
 }
 
+func sReference(e interface{}) Reference {
+	if e == nil {
+		return nil
+	}
+
+	return e.(Reference)
+}
+
 type TestRepo struct {
 	Interceptor *intercept.Interceptor
 }
@@ -404,13 +467,13 @@ func (r *TestRepo) IsDirtyWorkspace() (bool, error) {
 	return ret[0].(bool), sErr(ret[1])
 }
 
-func (r *TestRepo) Checkout(commit Commit) error {
+func (r *TestRepo) Checkout(commit Commit) (Reference, error) {
 	ret := r.Interceptor.Call("Checkout", commit)
-	return sErr(ret[0])
+	return sReference(ret[0]), sErr(ret[1])
 }
 
-func (r *TestRepo) CheckoutHead() error {
-	ret := r.Interceptor.Call("CheckoutHead")
+func (r *TestRepo) CheckoutReference(reference Reference) error {
+	ret := r.Interceptor.Call("CheckoutReference", reference)
 	return sErr(ret[0])
 }
 
