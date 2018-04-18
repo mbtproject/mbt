@@ -1,3 +1,8 @@
+## 0.15.1
+- [3f20eee](https://github.com/mbtproject/mbt/commit/3f20eee) Fix: Update head during checkout operations
+- [0760617](https://github.com/mbtproject/mbt/commit/0760617) Fix: Detect local changes on root
+- [60792ab](https://github.com/mbtproject/mbt/commit/60792ab) Fix: Handle root module changes correctly
+
 ## 0.15.0
 - [b02aaad](https://github.com/mbtproject/mbt/commit/b02aaad) Feature: Filter modules during local build/describe
 - [7c0f5b0](https://github.com/mbtproject/mbt/commit/7c0f5b0) Feature: Run mbt command from anywhere
