@@ -17,19 +17,27 @@ env:
   - secure: "YnhS+8n6B+uoyaYfaJ3Lei7cSJqHDPiKJCKFIF2c87YDfmCvAJke8QtE7IzjYDs7UFkTCM4ox+ph2bERUrxZbSCyEkHdjIZpKuMJfYWja/jgMqTMxdyOH9y8JLFbZsSXDIXDwqBlC6vVyl1fP90M35wuWcNTs6tctfVWVofEFbs="
   - GITTEST_INVASIVE_FS_SIZE=1
  matrix:
-  - OPTIONS="-DTHREADSAFE=ON -DCMAKE_BUILD_TYPE=Release"
-  - OPTIONS="-DTHREADSAFE=OFF -DBUILD_EXAMPLES=ON"
+  - OPTIONS="-DTHREADSAFE=ON -DENABLE_TRACE=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_WERROR=ON"
+  - OPTIONS="-DTHREADSAFE=OFF -DBUILD_EXAMPLES=ON -DENABLE_WERROR=ON"
+
+dist: trusty
+sudo: false
 
 addons:
-  apt:
-    packages:
-    - cmake
-    - libssh2-1-dev
-    - openssh-client
-    - openssh-server
-    - valgrind
-
-sudo: false
+ apt:
+  sources:
+   - sourceline: 'deb https://dl.bintray.com/libgit2/ci-dependencies trusty libgit2deps'
+     key_url: 'https://bintray.com/user/downloadSubjectPublicKey?username=bintray'
+  packages:
+   cmake
+   curl
+   libcurl3
+   libcurl3-gnutls
+   libcurl4-gnutls-dev
+   libssh2-1-dev
+   openssh-client
+   openssh-server
+   valgrind
 
 matrix:
  fast_finish: true
@@ -40,16 +48,18 @@ matrix:
    - compiler: gcc
      env: COVERITY=1
      os: linux
+     dist: trusty
    - compiler: gcc
      env:
        - VALGRIND=1
          OPTIONS="-DBUILD_CLAR=ON -DBUILD_EXAMPLES=OFF -DDEBUG_POOL=ON -DCMAKE_BUILD_TYPE=Debug"
      os: linux
+     dist: trusty
  allow_failures:
    - env: COVERITY=1
 
 install:
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then ./script/install-deps-${TRAVIS_OS_NAME}.sh; fi
+  - if [ -f ./script/install-deps-${TRAVIS_OS_NAME}.sh ]; then ./script/install-deps-${TRAVIS_OS_NAME}.sh; fi
 
 # Run the Build script and tests
 script:

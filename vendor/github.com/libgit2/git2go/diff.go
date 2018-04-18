@@ -405,7 +405,7 @@ func (diff *Diff) Patch(deltaIndex int) (*Patch, error) {
 	return newPatchFromC(patchPtr), nil
 }
 
-type DiffOptionsFlag int
+type DiffOptionsFlag uint
 
 const (
 	DiffNormal                 DiffOptionsFlag = C.GIT_DIFF_NORMAL
@@ -437,6 +437,8 @@ const (
 	DiffShowUnmodified       DiffOptionsFlag = C.GIT_DIFF_SHOW_UNMODIFIED
 	DiffPatience             DiffOptionsFlag = C.GIT_DIFF_PATIENCE
 	DiffMinimal              DiffOptionsFlag = C.GIT_DIFF_MINIMAL
+	DiffShowBinary           DiffOptionsFlag = C.GIT_DIFF_SHOW_BINARY
+	DiffIndentHeuristic      DiffOptionsFlag = C.GIT_DIFF_INDENT_HEURISTIC
 )
 
 type DiffNotifyCallback func(diffSoFar *Diff, deltaToAdd DiffDelta, matchedPathspec string) error

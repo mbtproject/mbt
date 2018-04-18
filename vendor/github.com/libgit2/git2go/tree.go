@@ -27,6 +27,10 @@ type Tree struct {
 	cast_ptr *C.git_tree
 }
 
+func (t *Tree) AsObject() *Object {
+	return &t.Object
+}
+
 type TreeEntry struct {
 	Name     string
 	Id       *Oid
@@ -48,12 +52,13 @@ func (t Tree) EntryByName(filename string) *TreeEntry {
 	defer C.free(unsafe.Pointer(cname))
 
 	entry := C.git_tree_entry_byname(t.cast_ptr, cname)
-	runtime.KeepAlive(t)
 	if entry == nil {
 		return nil
 	}
 
-	return newTreeEntry(entry)
+	goEntry := newTreeEntry(entry)
+	runtime.KeepAlive(t)
+	return goEntry
 }
 
 // EntryById performs a lookup for a tree entry with the given SHA value.
@@ -67,13 +72,14 @@ func (t Tree) EntryById(id *Oid) *TreeEntry {
 	defer runtime.UnlockOSThread()
 
 	entry := C.git_tree_entry_byid(t.cast_ptr, id.toC())
-	runtime.KeepAlive(t)
 	runtime.KeepAlive(id)
 	if entry == nil {
 		return nil
 	}
 
-	return newTreeEntry(entry)
+	goEntry := newTreeEntry(entry)
+	runtime.KeepAlive(t)
+	return goEntry
 }
 
 // EntryByPath looks up an entry by its full path, recursing into
@@ -98,12 +104,13 @@ func (t Tree) EntryByPath(path string) (*TreeEntry, error) {
 
 func (t Tree) EntryByIndex(index uint64) *TreeEntry {
 	entry := C.git_tree_entry_byindex(t.cast_ptr, C.size_t(index))
-	runtime.KeepAlive(t)
 	if entry == nil {
 		return nil
 	}
 
-	return newTreeEntry(entry)
+	goEntry := newTreeEntry(entry)
+	runtime.KeepAlive(t)
+	return goEntry
 }
 
 func (t Tree) EntryCount() uint64 {
