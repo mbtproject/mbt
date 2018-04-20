@@ -13,8 +13,8 @@ var (
 )
 
 func init() {
-	applyCmd.PersistentFlags().StringVar(&to, "to", "", "template to apply")
-	applyCmd.PersistentFlags().StringVar(&out, "out", "", "output path")
+	applyCmd.PersistentFlags().StringVar(&to, "to", "", "Template to apply")
+	applyCmd.PersistentFlags().StringVar(&out, "out", "", "Output path")
 	applyCmd.AddCommand(applyBranchCmd)
 	applyCmd.AddCommand(applyCommitCmd)
 	applyCmd.AddCommand(applyHeadCmd)

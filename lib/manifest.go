@@ -60,14 +60,24 @@ func (s *stdSystem) ManifestByWorkspaceChanges() (*Manifest, error) {
 // ones that are matching the terms specified in filter.
 // Multiple terms can be specified as a comma separated
 // string.
-// Comparison is a case insensitive subsequence comparison.
-func (m *Manifest) FilterByName(filter string) *Manifest {
+// If fuzzy argument is true, comparison is a case insensitive
+// subsequence comparison. Otherwise, it's a case insensitive
+// exact match.
+func (m *Manifest) FilterByName(filterOptions *FilterOptions) *Manifest {
 	filteredModules := make(Modules, 0)
+	filter := strings.ToLower(filterOptions.Name)
 	filters := strings.Split(filter, ",")
 
 	for _, m := range m.Modules {
+		lowerModuleName := strings.ToLower(m.Name())
 		for _, f := range filters {
-			if utils.IsSubsequence(m.Name(), f, true) {
+			match := false
+			if filterOptions.Fuzzy {
+				match = utils.IsSubsequence(lowerModuleName, f, true)
+			} else {
+				match = lowerModuleName == f
+			}
+			if match {
 				// We've got a match. Append it to the list
 				// and discard rest of the filters for this
 				// module.
@@ -78,4 +88,18 @@ func (m *Manifest) FilterByName(filter string) *Manifest {
 	}
 
 	return &Manifest{Dir: m.Dir, Modules: filteredModules, Sha: m.Sha}
+}
+
+// ApplyFilters will filter the modules in the manifest to the ones that
+// matches the specified filter. If filter is not specified, original
+// manifest is returned.
+func (m *Manifest) ApplyFilters(filterOptions *FilterOptions) *Manifest {
+	if filterOptions == nil {
+		panic("filterOptions cannot be nil")
+	}
+
+	if filterOptions.Name != "" {
+		return m.FilterByName(filterOptions)
+	}
+	return m
 }

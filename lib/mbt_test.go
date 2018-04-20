@@ -550,8 +550,8 @@ func (s *TestSystem) ApplyLocal(templatePath string, output io.Writer) error {
 	return sErr(ret[0])
 }
 
-func (s *TestSystem) BuildBranch(name string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
-	ret := s.Interceptor.Call("BuildBranch", name, stdin, stdout, stderr, callback)
+func (s *TestSystem) BuildBranch(name string, filterOptions *FilterOptions, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
+	ret := s.Interceptor.Call("BuildBranch", name, filterOptions, stdin, stdout, stderr, callback)
 	return sBuildSummary(ret[0]), sErr(ret[1])
 }
 
@@ -565,13 +565,13 @@ func (s *TestSystem) BuildDiff(from, to string, stdin io.Reader, stdout, stderr 
 	return sBuildSummary(ret[0]), sErr(ret[1])
 }
 
-func (s *TestSystem) BuildCurrentBranch(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
-	ret := s.Interceptor.Call("BuildCurrentBranch", stdin, stdout, stderr, callback)
+func (s *TestSystem) BuildCurrentBranch(filterOptions *FilterOptions, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
+	ret := s.Interceptor.Call("BuildCurrentBranch", filterOptions, stdin, stdout, stderr, callback)
 	return sBuildSummary(ret[0]), sErr(ret[1])
 }
 
-func (s *TestSystem) BuildCommit(commit string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
-	ret := s.Interceptor.Call("BuildCommit", commit, stdin, stdout, stderr, callback)
+func (s *TestSystem) BuildCommit(commit string, filterOptions *FilterOptions, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
+	ret := s.Interceptor.Call("BuildCommit", commit, filterOptions, stdin, stdout, stderr, callback)
 	return sBuildSummary(ret[0]), sErr(ret[1])
 }
 
@@ -581,8 +581,8 @@ func (s *TestSystem) BuildCommitContent(commit string, stdin io.Reader, stdout, 
 
 }
 
-func (s *TestSystem) BuildWorkspace(nameFilters string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
-	ret := s.Interceptor.Call("BuildWorkspace", nameFilters, stdin, stdout, stderr, callback)
+func (s *TestSystem) BuildWorkspace(filterOptions *FilterOptions, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
+	ret := s.Interceptor.Call("BuildWorkspace", filterOptions, stdin, stdout, stderr, callback)
 	return sBuildSummary(ret[0]), sErr(ret[1])
 }
 

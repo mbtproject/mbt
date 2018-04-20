@@ -17,13 +17,13 @@ var defaultCheckoutOptions = &git.CheckoutOpts{
 	Strategy: git.CheckoutSafe,
 }
 
-func (s *stdSystem) BuildBranch(name string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
+func (s *stdSystem) BuildBranch(name string, filterOptions *FilterOptions, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
 	m, err := s.ManifestByBranch(name)
 	if err != nil {
 		return nil, err
 	}
 
-	return build(s.Repo, m, stdin, stdout, stderr, callback, s.Log)
+	return build(s.Repo, m.ApplyFilters(filterOptions), stdin, stdout, stderr, callback, s.Log)
 }
 
 func (s *stdSystem) BuildPr(src, dst string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
@@ -44,22 +44,22 @@ func (s *stdSystem) BuildDiff(from, to string, stdin io.Reader, stdout, stderr i
 	return build(s.Repo, m, stdin, stdout, stderr, callback, s.Log)
 }
 
-func (s *stdSystem) BuildCurrentBranch(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
+func (s *stdSystem) BuildCurrentBranch(filterOptions *FilterOptions, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
 	m, err := s.ManifestByCurrentBranch()
 	if err != nil {
 		return nil, err
 	}
 
-	return build(s.Repo, m, stdin, stdout, stderr, callback, s.Log)
+	return build(s.Repo, m.ApplyFilters(filterOptions), stdin, stdout, stderr, callback, s.Log)
 }
 
-func (s *stdSystem) BuildCommit(commit string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
+func (s *stdSystem) BuildCommit(commit string, filterOptions *FilterOptions, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
 	m, err := s.ManifestByCommit(commit)
 	if err != nil {
 		return nil, err
 	}
 
-	return build(s.Repo, m, stdin, stdout, stderr, callback, s.Log)
+	return build(s.Repo, m.ApplyFilters(filterOptions), stdin, stdout, stderr, callback, s.Log)
 }
 
 func (s *stdSystem) BuildCommitContent(commit string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
@@ -71,16 +71,13 @@ func (s *stdSystem) BuildCommitContent(commit string, stdin io.Reader, stdout, s
 	return build(s.Repo, m, stdin, stdout, stderr, callback, s.Log)
 }
 
-func (s *stdSystem) BuildWorkspace(nameFilters string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
+func (s *stdSystem) BuildWorkspace(filterOptions *FilterOptions, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
 	m, err := s.ManifestByWorkspace()
 	if err != nil {
 		return nil, err
 	}
 
-	if nameFilters != "" {
-		m = m.FilterByName(nameFilters)
-	}
-
+	m = m.ApplyFilters(filterOptions)
 	return buildDir(m, stdin, stdout, stderr, callback, s.Log)
 }
 

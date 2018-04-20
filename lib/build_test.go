@@ -27,7 +27,7 @@ func TestBuildExecution(t *testing.T) {
 	stages := make([]BuildStage, 0)
 	stdout := new(bytes.Buffer)
 	stderr := new(bytes.Buffer)
-	_, err := NewWorld(t, ".tmp/repo").System.BuildCurrentBranch(os.Stdin, stdout, stderr, func(a *Module, s BuildStage) {
+	_, err := NewWorld(t, ".tmp/repo").System.BuildCurrentBranch(NoFilter, os.Stdin, stdout, stderr, func(a *Module, s BuildStage) {
 		stages = append(stages, s)
 	})
 	check(t, err)
@@ -49,7 +49,7 @@ func TestBuildDirExecution(t *testing.T) {
 	stages := make([]BuildStage, 0)
 	stdout := new(bytes.Buffer)
 	stderr := new(bytes.Buffer)
-	_, err := NewWorld(t, ".tmp/repo").System.BuildWorkspace("", os.Stdin, stdout, stderr, func(a *Module, s BuildStage) {
+	_, err := NewWorld(t, ".tmp/repo").System.BuildWorkspace(NoFilter, os.Stdin, stdout, stderr, func(a *Module, s BuildStage) {
 		stages = append(stages, s)
 	})
 	check(t, err)
@@ -84,7 +84,7 @@ func TestBuildSkip(t *testing.T) {
 	other := make([]string, 0)
 	buff := new(bytes.Buffer)
 
-	_, err := NewWorld(t, ".tmp/repo").System.BuildCurrentBranch(os.Stdin, buff, buff, func(a *Module, s BuildStage) {
+	_, err := NewWorld(t, ".tmp/repo").System.BuildCurrentBranch(NoFilter, os.Stdin, buff, buff, func(a *Module, s BuildStage) {
 		if s == BuildStageSkipBuild {
 			skipped = append(skipped, a.Name())
 		} else {
@@ -114,13 +114,13 @@ func TestBuildBranch(t *testing.T) {
 	check(t, repo.Commit("second"))
 
 	buff := new(bytes.Buffer)
-	_, err := NewWorld(t, ".tmp/repo").System.BuildBranch("master", os.Stdin, buff, buff, noopCb)
+	_, err := NewWorld(t, ".tmp/repo").System.BuildBranch("master", NoFilter, os.Stdin, buff, buff, noopCb)
 	check(t, err)
 
 	assert.Equal(t, "built app-a\n", buff.String())
 
 	buff = new(bytes.Buffer)
-	_, err = NewWorld(t, ".tmp/repo").System.BuildBranch("feature", os.Stdin, buff, buff, noopCb)
+	_, err = NewWorld(t, ".tmp/repo").System.BuildBranch("feature", NoFilter, os.Stdin, buff, buff, noopCb)
 	check(t, err)
 
 	assert.Equal(t, "built app-a\nbuilt app-b\n", buff.String())
@@ -200,7 +200,7 @@ func TestBuildWorkspaceWithNameFilter(t *testing.T) {
 	check(t, repo.WritePowershellScript("app-b/build.ps1", "write-host built app-b"))
 
 	buff := new(bytes.Buffer)
-	_, err := NewWorld(t, ".tmp/repo").System.BuildWorkspace("app-a", os.Stdin, buff, buff, noopCb)
+	_, err := NewWorld(t, ".tmp/repo").System.BuildWorkspace(&FilterOptions{Name: "app-a", Fuzzy: true}, os.Stdin, buff, buff, noopCb)
 	check(t, err)
 
 	assert.Equal(t, "built app-a\n", buff.String())
@@ -224,7 +224,7 @@ func TestBuildWorkspaceWithMultipleNameFilters(t *testing.T) {
 	check(t, repo.WritePowershellScript("app-c/build.ps1", "write-host built app-c"))
 
 	buff := new(bytes.Buffer)
-	_, err := NewWorld(t, ".tmp/repo").System.BuildWorkspace("app-a,app-c", os.Stdin, buff, buff, noopCb)
+	_, err := NewWorld(t, ".tmp/repo").System.BuildWorkspace(&FilterOptions{Name: "app-a,app-c", Fuzzy: true}, os.Stdin, buff, buff, noopCb)
 	check(t, err)
 
 	assert.Equal(t, "built app-a\nbuilt app-c\n", buff.String())
@@ -244,7 +244,7 @@ func TestBuildWorkspaceWithNameFiltersMatchingSameModule(t *testing.T) {
 	check(t, repo.WritePowershellScript("app-b/build.ps1", "write-host built app-b"))
 
 	buff := new(bytes.Buffer)
-	_, err := NewWorld(t, ".tmp/repo").System.BuildWorkspace("app-a,app-a", os.Stdin, buff, buff, noopCb)
+	_, err := NewWorld(t, ".tmp/repo").System.BuildWorkspace(&FilterOptions{Name: "app-a,app-a", Fuzzy: true}, os.Stdin, buff, buff, noopCb)
 	check(t, err)
 
 	assert.Equal(t, "built app-a\n", buff.String())
@@ -264,7 +264,7 @@ func TestBuildWorkspaceWithNameFilterThatDoesNotMatchAnyModule(t *testing.T) {
 	check(t, repo.WritePowershellScript("app-b/build.ps1", "write-host built app-b"))
 
 	buff := new(bytes.Buffer)
-	_, err := NewWorld(t, ".tmp/repo").System.BuildWorkspace("app-c", os.Stdin, buff, buff, noopCb)
+	_, err := NewWorld(t, ".tmp/repo").System.BuildWorkspace(&FilterOptions{Name: "app-c", Fuzzy: true}, os.Stdin, buff, buff, noopCb)
 	check(t, err)
 
 	assert.Equal(t, "", buff.String())
@@ -284,7 +284,7 @@ func TestBuildWorkspace(t *testing.T) {
 	check(t, repo.WritePowershellScript("app-b/build.ps1", "write-host built app-b"))
 
 	buff := new(bytes.Buffer)
-	_, err := NewWorld(t, ".tmp/repo").System.BuildWorkspace("", os.Stdin, buff, buff, noopCb)
+	_, err := NewWorld(t, ".tmp/repo").System.BuildWorkspace(NoFilter, os.Stdin, buff, buff, noopCb)
 	check(t, err)
 
 	assert.Equal(t, "built app-a\nbuilt app-b\n", buff.String())
@@ -315,7 +315,7 @@ func TestBuildBranchForManifestFailure(t *testing.T) {
 
 	w := NewWorld(t, ".tmp/repo")
 	w.ManifestBuilder.Interceptor.Config("ByBranch").Return(nil, errors.New("doh"))
-	_, err := w.System.BuildBranch("master", os.Stdin, os.Stdout, os.Stderr, noopCb)
+	_, err := w.System.BuildBranch("master", NoFilter, os.Stdin, os.Stdout, os.Stderr, noopCb)
 
 	assert.EqualError(t, err, "doh")
 }
@@ -351,7 +351,7 @@ func TestBuildCurrentBranchManifestFailure(t *testing.T) {
 
 	w := NewWorld(t, ".tmp/repo")
 	w.ManifestBuilder.Interceptor.Config("ByCurrentBranch").Return(nil, errors.New("doh"))
-	_, err := w.System.BuildCurrentBranch(os.Stdin, os.Stdout, os.Stderr, noopCb)
+	_, err := w.System.BuildCurrentBranch(NoFilter, os.Stdin, os.Stdout, os.Stderr, noopCb)
 
 	assert.EqualError(t, err, "doh")
 }
@@ -364,7 +364,7 @@ func TestBuildCommitForManifestFailure(t *testing.T) {
 
 	w := NewWorld(t, ".tmp/repo")
 	w.ManifestBuilder.Interceptor.Config("ByCommit").Return(nil, errors.New("doh"))
-	_, err := w.System.BuildCommit(c, os.Stdin, os.Stdout, os.Stderr, noopCb)
+	_, err := w.System.BuildCommit(c, NoFilter, os.Stdin, os.Stdout, os.Stderr, noopCb)
 
 	assert.EqualError(t, err, "doh")
 }
@@ -375,7 +375,7 @@ func TestBuildWorkspaceForManifestFailure(t *testing.T) {
 
 	w := NewWorld(t, ".tmp/repo")
 	w.ManifestBuilder.Interceptor.Config("ByWorkspace").Return(nil, errors.New("doh"))
-	_, err := w.System.BuildWorkspace("", os.Stdin, os.Stdout, os.Stderr, noopCb)
+	_, err := w.System.BuildWorkspace(NoFilter, os.Stdin, os.Stdout, os.Stderr, noopCb)
 
 	assert.EqualError(t, err, "doh")
 }
@@ -403,7 +403,7 @@ func TestDirtyWorkingDir(t *testing.T) {
 	check(t, repo.WriteContent("app-a/foo", "b"))
 
 	buff := new(bytes.Buffer)
-	_, err := NewWorld(t, ".tmp/repo").System.BuildCurrentBranch(os.Stdin, buff, buff, noopCb)
+	_, err := NewWorld(t, ".tmp/repo").System.BuildCurrentBranch(NoFilter, os.Stdin, buff, buff, noopCb)
 	assert.Error(t, err)
 	assert.Equal(t, "dirty working dir", err.Error())
 	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())
@@ -431,7 +431,7 @@ func TestBuildEnvironment(t *testing.T) {
 	check(t, err)
 
 	buff := new(bytes.Buffer)
-	_, err = NewWorld(t, ".tmp/repo").System.BuildCurrentBranch(os.Stdin, buff, buff, noopCb)
+	_, err = NewWorld(t, ".tmp/repo").System.BuildCurrentBranch(NoFilter, os.Stdin, buff, buff, noopCb)
 	check(t, err)
 
 	out := buff.String()
@@ -445,7 +445,7 @@ func TestBadSha(t *testing.T) {
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.Commit("first"))
 
-	_, err := NewWorld(t, ".tmp/repo").System.BuildCommit("a", os.Stdin, os.Stdout, os.Stderr, noopCb)
+	_, err := NewWorld(t, ".tmp/repo").System.BuildCommit("a", NoFilter, os.Stdin, os.Stdout, os.Stderr, noopCb)
 
 	assert.EqualError(t, err, fmt.Sprintf(msgInvalidSha, "a"))
 	assert.EqualError(t, (err.(*e.E)).InnerError(), "encoding/hex: odd length hex string")
@@ -460,7 +460,7 @@ func TestMissingSha(t *testing.T) {
 	check(t, repo.Commit("first"))
 
 	sha := "22221c5e56794a2af5f59f94512df4c669c77a49"
-	_, err := NewWorld(t, ".tmp/repo").System.BuildCommit(sha, os.Stdin, os.Stdout, os.Stderr, noopCb)
+	_, err := NewWorld(t, ".tmp/repo").System.BuildCommit(sha, NoFilter, os.Stdin, os.Stdout, os.Stderr, noopCb)
 
 	assert.EqualError(t, err, fmt.Sprintf(msgCommitShaNotFound, sha))
 	assert.EqualError(t, (err.(*e.E)).InnerError(), "object not found - no match for id (22221c5e56794a2af5f59f94512df4c669c77a49)")
@@ -524,7 +524,7 @@ func TestRestorationOfPristineWorkspace(t *testing.T) {
 
 	w := NewWorld(t, ".tmp/repo")
 	buff := new(bytes.Buffer)
-	_, err := w.System.BuildBranch("feature", os.Stdin, buff, buff, noopCb)
+	_, err := w.System.BuildBranch("feature", NoFilter, os.Stdin, buff, buff, noopCb)
 	check(t, err)
 
 	idx, err := repo.Repo.Index()
@@ -568,7 +568,7 @@ func TestRestorationOfPristineDetachedWorkspace(t *testing.T) {
 
 	w := NewWorld(t, ".tmp/repo")
 	buff := new(bytes.Buffer)
-	_, err := w.System.BuildBranch("feature", os.Stdin, buff, buff, noopCb)
+	_, err := w.System.BuildBranch("feature", NoFilter, os.Stdin, buff, buff, noopCb)
 	check(t, err)
 
 	idx, err := repo.Repo.Index()
@@ -603,7 +603,7 @@ func TestRestorationOnBuildFailure(t *testing.T) {
 
 	w := NewWorld(t, ".tmp/repo")
 	buff := new(bytes.Buffer)
-	_, err := w.System.BuildBranch("feature", os.Stdin, buff, buff, noopCb)
+	_, err := w.System.BuildBranch("feature", NoFilter, os.Stdin, buff, buff, noopCb)
 	assert.EqualError(t, err, "failed to build module 'app-a'")
 
 	idx, err := repo.Repo.Index()
