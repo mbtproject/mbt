@@ -215,6 +215,12 @@ type BuildStageCallback func(mod *Module, s BuildStage)
 
 /** Main MBT System Interface **/
 
+// FilterOptions describe how to filter the modules in a manifest
+type FilterOptions struct {
+	Name  string
+	Fuzzy bool
+}
+
 // System is the interface used by users to invoke the core functionality
 // of this package
 type System interface {
@@ -234,8 +240,10 @@ type System interface {
 	// Template is retrieved from the current workspace.
 	ApplyLocal(templatePath string, output io.Writer) error
 
-	// BuildBranch builds the specifed branch.
-	BuildBranch(name string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
+	// BuildBranch builds the specified branch.
+	// This function accepts FilterOptions to specify which modules to be built
+	// within that branch.
+	BuildBranch(name string, filterOptions *FilterOptions, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
 
 	// BuildPr builds changes in 'src' branch since it diverged from 'dst' branch.
 	BuildPr(src, dst string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
@@ -244,16 +252,22 @@ type System interface {
 	BuildDiff(from, to string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
 
 	// BuildCurrentBranch builds the current branch.
-	BuildCurrentBranch(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
+	// This function accepts FilterOptions to specify which modules to be built
+	// within that branch.
+	BuildCurrentBranch(filterOptions *FilterOptions, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
 
 	// BuildCommit builds specified commit.
-	BuildCommit(commit string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
+	// This function accepts FilterOptions to specify which modules to be built
+	// within that branch.
+	BuildCommit(commit string, filterOptions *FilterOptions, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
 
 	// BuildCommitChanges builds the changes in specified commit
 	BuildCommitContent(commit string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
 
 	// BuildWorkspace builds the current workspace.
-	BuildWorkspace(nameFilters string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
+	// This function accepts FilterOptions to specify which modules to be built
+	// within that branch.
+	BuildWorkspace(filterOptions *FilterOptions, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
 
 	// BuildWorkspace builds changes in current workspace.
 	BuildWorkspaceChanges(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
@@ -316,6 +330,19 @@ func NewSystem(path string, logLevel int) (System, error) {
 	reducer := NewReducer(log)
 	mb := NewManifestBuilder(repo, reducer, discover, log)
 	return initSystem(log, repo, mb, discover, reducer), nil
+}
+
+// NoFilter is built-in filter that represents no filtering
+var NoFilter = &FilterOptions{}
+
+// FuzzyFilter is a helper to create a fuzzy match FilterOptions
+func FuzzyFilter(name string) *FilterOptions {
+	return &FilterOptions{Name: name, Fuzzy: true}
+}
+
+// ExactMatchFilter is a helper to create an exact match FilterOptions
+func ExactMatchFilter(name string) *FilterOptions {
+	return &FilterOptions{Name: name}
 }
 
 func initSystem(log Log, repo Repo, mb ManifestBuilder, discover Discover, reducer Reducer) System {

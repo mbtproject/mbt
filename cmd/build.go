@@ -11,16 +11,25 @@ import (
 )
 
 func init() {
-	buildPr.Flags().StringVar(&src, "src", "", "source branch")
-	buildPr.Flags().StringVar(&dst, "dst", "", "destination branch")
+	buildPr.Flags().StringVar(&src, "src", "", "Source branch")
+	buildPr.Flags().StringVar(&dst, "dst", "", "Destination branch")
 
-	buildDiff.Flags().StringVar(&from, "from", "", "from commit")
-	buildDiff.Flags().StringVar(&to, "to", "", "to commit")
+	buildDiff.Flags().StringVar(&from, "from", "", "From commit")
+	buildDiff.Flags().StringVar(&to, "to", "", "To commit")
 
-	buildLocal.Flags().BoolVarP(&all, "all", "a", false, "all modules")
-	buildLocal.Flags().StringVarP(&name, "name", "n", "", "build modules with a name that matches a subsequence filter. Multiple names can be specified as a comma separated string.")
+	buildLocal.Flags().BoolVarP(&all, "all", "a", false, "All modules")
+	buildLocal.Flags().StringVarP(&name, "name", "n", "", "Build modules with a name that matches this value. Multiple names can be specified as a comma separated string.")
+	buildLocal.Flags().BoolVarP(&fuzzy, "fuzzy", "f", false, "Use fuzzy match when filtering")
 
-	buildCommit.Flags().BoolVarP(&content, "content", "c", false, "build the modules impacted by the content of the commit")
+	buildCommit.Flags().BoolVarP(&content, "content", "c", false, "Build the modules impacted by the content of the commit")
+	buildCommit.Flags().StringVarP(&name, "name", "n", "", "Build modules with a name that matches this value. Multiple names can be specified as a comma separated string.")
+	buildCommit.Flags().BoolVarP(&fuzzy, "fuzzy", "f", false, "Use fuzzy match when filtering")
+
+	buildBranch.Flags().StringVarP(&name, "name", "n", "", "Build modules with a name that matches this value. Multiple names can be specified as a comma separated string.")
+	buildBranch.Flags().BoolVarP(&fuzzy, "fuzzy", "f", false, "Use fuzzy match when filtering")
+
+	buildHead.Flags().StringVarP(&name, "name", "n", "", "Build modules with a name that matches this value. Multiple names can be specified as a comma separated string.")
+	buildHead.Flags().BoolVarP(&fuzzy, "fuzzy", "f", false, "Use fuzzy match when filtering")
 
 	buildCommand.AddCommand(buildBranch)
 	buildCommand.AddCommand(buildPr)
@@ -38,7 +47,7 @@ var buildHead = &cobra.Command{
 
 `,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
-		return summarise(system.BuildCurrentBranch(os.Stdin, os.Stdout, os.Stderr, buildStageCB))
+		return summarise(system.BuildCurrentBranch(&lib.FilterOptions{Name: name, Fuzzy: fuzzy}, os.Stdin, os.Stdout, os.Stderr, buildStageCB))
 	}),
 }
 
@@ -57,7 +66,7 @@ If branch name is not specified, the command assumes 'master'.
 			branch = args[0]
 		}
 
-		return summarise(system.BuildBranch(branch, os.Stdin, os.Stdout, os.Stderr, buildStageCB))
+		return summarise(system.BuildBranch(branch, &lib.FilterOptions{Name: name, Fuzzy: fuzzy}, os.Stdin, os.Stdout, os.Stderr, buildStageCB))
 	}),
 }
 
@@ -132,7 +141,7 @@ var buildCommit = &cobra.Command{
 		if content {
 			return summarise(system.BuildCommitContent(commit, os.Stdin, os.Stdout, os.Stderr, buildStageCB))
 		}
-		return summarise(system.BuildCommit(commit, os.Stdin, os.Stdout, os.Stderr, buildStageCB))
+		return summarise(system.BuildCommit(commit, &lib.FilterOptions{Name: name, Fuzzy: fuzzy}, os.Stdin, os.Stdout, os.Stderr, buildStageCB))
 	}),
 }
 
@@ -146,7 +155,7 @@ Specify the --all flag to build all modules in current workspace.
 	`,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if all || name != "" {
-			return summarise(system.BuildWorkspace(name, os.Stdin, os.Stdout, os.Stderr, buildStageCB))
+			return summarise(system.BuildWorkspace(&lib.FilterOptions{Name: name, Fuzzy: fuzzy}, os.Stdin, os.Stdout, os.Stderr, buildStageCB))
 		}
 
 		return summarise(system.BuildWorkspaceChanges(os.Stdin, os.Stdout, os.Stderr, buildStageCB))

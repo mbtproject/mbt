@@ -1152,3 +1152,27 @@ func TestManifestByWorkspaceChangesForRootModule(t *testing.T) {
 	assert.Len(t, m.Modules, 1)
 	assert.Equal(t, "root", m.Modules[0].Name())
 }
+
+func TestApplyFilter(t *testing.T) {
+	m := &Manifest{
+		Modules: []*Module{
+			{name: "app-a"},
+			{name: "app-b"},
+			{name: "app-aa"},
+		},
+	}
+
+	assert.Equal(t, m, m.ApplyFilters(NoFilter))
+
+	m1 := m.ApplyFilters(ExactMatchFilter("app"))
+	assert.Len(t, m1.Modules, 0)
+
+	m1 = m.ApplyFilters(ExactMatchFilter("app-a"))
+	assert.Len(t, m1.Modules, 1)
+	assert.Equal(t, "app-a", m1.Modules[0].Name())
+
+	m1 = m.ApplyFilters(FuzzyFilter("app-a"))
+	assert.Len(t, m1.Modules, 2)
+	assert.Equal(t, "app-a", m1.Modules[0].Name())
+	assert.Equal(t, "app-aa", m1.Modules[1].Name())
+}

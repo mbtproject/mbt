@@ -22,22 +22,21 @@ var (
 	all     bool
 	debug   bool
 	content bool
+	fuzzy   bool
 	system  lib.System
 )
 
 func init() {
-	RootCmd.PersistentFlags().StringVar(&in, "in", "", "path to repo")
-	RootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "enable debugging")
+	RootCmd.PersistentFlags().StringVar(&in, "in", "", "Path to repo")
+	RootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "Enable debugging")
 }
 
 // RootCmd is the main command.
 var RootCmd = &cobra.Command{
 	Use:   "mbt",
-	Short: "Build utility for monorepos",
-	Long: `Build utility for monorepos
-
-Monorepo Build Tool (mbt) is a utility that supports differential builds,
-dependency tracking and metadata management for monorepos stored in git.
+	Short: "Monorepo Build Tool",
+	Long: `Monorepo Build Tool
+The most flexible build tool for monorepo.
 
 See help for individual commands for more information.
 

@@ -17,22 +17,31 @@ var (
 )
 
 func init() {
-	describePrCmd.Flags().StringVar(&src, "src", "", "source branch")
-	describePrCmd.Flags().StringVar(&dst, "dst", "", "destination branch")
+	describePrCmd.Flags().StringVar(&src, "src", "", "Source branch")
+	describePrCmd.Flags().StringVar(&dst, "dst", "", "Destination branch")
 
-	describeIntersectionCmd.Flags().StringVar(&kind, "kind", "", "kind of input for first and second args (available options are 'branch' and 'commit')")
-	describeIntersectionCmd.Flags().StringVar(&first, "first", "", "first item")
-	describeIntersectionCmd.Flags().StringVar(&second, "second", "", "second item")
+	describeIntersectionCmd.Flags().StringVar(&kind, "kind", "", "Kind of input for first and second args (available options are 'branch' and 'commit')")
+	describeIntersectionCmd.Flags().StringVar(&first, "first", "", "First item")
+	describeIntersectionCmd.Flags().StringVar(&second, "second", "", "Second item")
 
-	describeDiffCmd.Flags().StringVar(&from, "from", "", "from commit")
-	describeDiffCmd.Flags().StringVar(&to, "to", "", "to commit")
-	describeLocalCmd.Flags().BoolVarP(&all, "all", "a", false, "describe all")
-	describeLocalCmd.Flags().StringVarP(&name, "name", "n", "", "describe modules with a name that matches a subsequence filter. Multiple names can be specified as a comma separated string.")
+	describeDiffCmd.Flags().StringVar(&from, "from", "", "From commit")
+	describeDiffCmd.Flags().StringVar(&to, "to", "", "To commit")
+	describeLocalCmd.Flags().BoolVarP(&all, "all", "a", false, "Describe all")
+	describeLocalCmd.Flags().StringVarP(&name, "name", "n", "", "Describe modules with a name that matches this value. Multiple names can be specified as a comma separated string.")
+	describeLocalCmd.Flags().BoolVarP(&fuzzy, "fuzzy", "f", false, "Use fuzzy match when filtering")
 
-	describeCommitCmd.Flags().BoolVarP(&content, "content", "c", false, "describe the modules impacted by the changes in commit")
+	describeCommitCmd.Flags().BoolVarP(&content, "content", "c", false, "Describe the modules impacted by the changes in commit")
+	describeCommitCmd.Flags().StringVarP(&name, "name", "n", "", "Describe modules with a name that matches this value. Multiple names can be specified as a comma separated string.")
+	describeCommitCmd.Flags().BoolVarP(&fuzzy, "fuzzy", "f", false, "Use fuzzy match when filtering")
 
-	describeCmd.PersistentFlags().BoolVar(&toJSON, "json", false, "format output as json")
-	describeCmd.PersistentFlags().BoolVar(&toGraph, "graph", false, "format output as dot graph")
+	describeBranchCmd.Flags().StringVarP(&name, "name", "n", "", "Describe modules with a name that matches this value. Multiple names can be specified as a comma separated string.")
+	describeBranchCmd.Flags().BoolVarP(&fuzzy, "fuzzy", "f", false, "Use fuzzy match when filtering")
+
+	describeHeadCmd.Flags().StringVarP(&name, "name", "n", "", "Describe modules with a name that matches this value. Multiple names can be specified as a comma separated string.")
+	describeHeadCmd.Flags().BoolVarP(&fuzzy, "fuzzy", "f", false, "Use fuzzy match when filtering")
+
+	describeCmd.PersistentFlags().BoolVar(&toJSON, "json", false, "Format output as json")
+	describeCmd.PersistentFlags().BoolVar(&toGraph, "graph", false, "Format output as dot graph")
 	describeCmd.AddCommand(describeCommitCmd)
 	describeCmd.AddCommand(describeBranchCmd)
 	describeCmd.AddCommand(describeHeadCmd)
@@ -82,6 +91,8 @@ If branch name is not specified assumes 'master'.
 			return err
 		}
 
+		m = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy})
+
 		return output(m.Modules)
 	}),
 }
@@ -98,6 +109,7 @@ var describeHeadCmd = &cobra.Command{
 			return err
 		}
 
+		m = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy})
 		return output(m.Modules)
 	}),
 }
@@ -115,9 +127,9 @@ This includes the modules in uncommitted changes.
 			err error
 		)
 
-		if all || name != "" {
+		if all {
 			m, err = system.ManifestByWorkspace()
-			m = m.FilterByName(name)
+			m = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy})
 		} else {
 			m, err = system.ManifestByWorkspaceChanges()
 		}
@@ -188,6 +200,8 @@ impacted by the specified commit.
 		if err != nil {
 			return err
 		}
+
+		m = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy})
 
 		return output(m.Modules)
 	}),
