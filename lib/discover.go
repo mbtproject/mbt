@@ -17,9 +17,10 @@ import (
 // moduleMetadata represents the information about modules
 // found during discovery phase.
 type moduleMetadata struct {
-	dir  string
-	hash string
-	spec *Spec
+	dir                 string
+	hash                string
+	spec                *Spec
+	dependentFileHashes map[string]string
 }
 
 // moduleMetadataSet is an array of ModuleMetadata extracted from the repository.
@@ -67,7 +68,18 @@ func (d *stdDiscover) ModulesInCommit(commit Commit) (Modules, error) {
 				return e.Wrapf(ErrClassUser, err, "error while parsing the spec at %v", b)
 			}
 
-			metadataSet = append(metadataSet, newModuleMetadata(p, hash, spec))
+			// Discover the hashes for file dependencies of this module
+			dependentFileHashes := make(map[string]string)
+			for _, f := range spec.FileDependencies {
+				fh, err := repo.EntryID(commit, f)
+				if err != nil {
+					return e.Wrapf(ErrClassUser, err, msgFileDependencyNotFound, f, spec.Name, p)
+				}
+
+				dependentFileHashes[f] = fh
+			}
+
+			metadataSet = append(metadataSet, newModuleMetadata(p, hash, spec, dependentFileHashes))
 		}
 		return nil
 	})
@@ -111,7 +123,7 @@ func (d *stdDiscover) ModulesInWorkspace() (Modules, error) {
 			dir = strings.TrimRight(dir, "/")
 
 			hash := "local"
-			metadataSet = append(metadataSet, newModuleMetadata(dir, hash, spec))
+			metadataSet = append(metadataSet, newModuleMetadata(dir, hash, spec, nil))
 		}
 
 		return nil
@@ -125,7 +137,7 @@ func (d *stdDiscover) ModulesInWorkspace() (Modules, error) {
 	return toModules(metadataSet)
 }
 
-func newModuleMetadata(dir string, hash string, spec *Spec) *moduleMetadata {
+func newModuleMetadata(dir string, hash string, spec *Spec, dependentFileHashes map[string]string) *moduleMetadata {
 	/*
 		Normalise the module dir. We always use paths
 		relative to the module root. Root is represented
@@ -135,10 +147,15 @@ func newModuleMetadata(dir string, hash string, spec *Spec) *moduleMetadata {
 		dir = ""
 	}
 
+	if dependentFileHashes == nil {
+		dependentFileHashes = make(map[string]string)
+	}
+
 	return &moduleMetadata{
-		dir:  dir,
-		hash: hash,
-		spec: spec,
+		dir:                 dir,
+		hash:                hash,
+		spec:                spec,
+		dependentFileHashes: dependentFileHashes,
 	}
 }
 
@@ -227,15 +244,19 @@ func toModules(a moduleMetadataSet) (Modules, error) {
 // initialises their version field.
 func calculateVersion(topSorted Modules) Modules {
 	for _, a := range topSorted {
-		if a.hash == "local" {
+		if a.Hash() == "local" {
 			a.version = "local"
 		} else {
-			if len(a.Requires()) == 0 {
-				a.version = a.hash
+			if len(a.Requires()) == 0 && len(a.FileDependencies()) == 0 {
+				// Fast path for modules without any dependencies
+				a.version = a.Hash()
 			} else {
+				// This module has dependencies.
+				// Version is created by combining the hashes of the module
+				// content, its file dependencies and the hashes of the dependencies.
 				h := sha1.New()
 
-				io.WriteString(h, a.hash)
+				io.WriteString(h, a.Hash())
 				// Consider the version of all dependencies to compute the version of
 				// current module.
 				// It is unnecessary to traverse the entire dependency graph
@@ -245,6 +266,11 @@ func calculateVersion(topSorted Modules) Modules {
 				for _, r := range a.Requires() {
 					io.WriteString(h, r.Version())
 				}
+
+				for _, f := range a.FileDependencies() {
+					io.WriteString(h, a.metadata.dependentFileHashes[f])
+				}
+
 				a.version = hex.EncodeToString(h.Sum(nil))
 			}
 		}

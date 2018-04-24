@@ -10,9 +10,9 @@ import (
 )
 
 func TestDependencyLinks(t *testing.T) {
-	a := newModuleMetadata("app-a", "a", &Spec{Name: "app-a", Dependencies: []string{"app-b"}})
-	b := newModuleMetadata("app-b", "b", &Spec{Name: "app-b", Dependencies: []string{"app-c"}})
-	c := newModuleMetadata("app-c", "c", &Spec{Name: "app-c"})
+	a := newModuleMetadata("app-a", "a", &Spec{Name: "app-a", Dependencies: []string{"app-b"}}, nil)
+	b := newModuleMetadata("app-b", "b", &Spec{Name: "app-b", Dependencies: []string{"app-c"}}, nil)
+	c := newModuleMetadata("app-c", "c", &Spec{Name: "app-c"}, nil)
 
 	s := moduleMetadataSet{a, b, c}
 	mods, err := toModules(s)
@@ -28,8 +28,8 @@ func TestDependencyLinks(t *testing.T) {
 }
 
 func TestVersionCalculation(t *testing.T) {
-	a := newModuleMetadata("app-a", "a", &Spec{Name: "app-a", Dependencies: []string{"app-b"}})
-	b := newModuleMetadata("app-b", "b", &Spec{Name: "app-b"})
+	a := newModuleMetadata("app-a", "a", &Spec{Name: "app-a", Dependencies: []string{"app-b"}}, nil)
+	b := newModuleMetadata("app-b", "b", &Spec{Name: "app-b"}, nil)
 
 	s := moduleMetadataSet{a, b}
 	mods, err := toModules(s)
@@ -155,4 +155,32 @@ func TestDirectoryEntriesCalledMbtYml(t *testing.T) {
 
 	assert.Len(t, modules, 1)
 	assert.Equal(t, "app-a", modules[0].Name())
+}
+
+func TestVersionChangeOnFileDependencyChange(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+
+	check(t, repo.InitModuleWithOptions("app-a", &Spec{
+		Name:             "app-a",
+		FileDependencies: []string{"foo.txt"},
+	}))
+
+	check(t, repo.WriteContent("foo.txt", "hello"))
+	check(t, repo.Commit("first"))
+
+	world := NewWorld(t, ".tmp/repo")
+	c1, err := world.Repo.GetCommit(repo.LastCommit.String())
+	check(t, err)
+	m1, err := world.Discover.ModulesInCommit(c1)
+	check(t, err)
+
+	check(t, repo.AppendContent("foo.txt", "world"))
+	check(t, repo.Commit("second"))
+	c2, err := world.Repo.GetCommit(repo.LastCommit.String())
+	check(t, err)
+	m2, err := world.Discover.ModulesInCommit(c2)
+	check(t, err)
+
+	assert.NotEqual(t, m2[0].Version(), m1[0].Version())
 }

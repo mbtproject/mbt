@@ -833,37 +833,22 @@ func TestDiffingForCaseSensitivityOfModulePath(t *testing.T) {
 	assert.Equal(t, "App-A", m.Modules[0].Name())
 }
 
-func TestDiffingForCaseSensitivityOfFileDependency(t *testing.T) {
+func TestCaseSensitivityOfFileDependency(t *testing.T) {
 	clean()
 	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.InitModuleWithOptions("App-A", &Spec{
 		Name:             "App-A",
-		FileDependencies: []string{"Dir1/Foo.js", "dir2/foo.js"},
+		FileDependencies: []string{"Dir1/Foo.js"},
 	}))
 
+	check(t, repo.WriteContent("dir/foo.js", "console.log('foo');"))
 	check(t, repo.Commit("first"))
-	c1 := repo.LastCommit
 
-	check(t, repo.WriteContent("dir1/foo.js", "bar"))
-	check(t, repo.Commit("second"))
-	c2 := repo.LastCommit
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByCurrentBranch()
 
-	m, err := NewWorld(t, ".tmp/repo").System.ManifestByDiff(c1.String(), c2.String())
-	check(t, err)
-
-	assert.Len(t, m.Modules, 1)
-	assert.Equal(t, "App-A", m.Modules[0].Name())
-
-	check(t, repo.WriteContent("Dir2/FOO.js", "bar"))
-	check(t, repo.Commit("third"))
-	c3 := repo.LastCommit
-
-	m, err = NewWorld(t, ".tmp/repo").System.ManifestByDiff(c2.String(), c3.String())
-	check(t, err)
-
-	assert.Len(t, m.Modules, 1)
-	assert.Equal(t, "App-A", m.Modules[0].Name())
+	assert.Nil(t, m)
+	assert.EqualError(t, err, fmt.Sprintf(msgFileDependencyNotFound, "Dir1/Foo.js", "App-A", "App-A"))
 }
 
 func TestByDiffForDiscoverFailure(t *testing.T) {
@@ -1156,9 +1141,9 @@ func TestManifestByWorkspaceChangesForRootModule(t *testing.T) {
 func TestApplyFilter(t *testing.T) {
 	m := &Manifest{
 		Modules: []*Module{
-			{name: "app-a"},
-			{name: "app-b"},
-			{name: "app-aa"},
+			{metadata: &moduleMetadata{spec: &Spec{Name: "app-a"}}},
+			{metadata: &moduleMetadata{spec: &Spec{Name: "app-b"}}},
+			{metadata: &moduleMetadata{spec: &Spec{Name: "app-aa"}}},
 		},
 	}
 

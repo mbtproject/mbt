@@ -604,7 +604,7 @@ func TestRestorationOnBuildFailure(t *testing.T) {
 	w := NewWorld(t, ".tmp/repo")
 	buff := new(bytes.Buffer)
 	_, err := w.System.BuildBranch("feature", NoFilter, os.Stdin, buff, buff, noopCb)
-	assert.EqualError(t, err, "failed to build module 'app-a'")
+	assert.EqualError(t, err, fmt.Sprintf(msgFailedBuild, "app-a"))
 
 	idx, err := repo.Repo.Index()
 	check(t, err)
