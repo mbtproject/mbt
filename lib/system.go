@@ -115,15 +115,10 @@ type Spec struct {
 
 // Module represents a single module in the repository.
 type Module struct {
-	name             string
-	path             string
-	build            map[string]*BuildCmd
-	hash             string
-	version          string
-	properties       map[string]interface{}
-	requires         Modules
-	requiredBy       Modules
-	fileDependencies []string
+	metadata   *moduleMetadata
+	version    string
+	requires   Modules
+	requiredBy Modules
 }
 
 // Modules is an array of Module.

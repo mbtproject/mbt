@@ -7,22 +7,22 @@ import (
 
 // Name returns the name of the module.
 func (a *Module) Name() string {
-	return a.name
+	return a.metadata.spec.Name
 }
 
 // Path returns the relative path to module.
 func (a *Module) Path() string {
-	return a.path
+	return a.metadata.dir
 }
 
 // Build returns the build configuration for the module.
 func (a *Module) Build() map[string]*BuildCmd {
-	return a.build
+	return a.metadata.spec.Build
 }
 
 // Properties returns the custom properties in the configuration.
 func (a *Module) Properties() map[string]interface{} {
-	return a.properties
+	return a.metadata.spec.Properties
 }
 
 // Requires returns an array of modules required by this module.
@@ -40,9 +40,14 @@ func (a *Module) Version() string {
 	return a.version
 }
 
+// Hash for the content of this module.
+func (a *Module) Hash() string {
+	return a.metadata.hash
+}
+
 // FileDependencies returns the list of file dependencies this module has.
 func (a *Module) FileDependencies() []string {
-	return a.fileDependencies
+	return a.metadata.spec.FileDependencies
 }
 
 type requiredByNodeProvider struct{}
@@ -74,16 +79,10 @@ func (p *requiresNodeProvider) Child(vertex interface{}, index int) (interface{}
 }
 
 func newModule(metadata *moduleMetadata, requires Modules) *Module {
-	spec := metadata.spec
 	mod := &Module{
-		build:            spec.Build,
-		name:             spec.Name,
-		properties:       spec.Properties,
-		hash:             metadata.hash,
-		path:             metadata.dir,
-		requires:         Modules{},
-		requiredBy:       Modules{},
-		fileDependencies: spec.FileDependencies,
+		requires:   Modules{},
+		requiredBy: Modules{},
+		metadata:   metadata,
 	}
 
 	if requires != nil {
