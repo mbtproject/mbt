@@ -1,3 +1,11 @@
+## 0.16.0
+### Breaking Changes
+This version includes significant breaking changes. Click through to the 
+commit messages for more information.
+
+- [cdcc122](https://github.com/mbtproject/mbt/commit/cdcc122) Fix: Consider file dependencies when calculating the version
+- [c52b91b](https://github.com/mbtproject/mbt/commit/c52b91b) Feature: Filter modules during commands based on git tree
+
 ## 0.15.1
 - [3f20eee](https://github.com/mbtproject/mbt/commit/3f20eee) Fix: Update head during checkout operations
 - [0760617](https://github.com/mbtproject/mbt/commit/0760617) Fix: Detect local changes on root
