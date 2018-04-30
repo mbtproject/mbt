@@ -77,7 +77,7 @@ See help for individual commands for more information.
 
 		parent := cmd.Parent()
 		if parent != nil && parent.Name() == "run-in" && command == "" {
-			return e.NewError(lib.ErrClassUser, "--command (-n) is not specified")
+			return e.NewError(lib.ErrClassUser, "--command (-m) is not specified")
 		}
 
 		level := lib.LogLevelNormal
