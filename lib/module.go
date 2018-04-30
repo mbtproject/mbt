@@ -31,8 +31,13 @@ func (a *Module) Path() string {
 }
 
 // Build returns the build configuration for the module.
-func (a *Module) Build() map[string]*BuildCmd {
+func (a *Module) Build() map[string]*Cmd {
 	return a.metadata.spec.Build
+}
+
+// Commands returns a list of user defined commands in the spec.
+func (a *Module) Commands() map[string]*UserCmd {
+	return a.metadata.spec.Commands
 }
 
 // Properties returns the custom properties in the configuration.

@@ -17,7 +17,6 @@ package cmd
 
 import (
 	"errors"
-	"os"
 
 	"github.com/sirupsen/logrus"
 
@@ -62,7 +61,7 @@ var buildHead = &cobra.Command{
 
 `,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
-		return summarise(system.BuildCurrentBranch(&lib.FilterOptions{Name: name, Fuzzy: fuzzy}, os.Stdin, os.Stdout, os.Stderr, buildStageCB))
+		return summarise(system.BuildCurrentBranch(&lib.FilterOptions{Name: name, Fuzzy: fuzzy}, lib.CmdOptionsWithStdIO(buildStageCB)))
 	}),
 }
 
@@ -81,7 +80,7 @@ If branch name is not specified, the command assumes 'master'.
 			branch = args[0]
 		}
 
-		return summarise(system.BuildBranch(branch, &lib.FilterOptions{Name: name, Fuzzy: fuzzy}, os.Stdin, os.Stdout, os.Stderr, buildStageCB))
+		return summarise(system.BuildBranch(branch, &lib.FilterOptions{Name: name, Fuzzy: fuzzy}, lib.CmdOptionsWithStdIO(buildStageCB)))
 	}),
 }
 
@@ -107,7 +106,7 @@ builds their dependents.
 			return errors.New("requires dest")
 		}
 
-		return summarise(system.BuildPr(src, dst, os.Stdin, os.Stdout, os.Stderr, buildStageCB))
+		return summarise(system.BuildPr(src, dst, lib.CmdOptionsWithStdIO(buildStageCB)))
 	}),
 }
 
@@ -134,7 +133,7 @@ Commit SHA must be the complete 40 character SHA1 string.
 			return errors.New("requires to commit")
 		}
 
-		return summarise(system.BuildDiff(from, to, os.Stdin, os.Stdout, os.Stderr, buildStageCB))
+		return summarise(system.BuildDiff(from, to, lib.CmdOptionsWithStdIO(buildStageCB)))
 	}),
 }
 
@@ -154,9 +153,9 @@ var buildCommit = &cobra.Command{
 		commit := args[0]
 
 		if content {
-			return summarise(system.BuildCommitContent(commit, os.Stdin, os.Stdout, os.Stderr, buildStageCB))
+			return summarise(system.BuildCommitContent(commit, lib.CmdOptionsWithStdIO(buildStageCB)))
 		}
-		return summarise(system.BuildCommit(commit, &lib.FilterOptions{Name: name, Fuzzy: fuzzy}, os.Stdin, os.Stdout, os.Stderr, buildStageCB))
+		return summarise(system.BuildCommit(commit, &lib.FilterOptions{Name: name, Fuzzy: fuzzy}, lib.CmdOptionsWithStdIO(buildStageCB)))
 	}),
 }
 
@@ -170,18 +169,18 @@ Specify the --all flag to build all modules in current workspace.
 	`,
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if all || name != "" {
-			return summarise(system.BuildWorkspace(&lib.FilterOptions{Name: name, Fuzzy: fuzzy}, os.Stdin, os.Stdout, os.Stderr, buildStageCB))
+			return summarise(system.BuildWorkspace(&lib.FilterOptions{Name: name, Fuzzy: fuzzy}, lib.CmdOptionsWithStdIO(buildStageCB)))
 		}
 
-		return summarise(system.BuildWorkspaceChanges(os.Stdin, os.Stdout, os.Stderr, buildStageCB))
+		return summarise(system.BuildWorkspaceChanges(lib.CmdOptionsWithStdIO(buildStageCB)))
 	}),
 }
 
-func buildStageCB(a *lib.Module, s lib.BuildStage) {
+func buildStageCB(a *lib.Module, s lib.CmdStage) {
 	switch s {
-	case lib.BuildStageBeforeBuild:
+	case lib.CmdStageBeforeBuild:
 		logrus.Infof("BUILD %s in %s for %s", a.Name(), a.Path(), a.Version())
-	case lib.BuildStageSkipBuild:
+	case lib.CmdStageSkipBuild:
 		logrus.Infof("SKIP %s in %s for %s", a.Name(), a.Path(), a.Version())
 	}
 }

@@ -18,6 +18,7 @@ package cmd
 import (
 	"os"
 
+	"github.com/mbtproject/mbt/e"
 	"github.com/mbtproject/mbt/lib"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -34,6 +35,7 @@ var (
 	second  string
 	kind    string
 	name    string
+	command string
 	all     bool
 	debug   bool
 	content bool
@@ -71,6 +73,11 @@ See help for individual commands for more information.
 			if err != nil {
 				return err
 			}
+		}
+
+		parent := cmd.Parent()
+		if parent != nil && parent.Name() == "run-in" && command == "" {
+			return e.NewError(lib.ErrClassUser, "--command (-n) is not specified")
 		}
 
 		level := lib.LogLevelNormal

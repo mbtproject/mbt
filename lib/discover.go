@@ -177,7 +177,7 @@ func newModuleMetadata(dir string, hash string, spec *Spec, dependentFileHashes 
 func newSpec(content []byte) (*Spec, error) {
 	a := &Spec{
 		Properties: make(map[string]interface{}),
-		Build:      make(map[string]*BuildCmd),
+		Build:      make(map[string]*Cmd),
 	}
 
 	err := yaml.Unmarshal(content, a)
