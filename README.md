@@ -215,6 +215,29 @@ image produced as of a particular Git commit SHA can be identified accurately.
 (We will also discuss how this information can be used to automatically produce
 deployment artifacts later in this document)
 
+## User Defined Commands
+User defined commands provides the ability to run arbitrary commands on a set of
+modules in a similar way to build.
+
+They are defined in `commands` section in the spec file.
+
+```
+module: app-a
+commands:
+  hello:
+    cmd: echo
+    args: [hello]
+```
+
+With preceding spec file, we could run `hello` command in relevant modules in
+current branch by running:
+
+```
+mbt run-in head --command hello
+```
+
+`run-in` command maintains the symmetry with `build` and `describe` commands.
+
 ## Describing the Change
 When working in a dense, modular codebase it is sometimes important to assess
 the impact of your changes to the overall system. Each `mbt build` command
