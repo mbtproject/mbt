@@ -17,13 +17,14 @@ package lib
 
 import (
 	"io"
+	"os"
 )
 
-// Interfaces and types that makes up MBT system
-// Other source files basically contains the implementations of one
-// or more of these concepts.
+// This file defines the interfaces and types that make up MBT system.
+// Other source files basically contain the implementations of one
+// or more of these components.
 
-/** GIT Integration Interface **/
+/** GIT Integration **/
 
 // Blob stored in git.
 type Blob interface {
@@ -61,6 +62,7 @@ type Commit interface {
 // For example, if you consider a git repository
 // this could be pointing to a branch, tag or commit.
 type Reference interface {
+	Name() string
 }
 
 // Repo defines the set of interactions with the git repository.
@@ -111,18 +113,26 @@ type Repo interface {
 	MergeBase(a, b Commit) (Commit, error)
 }
 
-/** Module Discovery Interface **/
+/** Module Discovery **/
 
-// BuildCmd represents the structure of build configuration in .mbt.yml.
-type BuildCmd struct {
+// Cmd represents the structure of a command appears in .mbt.yml.
+type Cmd struct {
 	Cmd  string
 	Args []string `yaml:",flow"`
+}
+
+// UserCmd represents the structure of a user defined command in .mbt.yml
+type UserCmd struct {
+	Cmd  string
+	Args []string `yaml:",flow"`
+	OS   []string `yaml:"os"`
 }
 
 // Spec represents the structure of .mbt.yml contents.
 type Spec struct {
 	Name             string                 `yaml:"name"`
-	Build            map[string]*BuildCmd   `yaml:"build"`
+	Build            map[string]*Cmd        `yaml:"build"`
+	Commands         map[string]*UserCmd    `yaml:"commands"`
 	Properties       map[string]interface{} `yaml:"properties"`
 	Dependencies     []string               `yaml:"dependencies"`
 	FileDependencies []string               `yaml:"fileDependencies"`
@@ -154,8 +164,6 @@ type Reducer interface {
 	Reduce(modules Modules, deltas []*DiffDelta) (Modules, error)
 }
 
-/** Manifest Interface **/
-
 // Manifest represents a collection modules in the repository.
 type Manifest struct {
 	Dir     string
@@ -184,10 +192,31 @@ type ManifestBuilder interface {
 	ByWorkspaceChanges() (*Manifest, error)
 }
 
-/** Build Interface **/
+/** Workspace Management **/
 
-// BuildStage is an enum to indicate various stages of the build.
-type BuildStage = int
+// WorkspaceManager contains various functions to manipulate workspace.
+type WorkspaceManager interface {
+	// CheckoutAndRun checks out the given commit and executes the specified function.
+	// Returns an error if current workspace is dirty.
+	// Otherwise returns the output from fn.
+	CheckoutAndRun(commit string, fn func() (interface{}, error)) (interface{}, error)
+}
+
+/** Process Manager **/
+
+// ProcessManager manages the execution of build and user defined commands.
+type ProcessManager interface {
+	// Exec runs an external command in the context of a module in a manifest.
+	// Following actions are performed prior to executing the command:
+	// - Current working directory of the target process is set to module path
+	// - Initialises important information in the target process environment
+	Exec(manifest *Manifest, module *Module, options *CmdOptions, command string, args ...string) error
+}
+
+/** Build **/
+
+// CmdStage is an enum to indicate various stages of a command.
+type CmdStage = int
 
 // BuildSummary is a summary of a successful build.
 type BuildSummary struct {
@@ -210,25 +239,47 @@ type BuildResult struct {
 }
 
 const (
-	// BuildStageBeforeBuild is the stage before executing module build command
-	BuildStageBeforeBuild = iota
+	// CmdStageBeforeBuild is the stage before executing module build command
+	CmdStageBeforeBuild = iota
 
-	// BuildStageAfterBuild is the stage after executing the module build command
-	BuildStageAfterBuild
+	// CmdStageAfterBuild is the stage after executing the module build command
+	CmdStageAfterBuild
 
-	// BuildStageSkipBuild is when module building is skipped due to lack of matching building command
-	BuildStageSkipBuild
+	// CmdStageSkipBuild is when module building is skipped due to lack of matching building command
+	CmdStageSkipBuild
 )
 
-// BuildStageCallback is the callback function used to notify various build stages
-type BuildStageCallback func(mod *Module, s BuildStage)
+// CmdStageCallback is the callback function used to notify various build stages
+type CmdStageCallback func(mod *Module, s CmdStage)
 
-/** Main MBT System Interface **/
+/** Main MBT System **/
 
 // FilterOptions describe how to filter the modules in a manifest
 type FilterOptions struct {
 	Name  string
 	Fuzzy bool
+}
+
+// CmdOptions defines various options required by methods executing
+// user defined commands.
+type CmdOptions struct {
+	Stdin          io.Reader
+	Stdout, Stderr io.Writer
+	Callback       CmdStageCallback
+}
+
+// CmdFailure contains the failures occurred while running a user defined command.
+type CmdFailure struct {
+	Module *Module
+	Err    error
+}
+
+// RunResult is the result of running a user defined command.
+type RunResult struct {
+	Manifest  *Manifest
+	Completed []*Module
+	Skipped   []*Module
+	Failures  []*CmdFailure
 }
 
 // System is the interface used by users to invoke the core functionality
@@ -253,34 +304,34 @@ type System interface {
 	// BuildBranch builds the specified branch.
 	// This function accepts FilterOptions to specify which modules to be built
 	// within that branch.
-	BuildBranch(name string, filterOptions *FilterOptions, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
+	BuildBranch(name string, filterOptions *FilterOptions, options *CmdOptions) (*BuildSummary, error)
 
 	// BuildPr builds changes in 'src' branch since it diverged from 'dst' branch.
-	BuildPr(src, dst string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
+	BuildPr(src, dst string, options *CmdOptions) (*BuildSummary, error)
 
 	// Build builds changes between two commits
-	BuildDiff(from, to string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
+	BuildDiff(from, to string, options *CmdOptions) (*BuildSummary, error)
 
 	// BuildCurrentBranch builds the current branch.
 	// This function accepts FilterOptions to specify which modules to be built
 	// within that branch.
-	BuildCurrentBranch(filterOptions *FilterOptions, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
+	BuildCurrentBranch(filterOptions *FilterOptions, options *CmdOptions) (*BuildSummary, error)
 
 	// BuildCommit builds specified commit.
 	// This function accepts FilterOptions to specify which modules to be built
 	// within that branch.
-	BuildCommit(commit string, filterOptions *FilterOptions, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
+	BuildCommit(commit string, filterOptions *FilterOptions, options *CmdOptions) (*BuildSummary, error)
 
 	// BuildCommitChanges builds the changes in specified commit
-	BuildCommitContent(commit string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
+	BuildCommitContent(commit string, options *CmdOptions) (*BuildSummary, error)
 
 	// BuildWorkspace builds the current workspace.
 	// This function accepts FilterOptions to specify which modules to be built
 	// within that branch.
-	BuildWorkspace(filterOptions *FilterOptions, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
+	BuildWorkspace(filterOptions *FilterOptions, options *CmdOptions) (*BuildSummary, error)
 
 	// BuildWorkspace builds changes in current workspace.
-	BuildWorkspaceChanges(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error)
+	BuildWorkspaceChanges(options *CmdOptions) (*BuildSummary, error)
 
 	// IntersectionByCommit returns the manifest of intersection of modules modified
 	// between two commits.
@@ -319,14 +370,49 @@ type System interface {
 
 	// ByWorkspaceChanges creates the manifest for the changes in workspace
 	ManifestByWorkspaceChanges() (*Manifest, error)
+
+	// RunInBranch runs a command in a branch.
+	// This function accepts FilterOptions to specify a subset of modules.
+	RunInBranch(command, name string, filterOptions *FilterOptions, options *CmdOptions) (*RunResult, error)
+
+	// RunInPr runs a command in modules that have been changed in
+	// 'src' branch since it diverged from 'dst' branch.
+	RunInPr(command, src, dst string, options *CmdOptions) (*RunResult, error)
+
+	// RunInDiff runs a command in modules that have been changed in 'from'
+	// commit since it diverged from 'to' commit.
+	RunInDiff(command, from, to string, options *CmdOptions) (*RunResult, error)
+
+	// RunInCurrentBranch runs a command in modules in the current branch.
+	// This function accepts FilterOptions to filter the modules included in this
+	// operation.
+	RunInCurrentBranch(command string, filterOptions *FilterOptions, options *CmdOptions) (*RunResult, error)
+
+	// RunInCommit runs a command in all modules in a commit.
+	// This function accepts FilterOptions to filter the modules included in this
+	// operation.
+	RunInCommit(command, commit string, filterOptions *FilterOptions, options *CmdOptions) (*RunResult, error)
+
+	// RunInCommitContent runs a command in modules modified in a commit.
+	RunInCommitContent(command, commit string, options *CmdOptions) (*RunResult, error)
+
+	// RunInWorkspace runs a command in all modules in workspace.
+	// This function accepts FilterOptions to filter the modules included in this
+	// operation.
+	RunInWorkspace(command string, filterOptions *FilterOptions, options *CmdOptions) (*RunResult, error)
+
+	// RunInWorkspaceChanges runs a command in modules modified in workspace.
+	RunInWorkspaceChanges(command string, options *CmdOptions) (*RunResult, error)
 }
 
 type stdSystem struct {
-	Repo     Repo
-	Log      Log
-	MB       ManifestBuilder
-	Discover Discover
-	Reducer  Reducer
+	Repo             Repo
+	Log              Log
+	MB               ManifestBuilder
+	Discover         Discover
+	Reducer          Reducer
+	WorkspaceManager WorkspaceManager
+	ProcessManager   ProcessManager
 }
 
 // NewSystem creates a new instance of core mbt system
@@ -339,7 +425,9 @@ func NewSystem(path string, logLevel int) (System, error) {
 	discover := NewDiscover(repo, log)
 	reducer := NewReducer(log)
 	mb := NewManifestBuilder(repo, reducer, discover, log)
-	return initSystem(log, repo, mb, discover, reducer), nil
+	wm := NewWorkspaceManager(log, repo)
+	pm := NewProcessManager(log)
+	return initSystem(log, repo, mb, discover, reducer, wm, pm), nil
 }
 
 // NoFilter is built-in filter that represents no filtering
@@ -355,16 +443,29 @@ func ExactMatchFilter(name string) *FilterOptions {
 	return &FilterOptions{Name: name}
 }
 
-func initSystem(log Log, repo Repo, mb ManifestBuilder, discover Discover, reducer Reducer) System {
+func initSystem(log Log, repo Repo, mb ManifestBuilder, discover Discover, reducer Reducer, workspaceManager WorkspaceManager, processManager ProcessManager) System {
 	return &stdSystem{
-		Log:      log,
-		Repo:     repo,
-		MB:       mb,
-		Discover: discover,
-		Reducer:  reducer,
+		Log:              log,
+		Repo:             repo,
+		MB:               mb,
+		Discover:         discover,
+		Reducer:          reducer,
+		WorkspaceManager: workspaceManager,
+		ProcessManager:   processManager,
 	}
 }
 
 func (s *stdSystem) ManifestBuilder() ManifestBuilder {
 	return s.MB
+}
+
+// CmdOptionsWithStdIO creates an instance of CmdOptions with
+// its streams pointing to std io streams.
+func CmdOptionsWithStdIO(callback CmdStageCallback) *CmdOptions {
+	return &CmdOptions{
+		Callback: callback,
+		Stdin:    os.Stdin,
+		Stdout:   os.Stdout,
+		Stderr:   os.Stderr,
+	}
 }

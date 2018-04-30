@@ -91,7 +91,7 @@ func TestMissingBlobs(t *testing.T) {
 	metadata, err := world.Discover.ModulesInCommit(lc)
 	assert.Nil(t, metadata)
 	assert.EqualError(t, err, fmt.Sprintf(msgFailedTreeLoad, repo.LastCommit.String()))
-	assert.EqualError(t, (err.(*e.E)).InnerError(), fmt.Sprintf("object not found - no match for id (32980cb34a5e42c0ff4e4920204206c492c8d487)"))
+	assert.EqualError(t, (err.(*e.E)).InnerError(), fmt.Sprintf("object not found - no match for id (215e27aae62c4e89fd047f07b9ca3708283c3657)"))
 	assert.Equal(t, ErrClassInternal, (err.(*e.E)).Class())
 }
 
@@ -105,14 +105,14 @@ func TestMissingTreeObject(t *testing.T) {
 	world := NewWorld(t, ".tmp/repo")
 	lc, err := world.Repo.GetCommit(repo.LastCommit.String())
 	check(t, err)
-	check(t, os.RemoveAll(".tmp/repo/.git/objects/f6"))
+	check(t, os.RemoveAll(".tmp/repo/.git/objects/6c"))
 
 	metadata, err := world.Discover.ModulesInCommit(lc)
 
-	treeID := "32980cb34a5e42c0ff4e4920204206c492c8d487"
+	treeID := "215e27aae62c4e89fd047f07b9ca3708283c3657"
 	assert.Nil(t, metadata)
 	assert.EqualError(t, err, fmt.Sprintf(msgFailedTreeWalk, treeID))
-	assert.EqualError(t, (err.(*e.E)).InnerError(), "object not found - no match for id (f6929fe5c1165232e1ee6c92532f1f2bcf936845)")
+	assert.EqualError(t, (err.(*e.E)).InnerError(), "object not found - no match for id (6c1d6fb334240894b1ec130a6009264a0cf8351b)")
 	assert.Equal(t, ErrClassInternal, (err.(*e.E)).Class())
 }
 

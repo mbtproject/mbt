@@ -40,7 +40,7 @@ type TestRepository struct {
 func (r *TestRepository) InitModule(p string) error {
 	return r.InitModuleWithOptions(p, &Spec{
 		Name: path.Base(p),
-		Build: map[string]*BuildCmd{
+		Build: map[string]*Cmd{
 			"darwin":  {"./build.sh", []string{}},
 			"linux":   {"./build.sh", []string{}},
 			"windows": {"powershell", []string{"-ExecutionPolicy", "Bypass", "-File", ".\\build.ps1"}},
@@ -339,12 +339,14 @@ func check(t *testing.T, err error) {
 }
 
 type World struct {
-	Log             Log
-	Repo            *TestRepo
-	Discover        *TestDiscover
-	Reducer         *TestReducer
-	ManifestBuilder *TestManifestBuilder
-	System          *TestSystem
+	Log              Log
+	Repo             *TestRepo
+	Discover         *TestDiscover
+	Reducer          *TestReducer
+	ManifestBuilder  *TestManifestBuilder
+	WorkspaceManager *TestWorkspaceManager
+	ProcessManager   *TestProcessManager
+	System           *TestSystem
 }
 
 /* sXxx methods below are used to safely convert interface{} to an interface type */
@@ -393,6 +395,14 @@ func sBuildSummary(e interface{}) *BuildSummary {
 	}
 
 	return e.(*BuildSummary)
+}
+
+func sRunResult(e interface{}) *RunResult {
+	if e == nil {
+		return nil
+	}
+
+	return e.(*RunResult)
 }
 
 func sReference(e interface{}) Reference {
@@ -565,45 +575,86 @@ func (s *TestSystem) ApplyLocal(templatePath string, output io.Writer) error {
 	return sErr(ret[0])
 }
 
-func (s *TestSystem) BuildBranch(name string, filterOptions *FilterOptions, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
-	ret := s.Interceptor.Call("BuildBranch", name, filterOptions, stdin, stdout, stderr, callback)
+func (s *TestSystem) BuildBranch(name string, filterOptions *FilterOptions, options *CmdOptions) (*BuildSummary, error) {
+	ret := s.Interceptor.Call("BuildBranch", name, filterOptions, options)
 	return sBuildSummary(ret[0]), sErr(ret[1])
 }
 
-func (s *TestSystem) BuildPr(src, dst string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
-	ret := s.Interceptor.Call("BuildPr", src, dst, stdin, stdout, stderr, callback)
+func (s *TestSystem) BuildPr(src, dst string, options *CmdOptions) (*BuildSummary, error) {
+	ret := s.Interceptor.Call("BuildPr", src, dst, options)
 	return sBuildSummary(ret[0]), sErr(ret[1])
 }
 
-func (s *TestSystem) BuildDiff(from, to string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
-	ret := s.Interceptor.Call("BuildDiff", from, to, stdin, stdout, stderr, callback)
+func (s *TestSystem) BuildDiff(from, to string, options *CmdOptions) (*BuildSummary, error) {
+	ret := s.Interceptor.Call("BuildDiff", from, to, options)
 	return sBuildSummary(ret[0]), sErr(ret[1])
 }
 
-func (s *TestSystem) BuildCurrentBranch(filterOptions *FilterOptions, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
-	ret := s.Interceptor.Call("BuildCurrentBranch", filterOptions, stdin, stdout, stderr, callback)
+func (s *TestSystem) BuildCurrentBranch(filterOptions *FilterOptions, options *CmdOptions) (*BuildSummary, error) {
+	ret := s.Interceptor.Call("BuildCurrentBranch", filterOptions, options)
 	return sBuildSummary(ret[0]), sErr(ret[1])
 }
 
-func (s *TestSystem) BuildCommit(commit string, filterOptions *FilterOptions, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
-	ret := s.Interceptor.Call("BuildCommit", commit, filterOptions, stdin, stdout, stderr, callback)
+func (s *TestSystem) BuildCommit(commit string, filterOptions *FilterOptions, options *CmdOptions) (*BuildSummary, error) {
+	ret := s.Interceptor.Call("BuildCommit", commit, filterOptions, options)
 	return sBuildSummary(ret[0]), sErr(ret[1])
 }
 
-func (s *TestSystem) BuildCommitContent(commit string, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
-	ret := s.Interceptor.Call("BuildCommitContent", commit, stdin, stdout, stderr, callback)
+func (s *TestSystem) BuildCommitContent(commit string, options *CmdOptions) (*BuildSummary, error) {
+	ret := s.Interceptor.Call("BuildCommitContent", commit, options)
 	return sBuildSummary(ret[0]), sErr(ret[1])
 
 }
 
-func (s *TestSystem) BuildWorkspace(filterOptions *FilterOptions, stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
-	ret := s.Interceptor.Call("BuildWorkspace", filterOptions, stdin, stdout, stderr, callback)
+func (s *TestSystem) BuildWorkspace(filterOptions *FilterOptions, options *CmdOptions) (*BuildSummary, error) {
+	ret := s.Interceptor.Call("BuildWorkspace", filterOptions, options)
 	return sBuildSummary(ret[0]), sErr(ret[1])
 }
 
-func (s *TestSystem) BuildWorkspaceChanges(stdin io.Reader, stdout, stderr io.Writer, callback BuildStageCallback) (*BuildSummary, error) {
-	ret := s.Interceptor.Call("BuildWorkspaceChanges", stdin, stdout, stderr, callback)
+func (s *TestSystem) BuildWorkspaceChanges(options *CmdOptions) (*BuildSummary, error) {
+	ret := s.Interceptor.Call("BuildWorkspaceChanges", options)
 	return sBuildSummary(ret[0]), sErr(ret[1])
+}
+
+func (s *TestSystem) RunInBranch(command, name string, filterOptions *FilterOptions, options *CmdOptions) (*RunResult, error) {
+	ret := s.Interceptor.Call("RunInBranch", command, name, filterOptions, options)
+	return sRunResult(ret[0]), sErr(ret[1])
+}
+
+func (s *TestSystem) RunInPr(command, src, dst string, options *CmdOptions) (*RunResult, error) {
+	ret := s.Interceptor.Call("RunInPr", command, src, dst, options)
+	return sRunResult(ret[0]), sErr(ret[1])
+}
+
+func (s *TestSystem) RunInDiff(command, from, to string, options *CmdOptions) (*RunResult, error) {
+	ret := s.Interceptor.Call("RunInDiff", command, from, to, options)
+	return sRunResult(ret[0]), sErr(ret[1])
+}
+
+func (s *TestSystem) RunInCurrentBranch(command string, filterOptions *FilterOptions, options *CmdOptions) (*RunResult, error) {
+	ret := s.Interceptor.Call("RunInCurrentBranch", command, filterOptions, options)
+	return sRunResult(ret[0]), sErr(ret[1])
+}
+
+func (s *TestSystem) RunInCommit(command, commit string, filterOptions *FilterOptions, options *CmdOptions) (*RunResult, error) {
+	ret := s.Interceptor.Call("RunInCommit", command, commit, filterOptions, options)
+	return sRunResult(ret[0]), sErr(ret[1])
+}
+
+func (s *TestSystem) RunInCommitContent(command, commit string, options *CmdOptions) (*RunResult, error) {
+	ret := s.Interceptor.Call("RunInCommitContent", command, commit, options)
+	return sRunResult(ret[0]), sErr(ret[1])
+
+}
+
+func (s *TestSystem) RunInWorkspace(command string, filterOptions *FilterOptions, options *CmdOptions) (*RunResult, error) {
+	ret := s.Interceptor.Call("RunInWorkspace", command, filterOptions, options)
+	return sRunResult(ret[0]), sErr(ret[1])
+}
+
+func (s *TestSystem) RunInWorkspaceChanges(command string, options *CmdOptions) (*RunResult, error) {
+	ret := s.Interceptor.Call("RunInWorkspaceChanges", command, options)
+	return sRunResult(ret[0]), sErr(ret[1])
 }
 
 func (s *TestSystem) IntersectionByCommit(first, second string) (Modules, error) {
@@ -679,6 +730,28 @@ func (r *TestReducer) Reduce(modules Modules, deltas []*DiffDelta) (Modules, err
 	return sModules(ret[0]), sErr(ret[1])
 }
 
+type TestWorkspaceManager struct {
+	Interceptor *intercept.Interceptor
+}
+
+func (w *TestWorkspaceManager) CheckoutAndRun(commit string, fn func() (interface{}, error)) (interface{}, error) {
+	ret := w.Interceptor.Call("CheckoutAndRun", commit, fn)
+	return ret[0], sErr(ret[1])
+}
+
+type TestProcessManager struct {
+	Interceptor *intercept.Interceptor
+}
+
+func (p *TestProcessManager) Exec(manifest *Manifest, module *Module, options *CmdOptions, command string, args ...string) error {
+	rest := []interface{}{manifest, module, options, command}
+	for _, a := range args {
+		rest = append(rest, a)
+	}
+	ret := p.Interceptor.Call("Exec", rest...)
+	return sErr(ret[0])
+}
+
 func buildWorld(repo string, failureCallback func(error)) *World {
 	log := NewStdLog(LogLevelNormal)
 	libgitRepo, err := NewLibgitRepo(repo, log)
@@ -692,14 +765,18 @@ func buildWorld(repo string, failureCallback func(error)) *World {
 	discover := &TestDiscover{Interceptor: intercept.NewInterceptor(NewDiscover(r, log))}
 	reducer := &TestReducer{Interceptor: intercept.NewInterceptor(NewReducer(log))}
 	mb := &TestManifestBuilder{Interceptor: intercept.NewInterceptor(NewManifestBuilder(r, reducer, discover, log))}
+	wm := &TestWorkspaceManager{Interceptor: intercept.NewInterceptor(NewWorkspaceManager(log, r))}
+	pm := &TestProcessManager{Interceptor: intercept.NewInterceptor(NewProcessManager(log))}
 
 	return &World{
-		Log:             log,
-		Repo:            r,
-		Discover:        discover,
-		Reducer:         reducer,
-		ManifestBuilder: mb,
-		System:          &TestSystem{Interceptor: intercept.NewInterceptor(initSystem(log, r, mb, discover, reducer))},
+		Log:              log,
+		Repo:             r,
+		Discover:         discover,
+		Reducer:          reducer,
+		ManifestBuilder:  mb,
+		WorkspaceManager: wm,
+		ProcessManager:   pm,
+		System:           &TestSystem{Interceptor: intercept.NewInterceptor(initSystem(log, r, mb, discover, reducer, wm, pm))},
 	}
 }
 

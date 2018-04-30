@@ -61,6 +61,10 @@ type libgitReference struct {
 	reference *git.Reference
 }
 
+func (r *libgitReference) Name() string {
+	return r.reference.Name()
+}
+
 type libgitRepo struct {
 	path string
 	Repo *git.Repository
