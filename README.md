@@ -216,7 +216,7 @@ image produced as of a particular Git commit SHA can be identified accurately.
 deployment artifacts later in this document)
 
 ## User Defined Commands
-User defined commands provides the ability to run arbitrary commands on a set of
+User defined commands provide the ability to run arbitrary commands on a set of
 modules in a similar way to build.
 
 They are defined in `commands` section in the spec file.
