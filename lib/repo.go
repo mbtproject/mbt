@@ -292,23 +292,35 @@ func (r *libgitRepo) IsEmpty() (bool, error) {
 	return empty, nil
 }
 
-func (r *libgitRepo) IsDirtyWorkspace() (bool, error) {
+func (r *libgitRepo) EnsureSafeWorkspace() error {
+	detached, err := r.Repo.IsHeadDetached()
+	if err != nil {
+		return e.Wrap(ErrClassInternal, err)
+	}
+
+	if detached {
+		return e.NewError(ErrClassUser, msgDetachedHead)
+	}
+
 	status, err := r.Repo.StatusList(&git.StatusOptions{
 		Flags: git.StatusOptIncludeUntracked,
 	})
 
 	if err != nil {
-		return false, e.Wrap(ErrClassInternal, err)
+		return e.Wrap(ErrClassInternal, err)
 	}
 
 	defer status.Free()
 
 	count, err := status.EntryCount()
 	if err != nil {
-		return false, e.Wrap(ErrClassInternal, err)
+		return e.Wrap(ErrClassInternal, err)
 	}
 
-	return count > 0, nil
+	if count > 0 {
+		return e.NewError(ErrClassUser, msgDirtyWorkingDir)
+	}
+	return nil
 }
 
 func (r *libgitRepo) BlobContentsFromTree(commit Commit, path string) ([]byte, error) {

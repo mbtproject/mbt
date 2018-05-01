@@ -76,10 +76,9 @@ func TestDirtyWorkspaceForUntracked(t *testing.T) {
 	check(t, repo.InitModule("app-a"))
 	check(t, repo.WriteContent("app-a/foo", "a"))
 
-	dirty, err := NewWorld(t, ".tmp/repo").Repo.IsDirtyWorkspace()
-	check(t, err)
+	err := NewWorld(t, ".tmp/repo").Repo.EnsureSafeWorkspace()
 
-	assert.True(t, dirty)
+	assert.EqualError(t, err, msgDirtyWorkingDir)
 }
 
 func TestDirtyWorkspaceForUpdates(t *testing.T) {
@@ -92,10 +91,9 @@ func TestDirtyWorkspaceForUpdates(t *testing.T) {
 
 	check(t, repo.WriteContent("app-a/foo", "b"))
 
-	dirty, err := NewWorld(t, ".tmp/repo").Repo.IsDirtyWorkspace()
-	check(t, err)
+	err := NewWorld(t, ".tmp/repo").Repo.EnsureSafeWorkspace()
 
-	assert.True(t, dirty)
+	assert.EqualError(t, err, msgDirtyWorkingDir)
 }
 
 func TestDirtyWorkspaceForRenames(t *testing.T) {
@@ -108,10 +106,9 @@ func TestDirtyWorkspaceForRenames(t *testing.T) {
 
 	check(t, repo.Rename("app-a/foo", "app-a/bar"))
 
-	dirty, err := NewWorld(t, ".tmp/repo").Repo.IsDirtyWorkspace()
-	check(t, err)
+	err := NewWorld(t, ".tmp/repo").Repo.EnsureSafeWorkspace()
 
-	assert.True(t, dirty)
+	assert.EqualError(t, err, msgDirtyWorkingDir)
 }
 
 func TestChangesOfFirstCommit(t *testing.T) {

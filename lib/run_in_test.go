@@ -75,7 +75,7 @@ func TestRunInDirtyWorkingDir(t *testing.T) {
 	result, err := w.System.RunInCurrentBranch("echo", NoFilter, stdTestCmdOptions(buff))
 
 	assert.Nil(t, result)
-	assert.EqualError(t, err, "dirty working dir")
+	assert.EqualError(t, err, msgDirtyWorkingDir)
 }
 
 func TestRunInBranch(t *testing.T) {
