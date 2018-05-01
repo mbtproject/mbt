@@ -185,6 +185,11 @@ func TestCustomTemplateFuncs(t *testing.T) {
 			},
 			"empty": []int{},
 			"foo":   "bar",
+			"map": map[string]interface{}{
+				"a": 1,
+				"b": "foo",
+				"c": "bar",
+			},
 		},
 	}))
 
@@ -211,6 +216,8 @@ func TestCustomTemplateFuncs(t *testing.T) {
 		{Template: `{{- join (property (module "app-a") "bar") "%v" "-"}}`, Expected: ""},
 		{Template: `{{- join (property (module "app-a") "foo") "%v" "-"}}`, Expected: ""},
 		{Template: `{{- join (property (module "app-a") "") "%v" "-"}}`, Expected: ""},
+		{Template: `{{- range $i, $e := (kvplist (property (module "app-a") "map"))}}{{if $i}},{{end}}{{$i}}-{{$e.Key}}-{{$e.Value}}{{end}}`, Expected: "0-a-1,1-b-foo,2-c-bar"},
+		{Template: `{{- range $i, $e := (kvplist (property (module "app-a") "invalid"))}}{{if $i}},{{end}}{{$i}}-{{$e.Key}}-{{$e.Value}}{{end}}`, Expected: ""},
 	}
 
 	for _, c := range cases {
