@@ -10,10 +10,12 @@
     "failf",
     "initialises",
     "klass",
+    "kvplist",
     "mbtproject",
     "monorepos",
     "rframes",
     "stretchr",
+    "strs",
     "uall",
     "vmods",
     "wrapm"

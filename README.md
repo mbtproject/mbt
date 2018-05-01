@@ -337,6 +337,7 @@ Following helper functions are available when writing templates.
 |`propertyOr <module> <name> <default>` |Find specified property in the given module or return the designated default value.
 |`contains <array> <item>` |Return true if the given item is present in the array.
 |`join <array> <format> <separator>` |Format each item in the array according the format specified and then join them with the specified separator.
+|`kvplist <map>` |Accepts a map of `map[string]interface{}` type and returns the items in the map as a list of key/value pairs sorted by the key. They can be accessed via `.Key` and `.Value` properties.
 
 These functions can be pipelined to simplify complex template expressions. Below is an example of emitting the word "foo"
 when module "app-a" has the value "a" in it's tags property.

@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"text/template"
 
@@ -33,6 +34,27 @@ type TemplateData struct {
 	Sha     string
 	Env     map[string]string
 	Modules map[string]*Module
+}
+
+// KVP is a key value pair.
+type KVP struct {
+	Key   string
+	Value interface{}
+}
+
+// KVPSort is a key based sorter for KVP
+type KVPSort []*KVP
+
+func (a KVPSort) Len() int {
+	return len(a)
+}
+
+func (a KVPSort) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
+
+func (a KVPSort) Less(i, j int) bool {
+	return a[i].Key < a[j].Key
 }
 
 func (s *stdSystem) ApplyBranch(templatePath, branch string, output io.Writer) error {
@@ -149,6 +171,15 @@ func processTemplate(buffer []byte, m *Manifest, output io.Writer) error {
 			}
 
 			return strings.Join(strs, sep)
+		},
+		"kvplist": func(m map[string]interface{}) []*KVP {
+			l := make([]*KVP, 0, len(m))
+			for k, v := range m {
+				l = append(l, &KVP{Key: k, Value: v})
+			}
+
+			sort.Sort(KVPSort(l))
+			return l
 		},
 	}).Parse(string(buffer))
 	if err != nil {
