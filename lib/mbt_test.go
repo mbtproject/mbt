@@ -487,9 +487,9 @@ func (r *TestRepo) IsEmpty() (bool, error) {
 	return ret[0].(bool), sErr(ret[1])
 }
 
-func (r *TestRepo) IsDirtyWorkspace() (bool, error) {
-	ret := r.Interceptor.Call("IsDirtyWorkspace")
-	return ret[0].(bool), sErr(ret[1])
+func (r *TestRepo) EnsureSafeWorkspace() error {
+	ret := r.Interceptor.Call("EnsureSafeWorkspace")
+	return sErr(ret[0])
 }
 
 func (r *TestRepo) Checkout(commit Commit) (Reference, error) {

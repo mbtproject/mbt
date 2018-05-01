@@ -23,13 +23,9 @@ type stdWorkspaceManager struct {
 }
 
 func (w *stdWorkspaceManager) CheckoutAndRun(commit string, fn func() (interface{}, error)) (interface{}, error) {
-	dirty, err := w.Repo.IsDirtyWorkspace()
+	err := w.Repo.EnsureSafeWorkspace()
 	if err != nil {
 		return nil, err
-	}
-
-	if dirty {
-		return nil, e.NewError(ErrClassUser, "dirty working dir")
 	}
 
 	c, err := w.Repo.GetCommit(commit)

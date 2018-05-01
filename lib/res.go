@@ -33,4 +33,6 @@ const (
 	msgFailedRestorationOfOldReference     = "Restoration of reference %v failed %v"
 	msgSuccessfulRestorationOfOldReference = "Successfully restored reference %v"
 	msgSuccessfulCheckout                  = "Successfully checked out commit %v"
+	msgDirtyWorkingDir                     = "Dirty working dir"
+	msgDetachedHead                        = "Head is currently detached"
 )

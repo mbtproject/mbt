@@ -448,7 +448,7 @@ func TestDirtyWorkingDir(t *testing.T) {
 	buff := new(bytes.Buffer)
 	_, err := NewWorld(t, ".tmp/repo").System.BuildCurrentBranch(NoFilter, stdTestCmdOptions(buff))
 	assert.Error(t, err)
-	assert.Equal(t, "dirty working dir", err.Error())
+	assert.Equal(t, msgDirtyWorkingDir, err.Error())
 	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())
 }
 
@@ -587,7 +587,7 @@ func TestRestorationOfPristineWorkspace(t *testing.T) {
 	assert.Equal(t, "refs/heads/master", head.Name())
 }
 
-func TestRestorationOfPristineDetachedWorkspace(t *testing.T) {
+func TestBuildingDetachedHead(t *testing.T) {
 	clean()
 	repo := NewTestRepo(t, ".tmp/repo")
 	check(t, repo.InitModule("app-a"))
@@ -611,9 +611,13 @@ func TestRestorationOfPristineDetachedWorkspace(t *testing.T) {
 
 	w := NewWorld(t, ".tmp/repo")
 	buff := new(bytes.Buffer)
-	_, err := w.System.BuildBranch("feature", NoFilter, stdTestCmdOptions(buff))
-	check(t, err)
+	r, err := w.System.BuildBranch("feature", NoFilter, stdTestCmdOptions(buff))
 
+	assert.Nil(t, r)
+	assert.EqualError(t, err, msgDetachedHead)
+	assert.Equal(t, ErrClassUser, err.(*e.E).Class())
+
+	// Ensure that we don't touch this workspace
 	idx, err := repo.Repo.Index()
 	check(t, err)
 

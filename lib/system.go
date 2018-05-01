@@ -102,8 +102,11 @@ type Repo interface {
 	CurrentBranchCommit() (Commit, error)
 	// IsEmpty informs if the current repository is empty or not.
 	IsEmpty() (bool, error)
-	// IsDirtyWorkspace returns true if the current workspace has uncommitted changes.
-	IsDirtyWorkspace() (bool, error)
+	// EnsureSafeWorkspace returns an error workspace is in a safe state
+	// for operations requiring a checkout.
+	// For example, in git repositories we consider uncommitted changes or
+	// a detached head is an unsafe state.
+	EnsureSafeWorkspace() error
 	// Checkout specified commit into workspace.
 	// Also returns a reference to the previous tree pointed by current workspace.
 	Checkout(commit Commit) (Reference, error)
