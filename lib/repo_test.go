@@ -224,9 +224,10 @@ func TestGitIgnoreRulesInSafeWorkspace(t *testing.T) {
 	repo := NewTestRepo(t, ".tmp/repo")
 
 	check(t, repo.WriteContent("readme.md", "hello"))
-	check(t, repo.WriteContent(".gitignore", ".cache/"))
+	check(t, repo.WriteContent(".gitignore", "!*.[Cc]ache/"))
+	check(t, repo.WriteContent("subdir/.gitignore", ".cache/"))
 	check(t, repo.Commit("first"))
-	check(t, repo.WriteContent(".cache/foo", "hello"))
+	check(t, repo.WriteContent("subdir/.cache/foo", "hello"))
 
 	w := NewWorld(t, ".tmp/repo")
 	check(t, w.Repo.EnsureSafeWorkspace())
