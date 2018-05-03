@@ -7,10 +7,6 @@
 #ifndef INCLUDE_common_h__
 #define INCLUDE_common_h__
 
-#ifndef LIBGIT2_NO_FEATURES_H
-# include "git2/sys/features.h"
-#endif
-
 #include "git2/common.h"
 #include "cc-compat.h"
 
@@ -50,6 +46,10 @@
 # include "win32/version.h"
 # ifdef GIT_THREADS
 #	include "win32/thread.h"
+# endif
+# if defined(GIT_MSVC_CRTDBG)
+#   include "win32/w32_stack.h"
+#   include "win32/w32_crtdbg_stacktrace.h"
 # endif
 
 #else
@@ -230,12 +230,6 @@ GIT_INLINE(void) git__init_structure(void *structure, size_t len, unsigned int v
 		GIT_ADD_SIZET_OVERFLOW(out, *(out), three) || \
 		GIT_ADD_SIZET_OVERFLOW(out, *(out), four)) { return -1; }
 
-#define GITERR_CHECK_ALLOC_ADD5(out, one, two, three, four, five) \
-	if (GIT_ADD_SIZET_OVERFLOW(out, one, two) || \
-		GIT_ADD_SIZET_OVERFLOW(out, *(out), three) || \
-		GIT_ADD_SIZET_OVERFLOW(out, *(out), four) || \
-		GIT_ADD_SIZET_OVERFLOW(out, *(out), five)) { return -1; }
-
 /** Check for multiplicative overflow, failing if it would occur. */
 #define GITERR_CHECK_ALLOC_MULTIPLY(out, nelem, elsize) \
 	if (GIT_MULTIPLY_SIZET_OVERFLOW(out, nelem, elsize)) { return -1; }
@@ -244,4 +238,4 @@ GIT_INLINE(void) git__init_structure(void *structure, size_t len, unsigned int v
 
 #include "util.h"
 
-#endif
+#endif /* INCLUDE_common_h__ */

@@ -20,10 +20,6 @@ type Blob struct {
 	cast_ptr *C.git_blob
 }
 
-func (b *Blob) AsObject() *Object {
-	return &b.Object
-}
-
 func (v *Blob) Size() int64 {
 	ret := int64(C.git_blob_rawsize(v.cast_ptr))
 	runtime.KeepAlive(v)
@@ -48,7 +44,7 @@ func (repo *Repository) CreateBlobFromBuffer(data []byte) (*Oid, error) {
 	var size C.size_t
 
 	// Go 1.6 added some increased checking of passing pointer to
-	// C, but its check depends on its expectations of what we
+	// C, but its check depends on its expectations of waht we
 	// pass to the C function, so unless we take the address of
 	// its contents at the call site itself, it can fail when
 	// 'data' is a slice of a slice.

@@ -50,7 +50,6 @@ static int add_revision(struct log_state *s, const char *revstr);
 /** log_options holds other command line options that affect log output */
 struct log_options {
 	int show_diff;
-	int show_log_size;
 	int skip, limit;
 	int min_parents, max_parents;
 	git_time_t before;
@@ -64,7 +63,7 @@ struct log_options {
 static int parse_options(
 	struct log_state *s, struct log_options *opt, int argc, char **argv);
 static void print_time(const git_time *intime, const char *prefix);
-static void print_commit(git_commit *commit, struct log_options *opts);
+static void print_commit(git_commit *commit);
 static int match_with_parent(git_commit *commit, int i, git_diff_options *);
 
 /** utility functions for filtering */
@@ -149,7 +148,7 @@ int main(int argc, char *argv[])
 			break;
 		}
 
-		print_commit(commit, &opt);
+		print_commit(commit);
 
 		if (opt.show_diff) {
 			git_tree *a = NULL, *b = NULL;
@@ -338,7 +337,7 @@ static void print_time(const git_time *intime, const char *prefix)
 }
 
 /** Helper to print a commit object. */
-static void print_commit(git_commit *commit, struct log_options *opts)
+static void print_commit(git_commit *commit)
 {
 	char buf[GIT_OID_HEXSZ + 1];
 	int i, count;
@@ -347,10 +346,6 @@ static void print_commit(git_commit *commit, struct log_options *opts)
 
 	git_oid_tostr(buf, sizeof(buf), git_commit_id(commit));
 	printf("commit %s\n", buf);
-
-	if (opts->show_log_size) {
-		printf("log size %d\n", (int)strlen(git_commit_message(commit)));
-	}
 
 	if ((count = (int)git_commit_parentcount(commit)) > 1) {
 		printf("Merge:");
@@ -475,8 +470,6 @@ static int parse_options(
 			/** Found valid --min_parents. */;
 		else if (!strcmp(a, "-p") || !strcmp(a, "-u") || !strcmp(a, "--patch"))
 			opt->show_diff = 1;
-		else if (!strcmp(a, "--log-size"))
-			opt->show_log_size = 1;
 		else
 			usage("Unsupported argument", a);
 	}

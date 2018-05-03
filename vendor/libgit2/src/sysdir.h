@@ -8,7 +8,6 @@
 #define INCLUDE_sysdir_h__
 
 #include "common.h"
-
 #include "posix.h"
 #include "buffer.h"
 
@@ -116,4 +115,4 @@ extern int git_sysdir_get_str(char *out, size_t outlen, git_sysdir_t which);
  */
 extern int git_sysdir_set(git_sysdir_t which, const char *paths);
 
-#endif
+#endif /* INCLUDE_sysdir_h__ */

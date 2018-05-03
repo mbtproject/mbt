@@ -5,10 +5,8 @@
  * a Linking Exception. For full terms see the included COPYING file.
  */
 
-#ifndef INCLUDE_transports_auth_h__
-#define INCLUDE_transports_auth_h__
-
-#include "common.h"
+#ifndef INCLUDE_http_auth_h__
+#define INCLUDE_http_auth_h__
 
 #include "git2.h"
 #include "netops.h"
@@ -62,3 +60,4 @@ int git_http_auth_basic(
 	const gitno_connection_data *connection_data);
 
 #endif
+

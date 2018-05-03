@@ -44,6 +44,7 @@
 #include "xinclude.h"
 #include "xtypes.h"
 #include "xdiff.h"
+#include "common.h"
 
 #define MAX_PTR	UINT_MAX
 #define MAX_CNT	UINT_MAX

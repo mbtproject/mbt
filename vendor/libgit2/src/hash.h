@@ -7,8 +7,6 @@
 #ifndef INCLUDE_hash_h__
 #define INCLUDE_hash_h__
 
-#include "common.h"
-
 #include "git2/oid.h"
 
 typedef struct git_hash_prov git_hash_prov;
@@ -42,4 +40,4 @@ int git_hash_final(git_oid *out, git_hash_ctx *c);
 int git_hash_buf(git_oid *out, const void *data, size_t len);
 int git_hash_vec(git_oid *out, git_buf_vec *vec, size_t n);
 
-#endif
+#endif /* INCLUDE_hash_h__ */

@@ -11,12 +11,7 @@ int main(int argc, char *argv[])
 
 	clar_test_init(argc, argv);
 
-	res = git_libgit2_init();
-	if (res < 0) {
-		fprintf(stderr, "failed to init libgit2");
-		return res;
-	}
-
+	git_libgit2_init();
 	cl_global_trace_register();
 	cl_sandbox_set_search_path_defaults();
 

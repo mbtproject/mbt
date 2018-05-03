@@ -8,7 +8,7 @@
 
 from __future__ import with_statement
 from string import Template
-import re, fnmatch, os, sys, codecs, pickle
+import re, fnmatch, os, codecs, pickle
 
 class Module(object):
     class Template(object):
@@ -128,9 +128,8 @@ class Module(object):
 
 class TestSuite(object):
 
-    def __init__(self, path, output):
+    def __init__(self, path):
         self.path = path
-        self.output = output
 
     def should_generate(self, path):
         if not os.path.isfile(path):
@@ -158,7 +157,7 @@ class TestSuite(object):
         return modules
 
     def load_cache(self):
-        path = os.path.join(self.output, '.clarcache')
+        path = os.path.join(self.path, '.clarcache')
         cache = {}
 
         try:
@@ -171,7 +170,7 @@ class TestSuite(object):
         return cache
 
     def save_cache(self):
-        path = os.path.join(self.output, '.clarcache')
+        path = os.path.join(self.path, '.clarcache')
         with open(path, 'wb') as cache:
             pickle.dump(self.modules, cache)
 
@@ -201,24 +200,22 @@ class TestSuite(object):
         return sum(len(module.callbacks) for module in self.modules.values())
 
     def write(self):
-        output = os.path.join(self.output, 'clar.suite')
+        output = os.path.join(self.path, 'clar.suite')
 
         if not self.should_generate(output):
             return False
 
         with open(output, 'w') as data:
-            modules = sorted(self.modules.values(), key=lambda module: module.name)
-
-            for module in modules:
+            for module in self.modules.values():
                 t = Module.DeclarationTemplate(module)
                 data.write(t.render())
 
-            for module in modules:
+            for module in self.modules.values():
                 t = Module.CallbacksTemplate(module)
                 data.write(t.render())
 
             suites = "static struct clar_suite _clar_suites[] = {" + ','.join(
-                Module.InfoTemplate(module).render() for module in modules
+                Module.InfoTemplate(module).render() for module in sorted(self.modules.values(), key=lambda module: module.name)
             ) + "\n};\n"
 
             data.write(suites)
@@ -235,18 +232,13 @@ if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option('-f', '--force', action="store_true", dest='force', default=False)
     parser.add_option('-x', '--exclude', dest='excluded', action='append', default=[])
-    parser.add_option('-o', '--output', dest='output')
 
     options, args = parser.parse_args()
-    if len(args) > 1:
-        print("More than one path given")
-        sys.exit(1)
 
-    path = args.pop() if args else '.'
-    output = options.output or path
-    suite = TestSuite(path, output)
-    suite.load(options.force)
-    suite.disable(options.excluded)
-    if suite.write():
-        print("Written `clar.suite` (%d tests in %d suites)" % (suite.callback_count(), suite.suite_count()))
+    for path in args or ['.']:
+        suite = TestSuite(path)
+        suite.load(options.force)
+        suite.disable(options.excluded)
+        if suite.write():
+            print("Written `clar.suite` (%d tests in %d suites)" % (suite.callback_count(), suite.suite_count()))
 

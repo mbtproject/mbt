@@ -5,10 +5,8 @@
  * a Linking Exception. For full terms see the included COPYING file.
  */
 
-#ifndef INCLUDE_win32_w32_stack_h__
-#define INCLUDE_win32_w32_stack_h__
-
-#include "common.h"
+#ifndef INCLUDE_w32_stack_h__
+#define INCLUDE_w32_stack_h__
 
 #if defined(GIT_MSVC_CRTDBG)
 
@@ -137,4 +135,4 @@ int git_win32__stack(
 	const char *prefix, const char *suffix);
 
 #endif /* GIT_MSVC_CRTDBG */
-#endif
+#endif /* INCLUDE_w32_stack_h__ */

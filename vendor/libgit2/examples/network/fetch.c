@@ -8,6 +8,13 @@
 # include <unistd.h>
 #endif
 
+struct dl_data {
+	git_remote *remote;
+	git_fetch_options *fetch_opts;
+	int ret;
+	int finished;
+};
+
 static int progress_cb(const char *str, int len, void *data)
 {
 	(void)data;

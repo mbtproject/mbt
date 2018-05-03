@@ -5,13 +5,14 @@
  * a Linking Exception. For full terms see the included COPYING file.
  */
 
-#include "worktree.h"
+#include "common.h"
 
 #include "git2/branch.h"
 #include "git2/commit.h"
 #include "git2/worktree.h"
 
 #include "repository.h"
+#include "worktree.h"
 
 static bool is_worktree_dir(const char *dir)
 {
@@ -383,7 +384,7 @@ out:
 	return err;
 }
 
-int git_worktree_lock(git_worktree *wt, const char *reason)
+int git_worktree_lock(git_worktree *wt, char *creason)
 {
 	git_buf buf = GIT_BUF_INIT, path = GIT_BUF_INIT;
 	int err;
@@ -396,8 +397,8 @@ int git_worktree_lock(git_worktree *wt, const char *reason)
 	if ((err = git_buf_joinpath(&path, wt->gitdir_path, "locked")) < 0)
 		goto out;
 
-	if (reason)
-		git_buf_attach_notowned(&buf, reason, strlen(reason));
+	if (creason)
+		git_buf_attach_notowned(&buf, creason, strlen(creason));
 
 	if ((err = git_futils_writebuffer(&buf, path.ptr, O_CREAT|O_EXCL|O_WRONLY, 0644)) < 0)
 		goto out;

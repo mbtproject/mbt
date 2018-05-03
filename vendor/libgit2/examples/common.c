@@ -235,13 +235,3 @@ void treeish_to_tree(
 	git_object_free(obj);
 }
 
-void *xrealloc(void *oldp, size_t newsz)
-{
-	void *p = realloc(oldp, newsz);
-	if (p == NULL) {
-		fprintf(stderr, "Cannot allocate memory, exiting.\n");
-		exit(1);
-	}
-	return p;
-}
-
