@@ -318,6 +318,17 @@ func (r *libgitRepo) EnsureSafeWorkspace() error {
 	}
 
 	if count > 0 {
+		r.Log.Debug("Workspace has %v changes", count)
+		r.Log.Debug("Begin tracing all changes")
+		for c := 0; c < count; c++ {
+			entry, err := status.ByIndex(c)
+			if err != nil {
+				r.Log.Debug("Error while getting the change at index %v - %v", c, err)
+				continue
+			}
+			r.Log.Debug("%v", entry.IndexToWorkdir.NewFile)
+		}
+		r.Log.Debug("End tracing all changes")
 		return e.NewError(ErrClassUser, msgDirtyWorkingDir)
 	}
 	return nil
