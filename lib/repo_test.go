@@ -218,3 +218,16 @@ func TestChangesOfCommitWhereOneParentIsAMergeCommit(t *testing.T) {
 	assert.Len(t, delta, 1)
 	assert.Equal(t, "car", delta[0].NewFile)
 }
+
+func TestGitIgnoreRulesInSafeWorkspace(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+
+	check(t, repo.WriteContent("readme.md", "hello"))
+	check(t, repo.WriteContent(".gitignore", ".cache/"))
+	check(t, repo.Commit("first"))
+	check(t, repo.WriteContent(".cache/foo", "hello"))
+
+	w := NewWorld(t, ".tmp/repo")
+	check(t, w.Repo.EnsureSafeWorkspace())
+}
