@@ -23,3 +23,7 @@ before_build:
 build_script: 
   - cmd: ./scripts/build_win.bat
   - ps: ./scripts/appveyor_publish.ps1
+artifacts:
+  - path: build
+    name: mbt
+    type: zip
