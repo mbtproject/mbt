@@ -1,3 +1,10 @@
+## 0.17.0
+
+- [97855c3](https://github.com/mbtproject/mbt/commit/97855c3) Fix: Version is written to stdout instead of stderr
+- [aecdcd3](https://github.com/mbtproject/mbt/commit/aecdcd3) Feature: Template helper to convert a map to a list
+- [d8b898a](https://github.com/mbtproject/mbt/commit/d8b898a) Fix: Prevent build|run-in commands when head is detached
+- [ff5d22a](https://github.com/mbtproject/mbt/commit/ff5d22a) Feature: Execute user defined commands in modules
+
 ## 0.16.0
 ### Breaking Changes
 This version includes significant breaking changes. Click through to the 
