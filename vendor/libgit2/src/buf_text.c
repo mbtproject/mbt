@@ -188,7 +188,7 @@ bool git_buf_text_is_binary(const git_buf *buf)
 	git_bom_t bom;
 	int printable = 0, nonprintable = 0;
 
-	scan += git_buf_text_detect_bom(&bom, buf);
+	scan += git_buf_text_detect_bom(&bom, buf, 0);
 
 	if (bom > GIT_BOM_UTF8)
 		return 1;
@@ -215,18 +215,18 @@ bool git_buf_text_contains_nul(const git_buf *buf)
 	return (memchr(buf->ptr, '\0', buf->size) != NULL);
 }
 
-int git_buf_text_detect_bom(git_bom_t *bom, const git_buf *buf)
+int git_buf_text_detect_bom(git_bom_t *bom, const git_buf *buf, size_t offset)
 {
 	const char *ptr;
 	size_t len;
 
 	*bom = GIT_BOM_NONE;
-	/* need at least 2 bytes to look for any BOM */
-	if (buf->size < 2)
+	/* need at least 2 bytes after offset to look for any BOM */
+	if (buf->size < offset + 2)
 		return 0;
 
-	ptr = buf->ptr;
-	len = buf->size;
+	ptr = buf->ptr + offset;
+	len = buf->size - offset;
 
 	switch (*ptr++) {
 	case 0:
@@ -274,7 +274,7 @@ bool git_buf_text_gather_stats(
 	memset(stats, 0, sizeof(*stats));
 
 	/* BOM detection */
-	skip = git_buf_text_detect_bom(&stats->bom, buf);
+	skip = git_buf_text_detect_bom(&stats->bom, buf, 0);
 	if (skip_bom)
 		scan += skip;
 

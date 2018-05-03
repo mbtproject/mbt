@@ -4,8 +4,7 @@
  * This file is part of libgit2, distributed under the GNU GPL v2 with
  * a Linking Exception. For full terms see the included COPYING file.
  */
-
-#include "diff_tform.h"
+#include "common.h"
 
 #include "git2/config.h"
 #include "git2/blob.h"
@@ -686,10 +685,8 @@ static bool is_rename_target(
 			break;
 		}
 		if (FLAG_SET(opts, GIT_DIFF_FIND_RENAMES_FROM_REWRITES) &&
-			delta->similarity < opts->rename_from_rewrite_threshold) {
-			delta->flags |= GIT_DIFF_FLAG__TO_SPLIT;
+			delta->similarity < opts->rename_from_rewrite_threshold)
 			break;
-		}
 
 		return false;
 

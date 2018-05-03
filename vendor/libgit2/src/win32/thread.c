@@ -6,7 +6,6 @@
  */
 
 #include "thread.h"
-
 #include "../global.h"
 
 #define CLEAN_THREAD_EXIT 0x6F012842

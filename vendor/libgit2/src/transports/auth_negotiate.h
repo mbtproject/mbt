@@ -5,10 +5,9 @@
  * a Linking Exception. For full terms see the included COPYING file.
  */
 
-#ifndef INCLUDE_transports_auth_negotiate_h__
-#define INCLUDE_transports_auth_negotiate_h__
+#ifndef INCLUDE_auth_negotiate_h__
+#define INCLUDE_auth_negotiate_h__
 
-#include "common.h"
 #include "git2.h"
 #include "auth.h"
 
@@ -25,3 +24,4 @@ extern int git_http_auth_negotiate(
 #endif /* GIT_GSSAPI */
 
 #endif
+

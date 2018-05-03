@@ -6,12 +6,12 @@ static git_repository *repo;
 
 void test_refs_iterator__initialize(void)
 {
-	repo = cl_git_sandbox_init("testrepo.git");
+	cl_git_pass(git_repository_open(&repo, cl_fixture("testrepo.git")));
 }
 
 void test_refs_iterator__cleanup(void)
 {
-	cl_git_sandbox_cleanup();
+	git_repository_free(repo);
 }
 
 static const char *refnames[] = {
@@ -36,36 +36,6 @@ static const char *refnames[] = {
 	"refs/tags/taggerless",
 	"refs/tags/test",
 	"refs/tags/wrapped_tag",
-	NULL
-};
-
-static const char *refnames_with_symlink[] = {
-	"refs/heads/br2",
-	"refs/heads/cannot-fetch",
-	"refs/heads/chomped",
-	"refs/heads/haacked",
-	"refs/heads/link/a",
-	"refs/heads/link/b",
-	"refs/heads/link/c",
-	"refs/heads/link/d",
-	"refs/heads/master",
-	"refs/heads/not-good",
-	"refs/heads/packed",
-	"refs/heads/packed-test",
-	"refs/heads/subtrees",
-	"refs/heads/test",
-	"refs/heads/track-local",
-	"refs/heads/trailing",
-	"refs/notes/fanout",
-	"refs/remotes/test/master",
-	"refs/tags/annotated_tag_to_blob",
-	"refs/tags/e90810b",
-	"refs/tags/hard_tag",
-	"refs/tags/point_to_blob",
-	"refs/tags/taggerless",
-	"refs/tags/test",
-	"refs/tags/wrapped_tag",
-	NULL
 };
 
 static int refcmp_cb(const void *a, const void *b)
@@ -76,21 +46,21 @@ static int refcmp_cb(const void *a, const void *b)
 	return strcmp(refa->name, refb->name);
 }
 
-static void assert_all_refnames_match(const char **expected, git_vector *names)
+static void assert_all_refnames_match(git_vector *output)
 {
 	size_t i;
 	git_reference *ref;
 
-	git_vector_sort(names);
+	cl_assert_equal_sz(output->length, ARRAY_SIZE(refnames));
 
-	git_vector_foreach(names, i, ref) {
-		cl_assert(expected[i] != NULL);
-		cl_assert_equal_s(expected[i], ref->name);
+	git_vector_sort(output);
+
+	git_vector_foreach(output, i, ref) {
+		cl_assert_equal_s(ref->name, refnames[i]);
 		git_reference_free(ref);
 	}
-	cl_assert(expected[i] == NULL);
 
-	git_vector_free(names);
+	git_vector_free(output);
 }
 
 void test_refs_iterator__list(void)
@@ -112,7 +82,7 @@ void test_refs_iterator__list(void)
 
 	git_reference_iterator_free(iter);
 
-	assert_all_refnames_match(refnames, &output);
+	assert_all_refnames_match(&output);
 }
 
 void test_refs_iterator__empty(void)
@@ -145,29 +115,7 @@ void test_refs_iterator__foreach(void)
 	git_vector output;
 	cl_git_pass(git_vector_init(&output, 32, &refcmp_cb));
 	cl_git_pass(git_reference_foreach(repo, refs_foreach_cb, &output));
-	assert_all_refnames_match(refnames, &output);
-}
-
-void test_refs_iterator__foreach_through_symlink(void)
-{
-	git_vector output;
-
-#ifdef GIT_WIN32
-	cl_skip();
-#endif
-
-	cl_git_pass(git_vector_init(&output, 32, &refcmp_cb));
-
-	cl_git_pass(p_mkdir("refs", 0777));
-	cl_git_mkfile("refs/a", "1234567890123456789012345678901234567890");
-	cl_git_mkfile("refs/b", "1234567890123456789012345678901234567890");
-	cl_git_mkfile("refs/c", "1234567890123456789012345678901234567890");
-	cl_git_mkfile("refs/d", "1234567890123456789012345678901234567890");
-
-	cl_git_pass(p_symlink("../../../refs", "testrepo.git/refs/heads/link"));
-
-	cl_git_pass(git_reference_foreach(repo, refs_foreach_cb, &output));
-	assert_all_refnames_match(refnames_with_symlink, &output);
+	assert_all_refnames_match(&output);
 }
 
 static int refs_foreach_cancel_cb(git_reference *reference, void *payload)
@@ -208,11 +156,11 @@ void test_refs_iterator__foreach_name(void)
 	cl_git_pass(
 		git_reference_foreach_name(repo, refs_foreach_name_cb, &output));
 
+	cl_assert_equal_sz(output.length, ARRAY_SIZE(refnames));
 	git_vector_sort(&output);
 
 	git_vector_foreach(&output, i, name) {
-		cl_assert(refnames[i] != NULL);
-		cl_assert_equal_s(refnames[i], name);
+		cl_assert_equal_s(name, refnames[i]);
 		git__free(name);
 	}
 
@@ -246,7 +194,7 @@ void test_refs_iterator__concurrent_delete(void)
 	const char *name;
 	int error;
 
-	cl_git_sandbox_cleanup();
+	git_repository_free(repo);
 	repo = cl_git_sandbox_init("testrepo");
 
 	cl_git_pass(git_reference_iterator_new(&iter, repo));
@@ -267,4 +215,7 @@ void test_refs_iterator__concurrent_delete(void)
 	cl_assert_equal_i(GIT_ITEROVER, error);
 
 	cl_assert_equal_i(full_count, concurrent_count);
+
+	cl_git_sandbox_cleanup();
+	repo = NULL;
 }

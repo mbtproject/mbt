@@ -5,11 +5,10 @@
  * a Linking Exception. For full terms see the included COPYING file.
  */
 
-#include "indexer.h"
-
 #include "git2/indexer.h"
 #include "git2/object.h"
 
+#include "common.h"
 #include "pack.h"
 #include "mwindow.h"
 #include "posix.h"
@@ -187,17 +186,13 @@ static int store_delta(git_indexer *idx)
 	return 0;
 }
 
-static int hash_header(git_hash_ctx *ctx, git_off_t len, git_otype type)
+static void hash_header(git_hash_ctx *ctx, git_off_t len, git_otype type)
 {
 	char buffer[64];
 	size_t hdrlen;
-	int error;
 
-	if ((error = git_odb__format_object_header(&hdrlen,
-		buffer, sizeof(buffer), (size_t)len, type)) < 0)
-		return error;
-
-	return git_hash_update(ctx, buffer, hdrlen);
+	hdrlen = git_odb__format_object_header(buffer, sizeof(buffer), (size_t)len, type);
+	git_hash_update(ctx, buffer, hdrlen);
 }
 
 static int hash_object_stream(git_indexer*idx, git_packfile_stream *stream)
@@ -625,10 +620,7 @@ int git_indexer_append(git_indexer *idx, const void *data, size_t size, git_tran
 				idx->have_delta = 1;
 			} else {
 				idx->have_delta = 0;
-
-				error = hash_header(&idx->hash_ctx, entry_size, type);
-				if (error < 0)
-					goto on_error;
+				hash_header(&idx->hash_ctx, entry_size, type);
 			}
 
 			idx->have_stream = 1;
@@ -851,7 +843,6 @@ static int fix_thin_pack(git_indexer *idx, git_transfer_progress *stats)
 static int resolve_deltas(git_indexer *idx, git_transfer_progress *stats)
 {
 	unsigned int i;
-	int error;
 	struct delta_info *delta;
 	int progressed = 0, non_null = 0, progress_cb_result;
 
@@ -866,13 +857,8 @@ static int resolve_deltas(git_indexer *idx, git_transfer_progress *stats)
 
 			non_null = 1;
 			idx->off = delta->delta_off;
-			if ((error = git_packfile_unpack(&obj, idx->pack, &idx->off)) < 0) {
-				if (error == GIT_PASSTHROUGH) {
-					/* We have not seen the base object, we'll try again later. */
-					continue;
-				}
-				return -1;
-			}
+			if (git_packfile_unpack(&obj, idx->pack, &idx->off) < 0)
+				continue;
 
 			if (hash_and_save(idx, &obj, delta->delta_off) < 0)
 				continue;
@@ -962,10 +948,6 @@ int git_indexer_commit(git_indexer *idx, git_transfer_progress *stats)
 	/* Test for this before resolve_deltas(), as it plays with idx->off */
 	if (idx->off + 20 < idx->pack->mwf.size) {
 		giterr_set(GITERR_INDEXER, "unexpected data at the end of the pack");
-		return -1;
-	}
-	if (idx->off + 20 > idx->pack->mwf.size) {
-		giterr_set(GITERR_INDEXER, "missing trailer at the end of the pack");
 		return -1;
 	}
 
@@ -1135,9 +1117,6 @@ void git_indexer_free(git_indexer *idx)
 {
 	if (idx == NULL)
 		return;
-
-	if (idx->have_stream)
-		git_packfile_stream_free(&idx->stream);
 
 	git_vector_free_deep(&idx->objects);
 

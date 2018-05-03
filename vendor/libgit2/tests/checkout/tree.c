@@ -10,16 +10,6 @@ static git_repository *g_repo;
 static git_checkout_options g_opts;
 static git_object *g_object;
 
-static void assert_status_entrycount(git_repository *repo, size_t count)
-{
-	git_status_list *status;
-
-	cl_git_pass(git_status_list_new(&status, repo, NULL));
-	cl_assert_equal_i(count, git_status_list_entrycount(status));
-
-	git_status_list_free(status);
-}
-
 void test_checkout_tree__initialize(void)
 {
 	g_repo = cl_git_sandbox_init("testrepo");
@@ -1096,8 +1086,6 @@ void test_checkout_tree__filemode_preserved_in_workdir(void)
 	cl_assert(!GIT_PERMS_IS_EXEC(read_filemode("a/b.txt")));
 
 	git_commit_free(commit);
-#else
-	cl_skip();
 #endif
 }
 
@@ -1492,6 +1480,7 @@ void test_checkout_tree__baseline_is_empty_when_no_index(void)
 	git_checkout_options opts = GIT_CHECKOUT_OPTIONS_INIT;
 	git_reference *head;
 	git_object *obj;
+	git_status_list *status;
 	size_t conflicts = 0;
 
 	assert_on_branch(g_repo, "master");
@@ -1517,47 +1506,12 @@ void test_checkout_tree__baseline_is_empty_when_no_index(void)
 	opts.checkout_strategy |= GIT_CHECKOUT_FORCE;
 	cl_git_pass(git_checkout_tree(g_repo, obj, &opts));
 
-	assert_status_entrycount(g_repo, 0);
+	cl_git_pass(git_status_list_new(&status, g_repo, NULL));
+	cl_assert_equal_i(0, git_status_list_entrycount(status));
+	git_status_list_free(status);
 
 	git_object_free(obj);
 	git_reference_free(head);
-}
-
-void test_checkout_tree__mode_change_is_force_updated(void)
-{
-	git_index *index;
-	git_reference *head;
-	git_object *obj;
-
-	if (!cl_is_chmod_supported())
-		clar__skip();
-
-	assert_on_branch(g_repo, "master");
-	cl_git_pass(git_repository_index(&index, g_repo));
-	cl_git_pass(git_repository_head(&head, g_repo));
-	cl_git_pass(git_reference_peel(&obj, head, GIT_OBJ_COMMIT));
-
-	cl_git_pass(git_reset(g_repo, obj, GIT_RESET_HARD, NULL));
-	assert_status_entrycount(g_repo, 0);
-
-	/* update the mode on-disk */
-	cl_must_pass(p_chmod("testrepo/README", 0755));
-
-	assert_status_entrycount(g_repo, 1);
-	cl_git_pass(git_checkout_tree(g_repo, obj, &g_opts));
-	assert_status_entrycount(g_repo, 0);
-
-	/* update the mode on-disk and in the index */
-	cl_must_pass(p_chmod("testrepo/README", 0755));
-	cl_must_pass(git_index_add_bypath(index, "README"));
-
-	assert_status_entrycount(g_repo, 1);
-	cl_git_pass(git_checkout_tree(g_repo, obj, &g_opts));
-	assert_status_entrycount(g_repo, 0);
-
-	git_object_free(obj);
-	git_reference_free(head);
-	git_index_free(index);
 }
 
 void test_checkout_tree__nullopts(void)

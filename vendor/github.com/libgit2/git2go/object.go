@@ -26,11 +26,6 @@ type Object struct {
 	repo *Repository
 }
 
-// Objecter lets us accept any kind of Git object in functions.
-type Objecter interface {
-	AsObject() *Object
-}
-
 func (t ObjectType) String() string {
 	switch t {
 	case ObjectAny:

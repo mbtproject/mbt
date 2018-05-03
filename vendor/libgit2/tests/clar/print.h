@@ -3,7 +3,7 @@ static void clar_print_init(int test_count, int suite_count, const char *suite_n
 {
 	(void)test_count;
 	printf("Loaded %d suites: %s\n", (int)suite_count, suite_names);
-	printf("Started (test status codes: OK='.' FAILURE='F' SKIPPED='S')\n");
+	printf("Started\n");
 }
 
 static void clar_print_shutdown(int test_count, int suite_count, int error_count)

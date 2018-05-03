@@ -7,10 +7,9 @@
 #ifndef INCLUDE_zstream_h__
 #define INCLUDE_zstream_h__
 
-#include "common.h"
-
 #include <zlib.h>
 
+#include "common.h"
 #include "buffer.h"
 
 typedef enum {
@@ -23,7 +22,6 @@ typedef struct {
 	git_zstream_t type;
 	const char *in;
 	size_t in_len;
-	int flush;
 	int zerr;
 } git_zstream;
 
@@ -36,11 +34,6 @@ int git_zstream_set_input(git_zstream *zstream, const void *in, size_t in_len);
 
 size_t git_zstream_suggest_output_len(git_zstream *zstream);
 
-/* get as much output as is available in the input buffer */
-int git_zstream_get_output_chunk(
-	void *out, size_t *out_len, git_zstream *zstream);
-
-/* get all the output from the entire input buffer */
 int git_zstream_get_output(void *out, size_t *out_len, git_zstream *zstream);
 
 bool git_zstream_done(git_zstream *zstream);
@@ -50,4 +43,4 @@ void git_zstream_reset(git_zstream *zstream);
 int git_zstream_deflatebuf(git_buf *out, const void *in, size_t in_len);
 int git_zstream_inflatebuf(git_buf *out, const void *in, size_t in_len);
 
-#endif
+#endif /* INCLUDE_zstream_h__ */
