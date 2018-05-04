@@ -293,15 +293,6 @@ func (r *libgitRepo) IsEmpty() (bool, error) {
 }
 
 func (r *libgitRepo) EnsureSafeWorkspace() error {
-	detached, err := r.Repo.IsHeadDetached()
-	if err != nil {
-		return e.Wrap(ErrClassInternal, err)
-	}
-
-	if detached {
-		return e.NewError(ErrClassUser, msgDetachedHead)
-	}
-
 	status, err := r.Repo.StatusList(&git.StatusOptions{
 		Flags: git.StatusOptIncludeUntracked,
 	})

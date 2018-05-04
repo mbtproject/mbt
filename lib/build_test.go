@@ -611,11 +611,8 @@ func TestBuildingDetachedHead(t *testing.T) {
 
 	w := NewWorld(t, ".tmp/repo")
 	buff := new(bytes.Buffer)
-	r, err := w.System.BuildBranch("feature", NoFilter, stdTestCmdOptions(buff))
-
-	assert.Nil(t, r)
-	assert.EqualError(t, err, msgDetachedHead)
-	assert.Equal(t, ErrClassUser, err.(*e.E).Class())
+	_, err := w.System.BuildBranch("feature", NoFilter, stdTestCmdOptions(buff))
+	check(t, err)
 
 	// Ensure that we don't touch this workspace
 	idx, err := repo.Repo.Index()
