@@ -1,3 +1,7 @@
+## 0.17.1
+
+- [24e3039](https://github.com/mbtproject/mbt/commit/24e3039) Fix: Support builds when head is detached
+
 ## 0.17.0
 
 - [97855c3](https://github.com/mbtproject/mbt/commit/97855c3) Fix: Version is written to stdout instead of stderr
