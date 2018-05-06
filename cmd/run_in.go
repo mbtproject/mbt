@@ -57,25 +57,14 @@ func init() {
 }
 
 var runInHead = &cobra.Command{
-	Use:   "head",
-	Short: "Run command in all modules in the commit pointed at current head",
-	Long: `Run command in modules in the commit pointed at current head
-
-`,
+	Use: "head",
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		return summariseRun(system.RunInCurrentBranch(command, &lib.FilterOptions{Name: name, Fuzzy: fuzzy}, lib.CmdOptionsWithStdIO(runCmdStageCB)))
 	}),
 }
 
 var runInBranch = &cobra.Command{
-	Use:   "branch <branch>",
-	Short: "Run command in all modules at the tip of the specified branch",
-	Long: `Build all modules at the tip of the specified branch
-
-Build all modules at the tip of the specified branch.
-If branch name is not specified, the command assumes 'master'.
-
-`,
+	Use: "branch <branch>",
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		branch := "master"
 		if len(args) > 0 {
@@ -87,17 +76,7 @@ If branch name is not specified, the command assumes 'master'.
 }
 
 var runInPr = &cobra.Command{
-	Use:   "pr --src <branch> --dst <branch>",
-	Short: "Run command in modules changed in dst branch relatively to src branch",
-	Long: `Run command in modules changed in dst branch relatively to src branch
-
-This command works out the merge base for src and dst branches and
-runs the specified command in all modules impacted by the diff between merge base and
-the tip of dst branch.
-
-In addition to the modules impacted by changes, command is also
-executed in their dependents (recursively).
-	`,
+	Use: "pr --src <branch> --dst <branch>",
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if src == "" {
 			return errors.New("requires source")
@@ -112,19 +91,7 @@ executed in their dependents (recursively).
 }
 
 var runInDiff = &cobra.Command{
-	Use:   "diff --from <sha> --to <sha>",
-	Short: "Run command in modules changed between from and to commits",
-	Long: `Run command in modules chanaged between from and to commits
-
-Works out the merge base for from and to commits and
-runs the command in modules which have been changed between merge base and
-to commit.
-
-In addition to the modules impacted by changes, command is also
-executed in their dependents.
-
-Commit SHA must be the complete 40 character SHA1 string.
-	`,
+	Use: "diff --from <sha> --to <sha>",
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if from == "" {
 			return errors.New("requires from commit")
@@ -139,13 +106,7 @@ Commit SHA must be the complete 40 character SHA1 string.
 }
 
 var runInCommit = &cobra.Command{
-	Use:   "commit <sha>",
-	Short: "Run command in all modules in the specified commit",
-	Long: `Run command in all modules in the specified commit
-
-	If --content flag is specified, command is run in just the modules
-	impacted by the specified commit.
-	`,
+	Use: "commit <sha>",
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			return errors.New("requires the commit sha")
@@ -161,12 +122,7 @@ var runInCommit = &cobra.Command{
 }
 
 var runInLocal = &cobra.Command{
-	Use:   "local [--all]",
-	Short: "Run command in all modules in uncommitted changes in current workspace",
-	Long: `Run command in all modules in uncommitted changes in current workspace
-
-Specify the --all flag to run command in all modules in current workspace.
-	`,
+	Use: "local [--all]",
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if all || name != "" {
 			return summariseRun(system.RunInWorkspace(command, &lib.FilterOptions{Name: name, Fuzzy: fuzzy}, lib.CmdOptionsWithStdIO(runCmdStageCB)))
@@ -200,10 +156,6 @@ func summariseRun(summary *lib.RunResult, err error) error {
 
 var runIn = &cobra.Command{
 	Use:   "run-in",
-	Short: "Main command for running user defined commands",
-	Long: `Main command for running user defined commands
-
-Execute a user defined command according to the specified sub command.
-See sub command help for more information.
-`,
+	Short: docText("run-in-summary"),
+	Long:  docText("run-in"),
 }
