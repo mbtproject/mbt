@@ -55,25 +55,14 @@ func init() {
 }
 
 var buildHead = &cobra.Command{
-	Use:   "head",
-	Short: "Build all modules in the commit pointed at current head",
-	Long: `Build all modules in the commit pointed at current head
-
-`,
+	Use: "head",
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		return summarise(system.BuildCurrentBranch(&lib.FilterOptions{Name: name, Fuzzy: fuzzy}, lib.CmdOptionsWithStdIO(buildStageCB)))
 	}),
 }
 
 var buildBranch = &cobra.Command{
-	Use:   "branch <branch>",
-	Short: "Build all modules at the tip of the specified branch",
-	Long: `Build all modules at the tip of the specified branch
-
-Build all modules at the tip of the specified branch.
-If branch name is not specified, the command assumes 'master'.
-
-`,
+	Use: "branch <branch>",
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		branch := "master"
 		if len(args) > 0 {
@@ -85,18 +74,7 @@ If branch name is not specified, the command assumes 'master'.
 }
 
 var buildPr = &cobra.Command{
-	Use:   "pr --src <branch> --dst <branch>",
-	Short: "Build the modules changed in dst branch relatively to src branch",
-	Long: `Build the modules changed in dst branch relatively to src branch
-
-This command works out the merge base for src and dst branches and
-builds all modules impacted by the diff between merge base and
-the tip of dst branch.
-
-In addition to the modules impacted by changes, this command also
-builds their dependents.
-
-	`,
+	Use: "pr --src <branch> --dst <branch>",
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if src == "" {
 			return errors.New("requires source")
@@ -111,19 +89,7 @@ builds their dependents.
 }
 
 var buildDiff = &cobra.Command{
-	Use:   "diff --from <sha> --to <sha>",
-	Short: "Build the modules changed between from and to commits",
-	Long: `Build the modules chanaged between from and to commits
-
-Works out the merge base for from and to commits and
-builds all modules which have been changed between merge base and
-to commit.
-
-In addition to the modules impacted by changes, this command also
-builds their dependents.
-
-Commit SHA must be the complete 40 character SHA1 string.
-	`,
+	Use: "diff --from <sha> --to <sha>",
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if from == "" {
 			return errors.New("requires from commit")
@@ -138,13 +104,7 @@ Commit SHA must be the complete 40 character SHA1 string.
 }
 
 var buildCommit = &cobra.Command{
-	Use:   "commit <sha>",
-	Short: "Build all modules in the specified commit",
-	Long: `Build all modules in the specified commit
-
-	If --content flag is specified, this command will build just the modules
-	impacted by the specified commit.
-	`,
+	Use: "commit <sha>",
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			return errors.New("requires the commit sha")
@@ -160,13 +120,7 @@ var buildCommit = &cobra.Command{
 }
 
 var buildLocal = &cobra.Command{
-	Use:   "local [--all]",
-	Short: "Build all modules in uncommitted changes in current workspace",
-	Long: `Build all modules in uncommitted changes in current workspace
-
-Local builds always uses a fixed version identifier - 'local'.
-Specify the --all flag to build all modules in current workspace.
-	`,
+	Use: "local [--all]",
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if all || name != "" {
 			return summarise(system.BuildWorkspace(&lib.FilterOptions{Name: name, Fuzzy: fuzzy}, lib.CmdOptionsWithStdIO(buildStageCB)))
@@ -199,10 +153,6 @@ func summarise(summary *lib.BuildSummary, err error) error {
 
 var buildCommand = &cobra.Command{
 	Use:   "build",
-	Short: "Main command for building the repository",
-	Long: `Main command for building the repository
-
-Execute the build according to the specified sub command.
-See sub command help for more information.
-`,
+	Short: docText("build-summary"),
+	Long:  docText("build"),
 }

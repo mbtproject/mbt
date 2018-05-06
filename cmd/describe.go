@@ -70,32 +70,12 @@ func init() {
 
 var describeCmd = &cobra.Command{
 	Use:   "describe",
-	Short: "Describe the modules in the repo",
-	Long: `Describe the modules in the repo
-
-Displays all modules discovered in repo according to the sub command
-used. This can be used to understand the impact of executing the build
-command.
-
-You can control the output of this command using --json and --graph flags.
-
---json flag is self explanatory.
---graph flag outputs the dependency graph in dot format. This can be piped
-into graphviz tools such as dot to produce a graphical representation of
-the dependency graph of the repo.
-
-e.g.
-mbt describe head --graph | dot -Tpng > /tmp/graph.png && open /tmp/graph.png
-`,
+	Short: docText("describe-summary"),
+	Long:  docText("describe"),
 }
 
 var describeBranchCmd = &cobra.Command{
-	Use:   "branch <branch>",
-	Short: "Describe all modules in the tip of the given branch",
-	Long: `Describe all modules in the tip of the given branch
-
-If branch name is not specified assumes 'master'.
-`,
+	Use: "branch <branch>",
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		branch := "master"
 		if len(args) > 0 {
@@ -113,11 +93,7 @@ If branch name is not specified assumes 'master'.
 }
 
 var describeHeadCmd = &cobra.Command{
-	Use:   "head",
-	Short: "Describe all modules in the branch pointed by head",
-	Long: `Describe all modules in the branch pointed by head
-
-`,
+	Use: "head",
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		m, err := system.ManifestByCurrentBranch()
 		if err != nil {
@@ -130,12 +106,7 @@ var describeHeadCmd = &cobra.Command{
 }
 
 var describeLocalCmd = &cobra.Command{
-	Use:   "local",
-	Short: "Describe all modules in current workspace",
-	Long: `Describe all modules in current workspace
-
-This includes the modules in uncommitted changes.
-`,
+	Use: "local",
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		var (
 			m   *lib.Manifest
@@ -158,14 +129,7 @@ This includes the modules in uncommitted changes.
 }
 
 var describePrCmd = &cobra.Command{
-	Use:   "pr --src <branch> --dst <branch>",
-	Short: "Describe the modules changed between src and dst branches",
-	Long: `Describe the modules changed between src and dst branches
-
-Works out the merge base for src and dst branches and
-displays all modules which have been changed between merge base and
-the tip of dst branch.
-`,
+	Use: "pr --src <branch> --dst <branch>",
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if src == "" {
 			return errors.New("requires source")
@@ -185,15 +149,7 @@ the tip of dst branch.
 }
 
 var describeCommitCmd = &cobra.Command{
-	Use:   "commit <sha>",
-	Short: "Describe all modules in the specified commit",
-	Long: `Describe all modules in the specified commit
-
-Commit SHA must be the complete 40 character SHA1 string.
-
-If --content flag is specified, this command will describe just the modules
-impacted by the specified commit.
-`,
+	Use: "commit <sha>",
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			return errors.New("requires the commit sha")
@@ -223,10 +179,7 @@ impacted by the specified commit.
 }
 
 var describeIntersectionCmd = &cobra.Command{
-	Use:   "intersection --kind <branch|commit> --first <first> --second <second>",
-	Short: "Describe the common modules changed in two commit trees",
-	Long: `Describe the common modules changed in two commit trees
-`,
+	Use: "intersection --kind <branch|commit> --first <first> --second <second>",
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if kind == "" {
 			return errors.New("requires the kind argument")
@@ -261,14 +214,7 @@ var describeIntersectionCmd = &cobra.Command{
 }
 
 var describeDiffCmd = &cobra.Command{
-	Use:   "diff --from <commit> --to <commit>",
-	Short: "Describe the modules in the diff between from and to commits",
-	Long: `Describe the modules in the diff between from and to commits
-
-Works out the merge base for from and to commits and
-displays all modules which have been changed between merge base and
-the to commit.
-`,
+	Use: "diff --from <commit> --to <commit>",
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if from == "" {
 			return errors.New("requires from commit")

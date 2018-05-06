@@ -45,19 +45,14 @@ var (
 
 func init() {
 	RootCmd.PersistentFlags().StringVar(&in, "in", "", "Path to repo")
-	RootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "Enable debugging")
+	RootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "Enable debug output")
 }
 
 // RootCmd is the main command.
 var RootCmd = &cobra.Command{
-	Use:   "mbt",
-	Short: "Monorepo Build Tool",
-	Long: `Monorepo Build Tool
-The most flexible build tool for monorepo.
-
-See help for individual commands for more information.
-
-	`,
+	Use:          "mbt",
+	Short:        docText("main-summary"),
+	Long:         docText("main"),
 	SilenceUsage: true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if cmd.Use == "version" {
