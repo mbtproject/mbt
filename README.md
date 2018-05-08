@@ -265,7 +265,7 @@ As a simple but rather useless example of this can be illustrated with a templat
 as shown below.
 
 ```go
-{{ $module := range .Modules }}
+{{ $module := range .ModulesList }}
 {{ $module.Name }}
 {{ end }}
 ```
@@ -317,7 +317,7 @@ properties:
 available to templates via `.Properties` property as illustrated below.
 
 ```go
-{{ $module := range .Modules }}
+{{ $module := range .ModulesList }}
 {{ property $module "a" }} {{ property $module "b" }}
 {{ end }}
 ```

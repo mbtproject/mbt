@@ -9,6 +9,8 @@
     "errorz",
     "failf",
     "initialises",
+    "ishead",
+    "istail",
     "klass",
     "kvplist",
     "mbtproject",
