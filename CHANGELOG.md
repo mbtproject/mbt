@@ -1,3 +1,7 @@
+## 0.18.0
+
+- [9ed7c00](https://github.com/mbtproject/mbt/commit/9ed7c00) Feature: New template helpers
+
 ## 0.17.1
 
 - [24e3039](https://github.com/mbtproject/mbt/commit/24e3039) Fix: Support builds when head is detached
