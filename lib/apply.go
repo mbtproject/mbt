@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"sort"
 	"strings"
 	"text/template"
@@ -180,6 +181,88 @@ func processTemplate(buffer []byte, m *Manifest, output io.Writer) error {
 
 			sort.Sort(KVPSort(l))
 			return l
+		},
+		"add": func(a, b int) int {
+			return a + b
+		},
+		"sub": func(a, b int) int {
+			return a - b
+		},
+		"mul": func(a, b int) int {
+			return a * b
+		},
+		"div": func(a, b int) int {
+			return a / b
+		},
+		"istail": func(array, value interface{}) bool {
+			if array == nil {
+				return false
+			}
+
+			t := reflect.TypeOf(array)
+			if t.Kind() != reflect.Array && t.Kind() != reflect.Slice {
+				panic(fmt.Sprintf("istail function requires an array/slice as input %d", t.Kind()))
+			}
+
+			arrayVal := reflect.ValueOf(array)
+			if arrayVal.Len() == 0 {
+				return false
+			}
+
+			v := arrayVal.Index(arrayVal.Len() - 1).Interface()
+			return v == value
+		},
+		"ishead": func(array, value interface{}) bool {
+			if array == nil {
+				return false
+			}
+
+			t := reflect.TypeOf(array)
+			if t.Kind() != reflect.Array && t.Kind() != reflect.Slice {
+				panic(fmt.Sprintf("ishead function requires an array/slice as input %d", t.Kind()))
+			}
+
+			arrayVal := reflect.ValueOf(array)
+			if arrayVal.Len() == 0 {
+				return false
+			}
+
+			v := arrayVal.Index(0).Interface()
+			return v == value
+		},
+		"head": func(array interface{}) interface{} {
+			if array == nil {
+				return ""
+			}
+
+			t := reflect.TypeOf(array)
+			if t.Kind() != reflect.Array && t.Kind() != reflect.Slice {
+				panic(fmt.Sprintf("head function requires an array/slice as input %d", t.Kind()))
+			}
+
+			arrayVal := reflect.ValueOf(array)
+			if arrayVal.Len() == 0 {
+				return ""
+			}
+
+			return arrayVal.Index(0).Interface()
+		},
+		"tail": func(array interface{}) interface{} {
+			if array == nil {
+				return ""
+			}
+
+			t := reflect.TypeOf(array)
+			if t.Kind() != reflect.Array && t.Kind() != reflect.Slice {
+				panic(fmt.Sprintf("tail function requires an array/slice as input %d", t.Kind()))
+			}
+
+			arrayVal := reflect.ValueOf(array)
+			if arrayVal.Len() == 0 {
+				return ""
+			}
+
+			return arrayVal.Index(arrayVal.Len() - 1).Interface()
 		},
 	}).Parse(string(buffer))
 	if err != nil {

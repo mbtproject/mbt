@@ -218,6 +218,22 @@ func TestCustomTemplateFuncs(t *testing.T) {
 		{Template: `{{- join (property (module "app-a") "") "%v" "-"}}`, Expected: ""},
 		{Template: `{{- range $i, $e := (kvplist (property (module "app-a") "map"))}}{{if $i}},{{end}}{{$i}}-{{$e.Key}}-{{$e.Value}}{{end}}`, Expected: "0-a-1,1-b-foo,2-c-bar"},
 		{Template: `{{- range $i, $e := (kvplist (property (module "app-a") "invalid"))}}{{if $i}},{{end}}{{$i}}-{{$e.Key}}-{{$e.Value}}{{end}}`, Expected: ""},
+		{Template: `{{- add 1 1}}`, Expected: "2"},
+		{Template: `{{- sub 2 1}}`, Expected: "1"},
+		{Template: `{{- mul 2 2}}`, Expected: "4"},
+		{Template: `{{- div 4 2}}`, Expected: "2"},
+		{Template: `{{- if ishead (property (module "app-a") "tags") "a"}}yes{{end}}`, Expected: "yes"},
+		{Template: `{{- if ishead (property (module "app-a") "tags") "b"}}yes{{end}}`, Expected: ""},
+		{Template: `{{- if ishead (property (module "app-a") "nil") "b"}}yes{{end}}`, Expected: ""},
+		{Template: `{{- if istail (property (module "app-a") "tags") "c"}}yes{{end}}`, Expected: "yes"},
+		{Template: `{{- if istail (property (module "app-a") "tags") "b"}}yes{{end}}`, Expected: ""},
+		{Template: `{{- if istail (property (module "app-a") "nil") "b"}}yes{{end}}`, Expected: ""},
+		{Template: `{{- head (property (module "app-a") "tags") }}`, Expected: "a"},
+		{Template: `{{- head (property (module "app-a") "nil") }}`, Expected: ""},
+		{Template: `{{- head (property (module "app-a") "empty") }}`, Expected: ""},
+		{Template: `{{- tail (property (module "app-a") "tags") }}`, Expected: "c"},
+		{Template: `{{- tail (property (module "app-a") "nil") }}`, Expected: ""},
+		{Template: `{{- tail (property (module "app-a") "empty") }}`, Expected: ""},
 	}
 
 	for _, c := range cases {
