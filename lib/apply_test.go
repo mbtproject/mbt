@@ -369,3 +369,25 @@ func TestApplyForManifestBuildFailureForCommit(t *testing.T) {
 func TestResolvePropertyForAnEmptySource(t *testing.T) {
 	assert.Equal(t, "a", resolveProperty(nil, []string{"a"}, "a"))
 }
+
+func TestTheOrderOfModulesList(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+
+	check(t, repo.InitModule("app-b"))
+	check(t, repo.InitModule("app-a"))
+	check(t, repo.InitModule("app-c"))
+
+	check(t, repo.WriteContent("template.tmpl", `
+{{- range $i, $mod := .ModulesList}}
+{{- $mod.Name }},
+{{- end}}
+`))
+
+	check(t, repo.Commit("first"))
+
+	output := new(bytes.Buffer)
+	check(t, NewWorld(t, ".tmp/repo").System.ApplyHead("template.tmpl", output))
+
+	assert.Equal(t, "app-a,app-b,app-c,\n", output.String())
+}

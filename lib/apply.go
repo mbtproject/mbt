@@ -31,10 +31,11 @@ import (
 
 // TemplateData is the data passed into template.
 type TemplateData struct {
-	Args    map[string]interface{}
-	Sha     string
-	Env     map[string]string
-	Modules map[string]*Module
+	Args        map[string]interface{}
+	Sha         string
+	Env         map[string]string
+	Modules     map[string]*Module
+	ModulesList []*Module
 }
 
 // KVP is a key value pair.
@@ -43,19 +44,32 @@ type KVP struct {
 	Value interface{}
 }
 
-// KVPSort is a key based sorter for KVP
-type KVPSort []*KVP
+type kvpSoter []*KVP
 
-func (a KVPSort) Len() int {
+func (a kvpSoter) Len() int {
 	return len(a)
 }
 
-func (a KVPSort) Swap(i, j int) {
+func (a kvpSoter) Swap(i, j int) {
 	a[i], a[j] = a[j], a[i]
 }
 
-func (a KVPSort) Less(i, j int) bool {
+func (a kvpSoter) Less(i, j int) bool {
 	return a[i].Key < a[j].Key
+}
+
+type modulesByNameSorter []*Module
+
+func (m modulesByNameSorter) Len() int {
+	return len(m)
+}
+
+func (m modulesByNameSorter) Swap(i, j int) {
+	m[i], m[j] = m[j], m[i]
+}
+
+func (m modulesByNameSorter) Less(i, j int) bool {
+	return m[i].Name() < m[j].Name()
 }
 
 func (s *stdSystem) ApplyBranch(templatePath, branch string, output io.Writer) error {
@@ -120,6 +134,10 @@ func (s *stdSystem) applyCore(commit Commit, templatePath string, output io.Writ
 
 func processTemplate(buffer []byte, m *Manifest, output io.Writer) error {
 	modulesIndex := m.Modules.indexByName()
+	sortedModules := make(modulesByNameSorter, len(m.Modules))
+	copy(sortedModules, m.Modules)
+	sort.Sort(sortedModules)
+
 	temp, err := template.New("template").Funcs(template.FuncMap{
 		"module": func(n string) *Module {
 			return modulesIndex[n]
@@ -179,7 +197,7 @@ func processTemplate(buffer []byte, m *Manifest, output io.Writer) error {
 				l = append(l, &KVP{Key: k, Value: v})
 			}
 
-			sort.Sort(KVPSort(l))
+			sort.Sort(kvpSoter(l))
 			return l
 		},
 		"add": func(a, b int) int {
@@ -270,9 +288,10 @@ func processTemplate(buffer []byte, m *Manifest, output io.Writer) error {
 	}
 
 	data := &TemplateData{
-		Sha:     m.Sha,
-		Env:     getEnvMap(),
-		Modules: m.Modules.indexByName(),
+		Sha:         m.Sha,
+		Env:         getEnvMap(),
+		Modules:     m.Modules.indexByName(),
+		ModulesList: sortedModules,
 	}
 
 	return temp.Execute(output, data)
