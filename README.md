@@ -338,6 +338,14 @@ Following helper functions are available when writing templates.
 |`contains <array> <item>` |Return true if the given item is present in the array.
 |`join <array> <format> <separator>` |Format each item in the array according the format specified and then join them with the specified separator.
 |`kvplist <map>` |Accepts a map of `map[string]interface{}` type and returns the items in the map as a list of key/value pairs sorted by the key. They can be accessed via `.Key` and `.Value` properties.
+|`add <int> <int>` |Adds two integers.
+|`sub <int> <int>` |Subtracts two integers.
+|`mul <int> <int>` |Multiplies two integers.
+|`div <int> <int>` |Divides two integers.
+|`head <array|slice>` |Selects the first item in an array/slice. Returns `""` if the input is `nil` or an empty array/slice.
+|`tail <array|slice>` |Selects the last item in an array/slice. Returns `""` if the input is `nil` or an empty array/slice.
+|`ishead` <array> <value>` |Returns true if the specified value is the head of the array/slice.
+|`istail` <array> <value>` |Returns true if the specified value is the tail of the array/slice.
 
 These functions can be pipelined to simplify complex template expressions. Below is an example of emitting the word "foo"
 when module "app-a" has the value "a" in it's tags property.
