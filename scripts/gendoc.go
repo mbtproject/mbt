@@ -31,7 +31,7 @@ func main() {
 		panic(err)
 	}
 
-	err = os.Link(path.Join(wd, "docs", "mbt.md"), path.Join(wd, "docs", "README.md"))
+	err = os.Link(path.Join(wd, "docs", "mbt.md"), path.Join(wd, "docs", "index.md"))
 	if err != nil {
 		panic(err)
 	}
