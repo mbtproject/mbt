@@ -16,22 +16,22 @@ func main() {
 		panic(err)
 	}
 
-	err = os.RemoveAll(path.Join(wd, "doc"))
+	err = os.RemoveAll(path.Join(wd, "docs"))
 	if err != nil {
 		panic(err)
 	}
 
-	err = os.Mkdir(path.Join(wd, "doc"), 0755)
+	err = os.Mkdir(path.Join(wd, "docs"), 0755)
 	if err != nil {
 		panic(err)
 	}
 
-	err = doc.GenMarkdownTree(cmd.RootCmd, path.Join(wd, "doc"))
+	err = doc.GenMarkdownTree(cmd.RootCmd, path.Join(wd, "docs"))
 	if err != nil {
 		panic(err)
 	}
 
-	err = os.Link(path.Join(wd, "doc", "mbt.md"), path.Join(wd, "doc", "index.md"))
+	err = os.Link(path.Join(wd, "docs", "mbt.md"), path.Join(wd, "docs", "README.md"))
 	if err != nil {
 		panic(err)
 	}
