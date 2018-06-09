@@ -4,7 +4,7 @@
 
 >> The most flexible build orchestration tool for monorepo
 
-[Documentation](doc) | [Twitter](https://twitter.com/mbtproject)
+[Documentation](https://mbt.readthedocs.io/) | [Twitter](https://twitter.com/mbtproject)
 
 [![Build Status](https://travis-ci.org/mbtproject/mbt.svg?branch=release)](https://travis-ci.org/mbtproject/mbt)
 [![Build status](https://ci.appveyor.com/api/projects/status/wy8rhr188t3phqvk?svg=true)](https://ci.appveyor.com/project/mbtproject/mbt)
