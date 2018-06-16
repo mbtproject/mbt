@@ -48,11 +48,11 @@ match by using `--fuzzy` option.
 When executing build, following environment variables are initialised and can be
 used by the command being executed.
 
-`MBT_MODULE_NAME` Name of the module
-`MBT_MODULE_PATH` Relative path to the module directory
-`MBT_MODULE_VERSION` Module version
-`MBT_BUILD_COMMIT` Git commit SHA of the commit being built
-`MBT_REPO_PATH` Absolute path to the repository directory
+- `MBT_MODULE_NAME` Name of the module
+- `MBT_MODULE_PATH` Relative path to the module directory
+- `MBT_MODULE_VERSION` Module version
+- `MBT_BUILD_COMMIT` Git commit SHA of the commit being built
+- `MBT_REPO_PATH` Absolute path to the repository directory
 
 In addition to the variables listed above, module properties are also populated 
 in the form of `MBT_MODULE_PROPERTY_XXX` where `XXX` denotes the key.
