@@ -43,6 +43,7 @@ func (p *stdProcessManager) setupModBuildEnvironment(manifest *Manifest, mod *Mo
 		fmt.Sprintf("MBT_BUILD_COMMIT=%s", manifest.Sha),
 		fmt.Sprintf("MBT_MODULE_VERSION=%s", mod.Version()),
 		fmt.Sprintf("MBT_MODULE_NAME=%s", mod.Name()),
+		fmt.Sprintf("MBT_MODULE_PATH=%s", mod.Path()),
 		fmt.Sprintf("MBT_REPO_PATH=%s", manifest.Dir),
 	}
 

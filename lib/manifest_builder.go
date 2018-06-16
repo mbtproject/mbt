@@ -15,6 +15,10 @@ limitations under the License.
 
 package lib
 
+import (
+	"path/filepath"
+)
+
 // NewManifestBuilder creates a new ManifestBuilder
 func NewManifestBuilder(repo Repo, reducer Reducer, discover Discover, log Log) ManifestBuilder {
 	return &stdManifestBuilder{Repo: repo, Discover: discover, Log: log, Reducer: reducer}
@@ -30,7 +34,7 @@ type stdManifestBuilder struct {
 type manifestBuilder func() (*Manifest, error)
 
 func (b *stdManifestBuilder) ByDiff(from, to Commit) (*Manifest, error) {
-	return b.buildManifest(func() (*Manifest, error) {
+	return b.runManifestBuilder(func() (*Manifest, error) {
 		mods, err := b.Discover.ModulesInCommit(to)
 		if err != nil {
 			return nil, err
@@ -51,12 +55,12 @@ func (b *stdManifestBuilder) ByDiff(from, to Commit) (*Manifest, error) {
 			return nil, err
 		}
 
-		return &Manifest{Dir: b.Repo.Path(), Modules: mods, Sha: to.ID()}, nil
+		return b.buildManifest(mods, to.ID())
 	})
 }
 
 func (b *stdManifestBuilder) ByPr(src, dst string) (*Manifest, error) {
-	return b.buildManifest(func() (*Manifest, error) {
+	return b.runManifestBuilder(func() (*Manifest, error) {
 		from, err := b.Repo.BranchCommit(dst)
 		if err != nil {
 			return nil, err
@@ -72,18 +76,18 @@ func (b *stdManifestBuilder) ByPr(src, dst string) (*Manifest, error) {
 }
 
 func (b *stdManifestBuilder) ByCommit(sha Commit) (*Manifest, error) {
-	return b.buildManifest(func() (*Manifest, error) {
+	return b.runManifestBuilder(func() (*Manifest, error) {
 		mods, err := b.Discover.ModulesInCommit(sha)
 		if err != nil {
 			return nil, err
 		}
 
-		return &Manifest{Dir: b.Repo.Path(), Modules: mods, Sha: sha.ID()}, nil
+		return b.buildManifest(mods, sha.ID())
 	})
 }
 
 func (b *stdManifestBuilder) ByCommitContent(sha Commit) (*Manifest, error) {
-	return b.buildManifest(func() (*Manifest, error) {
+	return b.runManifestBuilder(func() (*Manifest, error) {
 		mods, err := b.Discover.ModulesInCommit(sha)
 		if err != nil {
 			return nil, err
@@ -106,12 +110,12 @@ func (b *stdManifestBuilder) ByCommitContent(sha Commit) (*Manifest, error) {
 			}
 		}
 
-		return &Manifest{Dir: b.Repo.Path(), Modules: mods, Sha: sha.ID()}, nil
+		return b.buildManifest(mods, sha.ID())
 	})
 }
 
 func (b *stdManifestBuilder) ByBranch(name string) (*Manifest, error) {
-	return b.buildManifest(func() (*Manifest, error) {
+	return b.runManifestBuilder(func() (*Manifest, error) {
 		c, err := b.Repo.BranchCommit(name)
 		if err != nil {
 			return nil, err
@@ -122,7 +126,7 @@ func (b *stdManifestBuilder) ByBranch(name string) (*Manifest, error) {
 }
 
 func (b *stdManifestBuilder) ByCurrentBranch() (*Manifest, error) {
-	return b.buildManifest(func() (*Manifest, error) {
+	return b.runManifestBuilder(func() (*Manifest, error) {
 		n, err := b.Repo.CurrentBranch()
 		if err != nil {
 			return nil, err
@@ -137,7 +141,7 @@ func (b *stdManifestBuilder) ByWorkspace() (*Manifest, error) {
 		return nil, err
 	}
 
-	return &Manifest{Dir: b.Repo.Path(), Modules: mods, Sha: "local"}, nil
+	return b.buildManifest(mods, "local")
 }
 
 func (b *stdManifestBuilder) ByWorkspaceChanges() (*Manifest, error) {
@@ -161,18 +165,30 @@ func (b *stdManifestBuilder) ByWorkspaceChanges() (*Manifest, error) {
 		return nil, err
 	}
 
-	return &Manifest{Dir: b.Repo.Path(), Modules: mods, Sha: "local"}, nil
+	return b.buildManifest(mods, "local")
 }
 
-func (b *stdManifestBuilder) buildManifest(builder manifestBuilder) (*Manifest, error) {
+func (b *stdManifestBuilder) runManifestBuilder(builder manifestBuilder) (*Manifest, error) {
 	empty, err := b.Repo.IsEmpty()
 	if err != nil {
 		return nil, err
 	}
 
 	if empty {
-		return &Manifest{Dir: b.Repo.Path(), Modules: Modules{}, Sha: ""}, nil
+		return b.buildManifest(Modules{}, "")
 	}
 
 	return builder()
+}
+
+func (b *stdManifestBuilder) buildManifest(modules Modules, sha string) (*Manifest, error) {
+	repoPath := b.Repo.Path()
+	if !filepath.IsAbs(repoPath) {
+		var err error
+		repoPath, err = filepath.Abs(repoPath)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &Manifest{Dir: repoPath, Modules: modules, Sha: sha}, nil
 }
