@@ -1,3 +1,7 @@
+## 0.20.0
+
+- [398b10e](https://github.com/mbtproject/mbt/commit/398b10e) [2af9407](https://github.com/mbtproject/mbt/commit/2af9407) Feature: Additional environment values
+
 ## 0.19.0
 
 - [529068f](https://github.com/mbtproject/mbt/commit/529068f) Feature: Make a sorted modules list available for templates
