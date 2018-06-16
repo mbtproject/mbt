@@ -18,6 +18,7 @@ package lib
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
 	"testing"
 
 	"github.com/mbtproject/mbt/e"
@@ -364,9 +365,11 @@ func TestManifestByLocalDirForUpdates(t *testing.T) {
 
 	m, err := NewWorld(t, ".tmp/repo").System.ManifestByWorkspaceChanges()
 	check(t, err)
+	expectedPath, err := filepath.Abs(".tmp/repo")
+	check(t, err)
 
 	assert.Equal(t, "local", m.Sha)
-	assert.Equal(t, ".tmp/repo", m.Dir)
+	assert.Equal(t, expectedPath, m.Dir)
 
 	// currently no modules changed locally
 	assert.Equal(t, 0, len(m.Modules))
@@ -461,8 +464,11 @@ func TestVersionOfLocalDirManifest(t *testing.T) {
 	m, err := NewWorld(t, ".tmp/repo").System.ManifestByWorkspace()
 	check(t, err)
 
+	expectedPath, err := filepath.Abs(".tmp/repo")
+	check(t, err)
+
 	assert.Equal(t, "local", m.Sha)
-	assert.Equal(t, ".tmp/repo", m.Dir)
+	assert.Equal(t, expectedPath, m.Dir)
 
 	assert.Equal(t, 2, len(m.Modules))
 	assert.Equal(t, "app-a", m.Modules[0].Name())

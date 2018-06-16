@@ -224,8 +224,10 @@ When executing build, following environment variables are initialised and can be
 used by the command being executed.
 
 {{c "MBT_MODULE_NAME"}} Name of the module
+{{c "MBT_MODULE_PATH"}} Relative path to the module directory
 {{c "MBT_MODULE_VERSION"}} Module version
 {{c "MBT_BUILD_COMMIT"}} Git commit SHA of the commit being built
+{{c "MBT_REPO_PATH"}} Absolute path to the repository directory
 
 In addition to the variables listed above, module properties are also populated 
 in the form of {{c "MBT_MODULE_PROPERTY_XXX"}} where {{c "XXX"}} denotes the key.
