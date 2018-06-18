@@ -115,13 +115,15 @@ var describeLocalCmd = &cobra.Command{
 
 		if all {
 			m, err = system.ManifestByWorkspace()
+			if err != nil {
+				return err
+			}
 			m = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy})
 		} else {
 			m, err = system.ManifestByWorkspaceChanges()
-		}
-
-		if err != nil {
-			return err
+			if err != nil {
+				return err
+			}
 		}
 
 		return output(m.Modules)

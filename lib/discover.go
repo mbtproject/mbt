@@ -109,8 +109,16 @@ func (d *stdDiscover) ModulesInCommit(commit Commit) (Modules, error) {
 func (d *stdDiscover) ModulesInWorkspace() (Modules, error) {
 	metadataSet := moduleMetadataSet{}
 	absRepoPath, err := filepath.Abs(d.Repo.Path())
+	if err != nil {
+		return nil, e.Wrap(ErrClassInternal, err)
+	}
 
 	walkfunc := func(path string, info os.FileInfo, err error) error {
+		d.Log.Debug("visiting %s", path)
+		if err != nil {
+			d.Log.Debug("error %v", err)
+			return err
+		}
 		if info.Name() == ".mbt.yml" && info.IsDir() == false {
 			contents, err := ioutil.ReadFile(path)
 			if err != nil {
@@ -134,8 +142,10 @@ func (d *stdDiscover) ModulesInWorkspace() (Modules, error) {
 			if err != nil {
 				return e.Wrapf(ErrClassInternal, err, "error whilst reading relative path %s", path)
 			}
+
 			dir := strings.Replace(relPath, string(os.PathSeparator), "/", -1)
 			dir = strings.TrimRight(dir, "/")
+			d.Log.Debug("discovered module in %s", dir)
 
 			hash := "local"
 			metadataSet = append(metadataSet, newModuleMetadata(dir, hash, spec, nil))
