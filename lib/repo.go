@@ -292,6 +292,48 @@ func (r *libgitRepo) IsEmpty() (bool, error) {
 	return empty, nil
 }
 
+func (r *libgitRepo) FindAllFilesInWorkspace(pathSpec string) ([]string, error) {
+	var configPaths []string
+	status, err := r.Repo.StatusList(&git.StatusOptions{
+		Flags:    git.StatusOptIncludeUntracked | git.StatusOptIncludeUnmodified | git.StatusOptRecurseUntrackedDirs,
+		Pathspec: []string{pathSpec},
+	})
+
+	if err != nil {
+		return nil, e.Wrap(ErrClassInternal, err)
+	}
+
+	defer status.Free()
+
+	count, err := status.EntryCount()
+	if err != nil {
+		return nil, e.Wrap(ErrClassInternal, err)
+	}
+
+	if count > 0 {
+		r.Log.Debug("Workspace has %v configs", count)
+		for c := 0; c < count; c++ {
+			entry, err := status.ByIndex(c)
+			if err != nil {
+				r.Log.Debug("Error while getting the change at index %v - %v", c, err)
+				continue
+			}
+
+			if entry.Status != git.StatusWtDeleted {
+				path := entry.IndexToWorkdir.NewFile.Path
+				if path == "" {
+					path = entry.HeadToIndex.NewFile.Path
+				}
+				r.Log.Debug("MBT config found: %v", path)
+				configPaths = append(configPaths, path)
+			}
+		}
+		return configPaths, nil
+	}
+
+	return nil, nil
+}
+
 func (r *libgitRepo) EnsureSafeWorkspace() error {
 	status, err := r.Repo.StatusList(&git.StatusOptions{
 		Flags: git.StatusOptIncludeUntracked,

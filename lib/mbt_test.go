@@ -487,6 +487,11 @@ func (r *TestRepo) IsEmpty() (bool, error) {
 	return ret[0].(bool), sErr(ret[1])
 }
 
+func (r *TestRepo) FindAllFilesInWorkspace(pathSpec string) ([]string, error) {
+	ret := r.Interceptor.Call("FindAllFilesInWorkspace", pathSpec)
+	return ret[0].([]string), sErr(ret[1])
+}
+
 func (r *TestRepo) EnsureSafeWorkspace() error {
 	ret := r.Interceptor.Call("EnsureSafeWorkspace")
 	return sErr(ret[0])

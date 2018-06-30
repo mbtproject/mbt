@@ -46,6 +46,8 @@ type stdDiscover struct {
 	Log  Log
 }
 
+const configFileName string = ".mbt.yml"
+
 // NewDiscover creates an instance of standard discover implementation.
 func NewDiscover(repo Repo, l Log) Discover {
 	return &stdDiscover{Repo: repo, Log: l}
@@ -56,7 +58,7 @@ func (d *stdDiscover) ModulesInCommit(commit Commit) (Modules, error) {
 	metadataSet := moduleMetadataSet{}
 
 	err := repo.WalkBlobs(commit, func(b Blob) error {
-		if b.Name() == ".mbt.yml" {
+		if b.Name() == configFileName {
 			var (
 				hash string
 				err  error
@@ -109,42 +111,35 @@ func (d *stdDiscover) ModulesInCommit(commit Commit) (Modules, error) {
 func (d *stdDiscover) ModulesInWorkspace() (Modules, error) {
 	metadataSet := moduleMetadataSet{}
 	absRepoPath, err := filepath.Abs(d.Repo.Path())
+	configFiles, err := d.Repo.FindAllFilesInWorkspace("*" + configFileName)
 
-	walkfunc := func(path string, info os.FileInfo, err error) error {
-		if info.Name() == ".mbt.yml" && info.IsDir() == false {
-			contents, err := ioutil.ReadFile(path)
-			if err != nil {
-				return e.Wrapf(ErrClassInternal, err, "error whilst reading file contents at path %s", path)
-			}
-
-			spec, err := newSpec(contents)
-			if err != nil {
-				return e.Wrapf(ErrClassUser, err, "error whilst parsing spec at %s", path)
-			}
-
-			// reduce the path down to be only relative for the module
-			modpath := filepath.Dir(path)
-			relPath := ""
-			if filepath.IsAbs(modpath) {
-				relPath, err = filepath.Rel(absRepoPath, modpath)
-			} else {
-				relPath, err = filepath.Rel(d.Repo.Path(), modpath)
-			}
-
-			if err != nil {
-				return e.Wrapf(ErrClassInternal, err, "error whilst reading relative path %s", path)
-			}
-			dir := strings.Replace(relPath, string(os.PathSeparator), "/", -1)
-			dir = strings.TrimRight(dir, "/")
-
-			hash := "local"
-			metadataSet = append(metadataSet, newModuleMetadata(dir, hash, spec, nil))
-		}
-
-		return nil
+	if err != nil {
+		return nil, err
 	}
 
-	err = filepath.Walk(d.Repo.Path(), walkfunc)
+	for _, entry := range configFiles {
+		path := filepath.Join(absRepoPath, entry)
+
+		contents, err := ioutil.ReadFile(path)
+		if err != nil {
+			return nil, e.Wrapf(ErrClassInternal, err, "error whilst reading file contents at path %s", path)
+		}
+
+		spec, err := newSpec(contents)
+		if err != nil {
+			return nil, e.Wrapf(ErrClassUser, err, "error whilst parsing spec at %s", path)
+		}
+
+		// reduce the path down to be only relative for the module
+		relPath := strings.TrimRight(entry, configFileName)
+
+		dir := strings.Replace(relPath, string(os.PathSeparator), "/", -1)
+		dir = strings.TrimRight(dir, "/")
+
+		hash := "local"
+		metadataSet = append(metadataSet, newModuleMetadata(dir, hash, spec, nil))
+	}
+
 	if err != nil {
 		return nil, e.Wrap(ErrClassInternal, err)
 	}
