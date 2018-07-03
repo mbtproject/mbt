@@ -29,6 +29,6 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Show mbt version",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("0.20.0")
+		fmt.Println("0.20.1")
 	},
 }
