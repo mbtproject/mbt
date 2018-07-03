@@ -1,3 +1,6 @@
+## 0.20.1
+- [e3a0fbb](https://github.com/mbtproject/mbt/commit/e3a0fbb) [f855765](https://github.com/mbtproject/mbt/commit/f855765) [perf] Faster discovery of local modules
+
 ## 0.20.0
 
 - [398b10e](https://github.com/mbtproject/mbt/commit/398b10e) [2af9407](https://github.com/mbtproject/mbt/commit/2af9407) Feature: Additional environment values
