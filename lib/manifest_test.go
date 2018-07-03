@@ -447,6 +447,30 @@ func TestManifestByLocalDirForAnEmptyRepo(t *testing.T) {
 	assert.Equal(t, "local", m.Modules[0].Version())
 }
 
+func TestManifestByLocalForFilesEndingWithSpecFileName(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+
+	check(t, repo.WriteContent("dummy/interesting.mbt.yml", "hello"))
+
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByWorkspace()
+	check(t, err)
+
+	assert.Len(t, m.Modules, 0)
+}
+
+func TestManifestByLocalForDirsEndingWithSpecFileName(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+
+	check(t, repo.WriteContent(".mbt.yml/hello", "world"))
+
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByWorkspace()
+	check(t, err)
+
+	assert.Len(t, m.Modules, 0)
+}
+
 func TestVersionOfLocalDirManifest(t *testing.T) {
 	// All modules should have the fixed version string "local" as
 	// for manifest derived from local directory.

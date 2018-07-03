@@ -20,7 +20,6 @@ import (
 	"encoding/hex"
 	"io"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -46,7 +45,7 @@ type stdDiscover struct {
 	Log  Log
 }
 
-const configFileName string = ".mbt.yml"
+const configFileName = ".mbt.yml"
 
 // NewDiscover creates an instance of standard discover implementation.
 func NewDiscover(repo Repo, l Log) Discover {
@@ -111,13 +110,20 @@ func (d *stdDiscover) ModulesInCommit(commit Commit) (Modules, error) {
 func (d *stdDiscover) ModulesInWorkspace() (Modules, error) {
 	metadataSet := moduleMetadataSet{}
 	absRepoPath, err := filepath.Abs(d.Repo.Path())
-	configFiles, err := d.Repo.FindAllFilesInWorkspace("*" + configFileName)
+
+	configFiles, err := d.Repo.FindAllFilesInWorkspace([]string{configFileName, "/**/" + configFileName})
 
 	if err != nil {
 		return nil, err
 	}
 
 	for _, entry := range configFiles {
+		if filepath.Base(entry) != configFileName {
+			// Fast path directories that matched path spec
+			// e.g. .mbt.yml/abc/foo
+			continue
+		}
+
 		path := filepath.Join(absRepoPath, entry)
 
 		contents, err := ioutil.ReadFile(path)
@@ -130,11 +136,13 @@ func (d *stdDiscover) ModulesInWorkspace() (Modules, error) {
 			return nil, e.Wrapf(ErrClassUser, err, "error whilst parsing spec at %s", path)
 		}
 
-		// reduce the path down to be only relative for the module
-		relPath := strings.TrimRight(entry, configFileName)
-
-		dir := strings.Replace(relPath, string(os.PathSeparator), "/", -1)
-		dir = strings.TrimRight(dir, "/")
+		// Sanitize the module path
+		dir := filepath.ToSlash(filepath.Dir(entry))
+		if dir == "." {
+			dir = ""
+		} else {
+			dir = strings.TrimRight(dir, "/")
+		}
 
 		hash := "local"
 		metadataSet = append(metadataSet, newModuleMetadata(dir, hash, spec, nil))
