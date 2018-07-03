@@ -86,7 +86,7 @@ func (m *Manifest) FilterByName(filterOptions *FilterOptions) *Manifest {
 	for _, m := range m.Modules {
 		lowerModuleName := strings.ToLower(m.Name())
 		for _, f := range filters {
-			match := false
+			var match bool
 			if filterOptions.Fuzzy {
 				match = utils.IsSubsequence(lowerModuleName, f, true)
 			} else {

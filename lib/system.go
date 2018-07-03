@@ -102,7 +102,7 @@ type Repo interface {
 	CurrentBranchCommit() (Commit, error)
 	// IsEmpty informs if the current repository is empty or not.
 	IsEmpty() (bool, error)
-	// FindAllFilesInWorkspace returns all files in repository maching given pathSpec, including untracked files.
+	// FindAllFilesInWorkspace returns all files in repository matching given pathSpec, including untracked files.
 	FindAllFilesInWorkspace(pathSpec []string) ([]string, error)
 	// EnsureSafeWorkspace returns an error workspace is in a safe state
 	// for operations requiring a checkout.

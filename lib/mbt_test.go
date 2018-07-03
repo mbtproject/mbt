@@ -250,6 +250,9 @@ func (r *TestRepository) SimpleMerge(src, dst string) (*git.Oid, error) {
 	}
 
 	index, err := r.Repo.MergeCommits(dstCommit, srcCommit, nil)
+	if err != nil {
+		return nil, err
+	}
 
 	treeID, err := index.WriteTreeTo(r.Repo)
 	if err != nil {

@@ -330,13 +330,10 @@ func TestApplyLocalForWrongTemplatePath(t *testing.T) {
 	repo.InitModule("app-a")
 
 	w := NewWorld(t, ".tmp/repo")
-	output := new(bytes.Buffer)
-	err := w.System.ApplyLocal("template.tmpl", output)
-
 	absTemplatePath, err := filepath.Abs(".tmp/repo/template.tmpl")
 	check(t, err)
-
 	err = w.System.ApplyLocal("template.tmpl", new(bytes.Buffer))
+
 	assert.EqualError(t, err, fmt.Sprintf(msgFailedReadFile, absTemplatePath))
 	assert.Error(t, (err.(*e.E)).InnerError())
 	assert.Equal(t, ErrClassUser, (err.(*e.E)).Class())

@@ -110,6 +110,9 @@ func (d *stdDiscover) ModulesInCommit(commit Commit) (Modules, error) {
 func (d *stdDiscover) ModulesInWorkspace() (Modules, error) {
 	metadataSet := moduleMetadataSet{}
 	absRepoPath, err := filepath.Abs(d.Repo.Path())
+	if err != nil {
+		return nil, e.Wrap(ErrClassInternal, err)
+	}
 
 	configFiles, err := d.Repo.FindAllFilesInWorkspace([]string{configFileName, "/**/" + configFileName})
 
