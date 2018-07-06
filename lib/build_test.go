@@ -484,6 +484,36 @@ func TestBuildEnvironment(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("%s-%s-%s-%s-%s-%s\n", m.Sha, m.Modules[0].Version(), m.Modules[0].Name(), m.Modules[0].Path(), expectedRepoPath, m.Modules[0].Properties()["foo"]), out)
 }
 
+func TestDefaultBuild(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+
+	check(t, repo.InitModuleWithOptions("app-a", &Spec{
+		Name: "app-a",
+		Build: map[string]*Cmd{
+			"default": {Cmd: "./build.sh"},
+			"windows": {Cmd: "powershell", Args: []string{"-ExecutionPolicy", "Bypass", "-File", ".\\build.ps1"}},
+		},
+		Properties: map[string]interface{}{"foo": "bar"},
+	}))
+
+	check(t, repo.WriteShellScript("app-a/build.sh", "echo $MBT_BUILD_COMMIT-$MBT_MODULE_VERSION-$MBT_MODULE_NAME-$MBT_MODULE_PATH-$MBT_REPO_PATH-$MBT_MODULE_PROPERTY_FOO"))
+	check(t, repo.WritePowershellScript("app-a/build.ps1", "write-host $Env:MBT_BUILD_COMMIT-$Env:MBT_MODULE_VERSION-$Env:MBT_MODULE_NAME-$Env:MBT_MODULE_PATH-$Env:MBT_REPO_PATH-$Env:MBT_MODULE_PROPERTY_FOO"))
+	check(t, repo.Commit("first"))
+
+	m, err := NewWorld(t, ".tmp/repo").System.ManifestByCurrentBranch()
+	check(t, err)
+
+	buff := new(bytes.Buffer)
+	_, err = NewWorld(t, ".tmp/repo").System.BuildCurrentBranch(NoFilter, stdTestCmdOptions(buff))
+	check(t, err)
+
+	expectedRepoPath, err := filepath.Abs(".tmp/repo")
+	check(t, err)
+	out := buff.String()
+	assert.Equal(t, fmt.Sprintf("%s-%s-%s-%s-%s-%s\n", m.Sha, m.Modules[0].Version(), m.Modules[0].Name(), m.Modules[0].Path(), expectedRepoPath, m.Modules[0].Properties()["foo"]), out)
+}
+
 func TestBuildEnvironmentForAbsPath(t *testing.T) {
 	clean()
 

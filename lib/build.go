@@ -116,14 +116,15 @@ func (s *stdSystem) buildManifest(m *Manifest, options *CmdOptions) (*BuildSumma
 	skipped := make([]*Module, 0)
 
 	for _, a := range m.Modules {
-		if !s.canBuildHere(a) {
+		cmd, ok := s.canBuildHere(a)
+		if !ok {
 			skipped = append(skipped, a)
 			options.Callback(a, CmdStageSkipBuild)
 			continue
 		}
 
 		options.Callback(a, CmdStageBeforeBuild)
-		err := s.execBuild(m, a, options)
+		err := s.execBuild(cmd, m, a, options)
 		if err != nil {
 			return nil, err
 		}
@@ -134,8 +135,7 @@ func (s *stdSystem) buildManifest(m *Manifest, options *CmdOptions) (*BuildSumma
 	return &BuildSummary{Manifest: m, Completed: completed, Skipped: skipped}, nil
 }
 
-func (s *stdSystem) execBuild(manifest *Manifest, module *Module, options *CmdOptions) error {
-	buildCmd := module.Build()[runtime.GOOS]
+func (s *stdSystem) execBuild(buildCmd *Cmd, manifest *Manifest, module *Module, options *CmdOptions) error {
 	err := s.ProcessManager.Exec(manifest, module, options, buildCmd.Cmd, buildCmd.Args...)
 	if err != nil {
 		return e.Wrapf(ErrClassUser, err, msgFailedBuild, module.Name())
@@ -143,7 +143,12 @@ func (s *stdSystem) execBuild(manifest *Manifest, module *Module, options *CmdOp
 	return nil
 }
 
-func (s *stdSystem) canBuildHere(mod *Module) bool {
-	_, ok := mod.Build()[runtime.GOOS]
-	return ok
+func (s *stdSystem) canBuildHere(mod *Module) (*Cmd, bool) {
+	c, ok := mod.Build()[runtime.GOOS]
+
+	if !ok {
+		c, ok = mod.Build()["default"]
+	}
+
+	return c, ok
 }
