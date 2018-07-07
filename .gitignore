@@ -7,3 +7,5 @@ repo/
 build/
 vendor/libgit2/build/
 vendor/libgit2/install/
+
+.idea/
