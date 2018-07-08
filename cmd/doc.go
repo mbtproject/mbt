@@ -35,8 +35,11 @@ Spec file is written in {{c "yaml" }} following the schema specified below.
 {{c "" }}
 name: Unique module name (required)
 build: Dictionary of build commands specific to a platform (optional)
-  os: os name (linux|darwin|windows)
-    cmd: Command name (required)
+  default: (optional)
+    cmd: Default command to run when os specific command is not found (required)
+    args: Array of arguments to default build command (optional)
+  linux|darwin|windows:
+    cmd: Operating system specific command name (required)
     args: Array of arguments (optional)
 dependencies: An array of modules that this module's build depend on (optional)
 fileDependencies: An array of file names that this module's build depend on (optional)
@@ -54,6 +57,9 @@ commands, it skips the modules that do not specify a build command for the opera
 system build is running on.
 Full list of operating systems names that can be used can be 
 found {{link "here" "https://golang.org/doc/install/source#environment"}}
+
+When the command is applicable for multiple operating systems, you could list it as
+the default command. Operating system specific commands take precedence.
 
 {{h2 "Dependencies"}}
 {{ c "mbt"}} comes with a set of primitives to manage build dependencies. Current build
