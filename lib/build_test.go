@@ -31,7 +31,7 @@ import (
 )
 
 //noinspection GoUnusedParameter
-func noopCb(a *Module, s CmdStage) {}
+func noopCb(a *Module, s CmdStage, err error) {}
 
 func stdTestCmdOptions(buff *bytes.Buffer) *CmdOptions {
 	var stdout io.Writer = buff
@@ -58,7 +58,7 @@ func TestBuildExecution(t *testing.T) {
 	stdout := new(bytes.Buffer)
 	stderr := new(bytes.Buffer)
 	_, err := NewWorld(t, ".tmp/repo").System.BuildCurrentBranch(NoFilter, &CmdOptions{
-		Callback: func(a *Module, s CmdStage) {
+		Callback: func(a *Module, s CmdStage, err error) {
 			stages = append(stages, s)
 		},
 		Stdin:  os.Stdin,
@@ -85,7 +85,7 @@ func TestBuildDirExecution(t *testing.T) {
 	stdout := new(bytes.Buffer)
 	stderr := new(bytes.Buffer)
 	_, err := NewWorld(t, ".tmp/repo").System.BuildWorkspace(NoFilter, &CmdOptions{
-		Callback: func(a *Module, s CmdStage) {
+		Callback: func(a *Module, s CmdStage, err error) {
 			stages = append(stages, s)
 		},
 		Stdin:  os.Stdin,
@@ -125,7 +125,7 @@ func TestBuildSkip(t *testing.T) {
 	buff := new(bytes.Buffer)
 
 	_, err := NewWorld(t, ".tmp/repo").System.BuildCurrentBranch(NoFilter, &CmdOptions{
-		Callback: func(a *Module, s CmdStage) {
+		Callback: func(a *Module, s CmdStage, err error) {
 			if s == CmdStageSkipBuild {
 				skipped = append(skipped, a.Name())
 			} else {

@@ -119,16 +119,16 @@ func (s *stdSystem) buildManifest(m *Manifest, options *CmdOptions) (*BuildSumma
 		cmd, ok := s.canBuildHere(a)
 		if !ok {
 			skipped = append(skipped, a)
-			options.Callback(a, CmdStageSkipBuild)
+			options.Callback(a, CmdStageSkipBuild, nil)
 			continue
 		}
 
-		options.Callback(a, CmdStageBeforeBuild)
+		options.Callback(a, CmdStageBeforeBuild, nil)
 		err := s.execBuild(cmd, m, a, options)
 		if err != nil {
 			return nil, err
 		}
-		options.Callback(a, CmdStageAfterBuild)
+		options.Callback(a, CmdStageAfterBuild, nil)
 		completed = append(completed, &BuildResult{Module: a})
 	}
 

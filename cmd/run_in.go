@@ -20,12 +20,14 @@ import (
 
 	"github.com/sirupsen/logrus"
 
+	"github.com/mbtproject/mbt/e"
 	"github.com/mbtproject/mbt/lib"
 	"github.com/spf13/cobra"
 )
 
 func init() {
 	runIn.PersistentFlags().StringVarP(&command, "command", "m", "", "Command to execute")
+	runIn.PersistentFlags().BoolVarP(&failFast, "fail-fast", "", false, "Fail fast on command failure")
 
 	runInPr.Flags().StringVar(&src, "src", "", "Source branch")
 	runInPr.Flags().StringVar(&dst, "dst", "", "Destination branch")
@@ -59,7 +61,7 @@ func init() {
 var runInHead = &cobra.Command{
 	Use: "head",
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
-		return summariseRun(system.RunInCurrentBranch(command, &lib.FilterOptions{Name: name, Fuzzy: fuzzy}, lib.CmdOptionsWithStdIO(runCmdStageCB)))
+		return summariseRun(system.RunInCurrentBranch(command, &lib.FilterOptions{Name: name, Fuzzy: fuzzy}, runInCmdOptions()))
 	}),
 }
 
@@ -71,7 +73,7 @@ var runInBranch = &cobra.Command{
 			branch = args[0]
 		}
 
-		return summariseRun(system.RunInBranch(command, branch, &lib.FilterOptions{Name: name, Fuzzy: fuzzy}, lib.CmdOptionsWithStdIO(runCmdStageCB)))
+		return summariseRun(system.RunInBranch(command, branch, &lib.FilterOptions{Name: name, Fuzzy: fuzzy}, runInCmdOptions()))
 	}),
 }
 
@@ -86,7 +88,7 @@ var runInPr = &cobra.Command{
 			return errors.New("requires dest")
 		}
 
-		return summariseRun(system.RunInPr(command, src, dst, lib.CmdOptionsWithStdIO(runCmdStageCB)))
+		return summariseRun(system.RunInPr(command, src, dst, runInCmdOptions()))
 	}),
 }
 
@@ -101,7 +103,7 @@ var runInDiff = &cobra.Command{
 			return errors.New("requires to commit")
 		}
 
-		return summariseRun(system.RunInDiff(command, from, to, lib.CmdOptionsWithStdIO(runCmdStageCB)))
+		return summariseRun(system.RunInDiff(command, from, to, runInCmdOptions()))
 	}),
 }
 
@@ -115,9 +117,9 @@ var runInCommit = &cobra.Command{
 		commit := args[0]
 
 		if content {
-			return summariseRun(system.RunInCommitContent(command, commit, lib.CmdOptionsWithStdIO(runCmdStageCB)))
+			return summariseRun(system.RunInCommitContent(command, commit, runInCmdOptions()))
 		}
-		return summariseRun(system.RunInCommit(command, commit, &lib.FilterOptions{Name: name, Fuzzy: fuzzy}, lib.CmdOptionsWithStdIO(runCmdStageCB)))
+		return summariseRun(system.RunInCommit(command, commit, &lib.FilterOptions{Name: name, Fuzzy: fuzzy}, runInCmdOptions()))
 	}),
 }
 
@@ -125,19 +127,21 @@ var runInLocal = &cobra.Command{
 	Use: "local [--all]",
 	RunE: buildHandler(func(cmd *cobra.Command, args []string) error {
 		if all || name != "" {
-			return summariseRun(system.RunInWorkspace(command, &lib.FilterOptions{Name: name, Fuzzy: fuzzy}, lib.CmdOptionsWithStdIO(runCmdStageCB)))
+			return summariseRun(system.RunInWorkspace(command, &lib.FilterOptions{Name: name, Fuzzy: fuzzy}, runInCmdOptions()))
 		}
 
-		return summariseRun(system.RunInWorkspaceChanges(command, lib.CmdOptionsWithStdIO(runCmdStageCB)))
+		return summariseRun(system.RunInWorkspaceChanges(command, runInCmdOptions()))
 	}),
 }
 
-func runCmdStageCB(a *lib.Module, s lib.CmdStage) {
+func runCmdStageCB(a *lib.Module, s lib.CmdStage, err error) {
 	switch s {
 	case lib.CmdStageBeforeBuild:
 		logrus.Infof("RUN command %s in module %s (path: %s version: %s)", command, a.Name(), a.Path(), a.Version())
 	case lib.CmdStageSkipBuild:
 		logrus.Infof("SKIP %s in %s for %s", a.Name(), a.Path(), a.Version())
+	case lib.CmdStageFailedBuild:
+		logrus.Infof("Failed %s in %s for %s: %v", a.Name(), a.Path(), a.Version(), err)
 	}
 }
 
@@ -150,8 +154,18 @@ func summariseRun(summary *lib.RunResult, err error) error {
 			len(summary.Skipped))
 
 		logrus.Infof("Build finished for commit %v", summary.Manifest.Sha)
+
+		if len(summary.Failures) > 0 && failFast {
+			return e.NewError(lib.ErrClassUser, "One or more commands failed to run")
+		}
 	}
 	return err
+}
+
+func runInCmdOptions() *lib.CmdOptions {
+	options := lib.CmdOptionsWithStdIO(runCmdStageCB)
+	options.FailFast = failFast
+	return options
 }
 
 var runIn = &cobra.Command{

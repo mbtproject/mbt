@@ -111,22 +111,24 @@ func (s *stdSystem) runManifest(command string, m *Manifest, options *CmdOptions
 	skipped := make([]*Module, 0)
 	failed := make([]*CmdFailure, 0)
 
+	var err error
 	for _, a := range m.Modules {
 		cmd, canRun := s.canRunHere(command, a)
-		if !canRun {
+		if !canRun || (err != nil && options.FailFast) {
 			skipped = append(skipped, a)
-			options.Callback(a, CmdStageSkipBuild)
+			options.Callback(a, CmdStageSkipBuild, nil)
 			continue
 		}
 
-		options.Callback(a, CmdStageBeforeBuild)
-		err := s.execCommand(cmd, m, a, options)
+		options.Callback(a, CmdStageBeforeBuild, nil)
+		err = s.execCommand(cmd, m, a, options)
 		if err != nil {
 			failed = append(failed, &CmdFailure{Err: err, Module: a})
+			options.Callback(a, CmdStageFailedBuild, err)
 		} else {
 			completed = append(completed, a)
+			options.Callback(a, CmdStageAfterBuild, nil)
 		}
-		options.Callback(a, CmdStageAfterBuild)
 	}
 
 	return &RunResult{Manifest: m, Failures: failed, Completed: completed, Skipped: skipped}, nil
@@ -135,7 +137,7 @@ func (s *stdSystem) runManifest(command string, m *Manifest, options *CmdOptions
 func (s *stdSystem) execCommand(command *UserCmd, manifest *Manifest, module *Module, options *CmdOptions) error {
 	err := s.ProcessManager.Exec(manifest, module, options, command.Cmd, command.Args...)
 	if err != nil {
-		return e.Wrapf(ErrClassUser, err, msgFailedBuild, module.Name())
+		return e.Wrap(ErrClassUser, err)
 	}
 	return nil
 }
