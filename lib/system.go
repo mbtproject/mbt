@@ -252,10 +252,13 @@ const (
 
 	// CmdStageSkipBuild is when module building is skipped due to lack of matching building command
 	CmdStageSkipBuild
+
+	// CmdStageFailedBuild is when module command is failed
+	CmdStageFailedBuild
 )
 
 // CmdStageCallback is the callback function used to notify various build stages
-type CmdStageCallback func(mod *Module, s CmdStage)
+type CmdStageCallback func(mod *Module, s CmdStage, err error)
 
 /** Main MBT System **/
 
@@ -271,6 +274,7 @@ type CmdOptions struct {
 	Stdin          io.Reader
 	Stdout, Stderr io.Writer
 	Callback       CmdStageCallback
+	FailFast       bool
 }
 
 // CmdFailure contains the failures occurred while running a user defined command.

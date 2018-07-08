@@ -407,3 +407,45 @@ func TestFailingCommands(t *testing.T) {
 	assert.Equal(t, "app-b", result.Failures[0].Module.Name())
 	assert.Equal(t, "app-a\napp-c\n", buff.String())
 }
+
+func TestFailFast(t *testing.T) {
+	clean()
+	r := NewTestRepo(t, ".tmp/repo")
+
+	r.InitModuleWithOptions("app-a", &Spec{
+		Name: "app-a",
+		Commands: map[string]*UserCmd{
+			"echo": {Cmd: "echo", Args: []string{"app-a"}},
+		},
+	})
+	r.InitModuleWithOptions("app-b", &Spec{
+		Name: "app-b",
+		Commands: map[string]*UserCmd{
+			"echo": {Cmd: "bad_command", Args: []string{"app-b"}},
+		},
+	})
+	r.InitModuleWithOptions("app-c", &Spec{
+		Name: "app-c",
+		Commands: map[string]*UserCmd{
+			"echo": {Cmd: "echo", Args: []string{"app-c"}},
+		},
+	})
+
+	r.Commit("first")
+
+	w := NewWorld(t, ".tmp/repo")
+
+	buff := new(bytes.Buffer)
+	options := stdTestCmdOptions(buff)
+	options.FailFast = true
+	result, err := w.System.RunInCurrentBranch("echo", NoFilter, options)
+
+	check(t, err)
+	assert.Len(t, result.Completed, 1)
+	assert.Len(t, result.Skipped, 1)
+	assert.Len(t, result.Failures, 1)
+	assert.Equal(t, "app-a", result.Completed[0].Name())
+	assert.Equal(t, "app-b", result.Failures[0].Module.Name())
+	assert.Equal(t, "app-c", result.Skipped[0].Name())
+	assert.Equal(t, "app-a\n", buff.String())
+}

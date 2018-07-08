@@ -26,21 +26,22 @@ import (
 
 // Flags available to all commands.
 var (
-	in      string
-	src     string
-	dst     string
-	from    string
-	to      string
-	first   string
-	second  string
-	kind    string
-	name    string
-	command string
-	all     bool
-	debug   bool
-	content bool
-	fuzzy   bool
-	system  lib.System
+	in       string
+	src      string
+	dst      string
+	from     string
+	to       string
+	first    string
+	second   string
+	kind     string
+	name     string
+	command  string
+	all      bool
+	debug    bool
+	content  bool
+	fuzzy    bool
+	failFast bool
+	system   lib.System
 )
 
 func init() {

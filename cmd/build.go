@@ -130,7 +130,7 @@ var buildLocal = &cobra.Command{
 	}),
 }
 
-func buildStageCB(a *lib.Module, s lib.CmdStage) {
+func buildStageCB(a *lib.Module, s lib.CmdStage, err error) {
 	switch s {
 	case lib.CmdStageBeforeBuild:
 		logrus.Infof("BUILD %s in %s for %s", a.Name(), a.Path(), a.Version())
