@@ -27,8 +27,9 @@ import (
 )
 
 var (
-	toJSON  bool
-	toGraph bool
+	toJSON     bool
+	toGraph    bool
+	dependents bool
 )
 
 func init() {
@@ -41,22 +42,18 @@ func init() {
 
 	describeDiffCmd.Flags().StringVar(&from, "from", "", "From commit")
 	describeDiffCmd.Flags().StringVar(&to, "to", "", "To commit")
+
 	describeLocalCmd.Flags().BoolVarP(&all, "all", "a", false, "Describe all")
-	describeLocalCmd.Flags().StringVarP(&name, "name", "n", "", "Describe modules with a name that matches this value. Multiple names can be specified as a comma separated string.")
-	describeLocalCmd.Flags().BoolVarP(&fuzzy, "fuzzy", "f", false, "Use fuzzy match when filtering")
 
 	describeCommitCmd.Flags().BoolVarP(&content, "content", "c", false, "Describe the modules impacted by the changes in commit")
-	describeCommitCmd.Flags().StringVarP(&name, "name", "n", "", "Describe modules with a name that matches this value. Multiple names can be specified as a comma separated string.")
-	describeCommitCmd.Flags().BoolVarP(&fuzzy, "fuzzy", "f", false, "Use fuzzy match when filtering")
 
-	describeBranchCmd.Flags().StringVarP(&name, "name", "n", "", "Describe modules with a name that matches this value. Multiple names can be specified as a comma separated string.")
-	describeBranchCmd.Flags().BoolVarP(&fuzzy, "fuzzy", "f", false, "Use fuzzy match when filtering")
-
-	describeHeadCmd.Flags().StringVarP(&name, "name", "n", "", "Describe modules with a name that matches this value. Multiple names can be specified as a comma separated string.")
-	describeHeadCmd.Flags().BoolVarP(&fuzzy, "fuzzy", "f", false, "Use fuzzy match when filtering")
+	describeCmd.PersistentFlags().BoolVarP(&fuzzy, "fuzzy", "f", false, "Use fuzzy match when filtering")
+	describeCmd.PersistentFlags().StringVarP(&name, "name", "n", "", "Describe modules with a name that matches this value. Multiple names can be specified as a comma separated string.")
 
 	describeCmd.PersistentFlags().BoolVar(&toJSON, "json", false, "Format output as json")
 	describeCmd.PersistentFlags().BoolVar(&toGraph, "graph", false, "Format output as dot graph")
+	describeCmd.PersistentFlags().BoolVar(&dependents, "dependents", false, "Output dependents on potential change")
+
 	describeCmd.AddCommand(describeCommitCmd)
 	describeCmd.AddCommand(describeBranchCmd)
 	describeCmd.AddCommand(describeHeadCmd)
@@ -86,7 +83,11 @@ var describeBranchCmd = &cobra.Command{
 			return err
 		}
 
-		m = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy})
+		m, err = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy, Dependents: dependents})
+
+		if err != nil {
+			return err
+		}
 
 		return output(m.Modules)
 	}),
@@ -100,7 +101,12 @@ var describeHeadCmd = &cobra.Command{
 			return err
 		}
 
-		m = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy})
+		m, err = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy, Dependents: dependents})
+
+		if err != nil {
+			return err
+		}
+
 		return output(m.Modules)
 	}),
 }
@@ -115,7 +121,12 @@ var describeLocalCmd = &cobra.Command{
 
 		if all {
 			m, err = system.ManifestByWorkspace()
-			m = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy})
+
+			if err != nil {
+				return err
+			}
+
+			m, err = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy, Dependents: dependents})
 		} else {
 			m, err = system.ManifestByWorkspaceChanges()
 		}
@@ -140,6 +151,12 @@ var describePrCmd = &cobra.Command{
 		}
 
 		m, err := system.ManifestByPr(src, dst)
+		if err != nil {
+			return err
+		}
+
+		m, err = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy, Dependents: dependents})
+
 		if err != nil {
 			return err
 		}
@@ -172,7 +189,11 @@ var describeCommitCmd = &cobra.Command{
 			return err
 		}
 
-		m = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy})
+		m, err = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy, Dependents: dependents})
+
+		if err != nil {
+			return err
+		}
 
 		return output(m.Modules)
 	}),
@@ -229,6 +250,12 @@ var describeDiffCmd = &cobra.Command{
 			return err
 		}
 
+		m, err = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy, Dependents: dependents})
+
+		if err != nil {
+			return err
+		}
+
 		return output(m.Modules)
 	}),
 }
@@ -252,7 +279,11 @@ func output(mods lib.Modules) error {
 		}
 		fmt.Println(string(buff))
 	} else if toGraph {
-		fmt.Println(mods.SerializeAsDot())
+		if dependents {
+			fmt.Println(mods.GroupedSerializeAsDot())
+		} else {
+			fmt.Println(mods.SerializeAsDot())
+		}
 	} else {
 		w := tabwriter.NewWriter(os.Stdout, 0, 4, 4, ' ', 0)
 		fmt.Fprintf(w, "Name\tPATH\tVERSION\n")

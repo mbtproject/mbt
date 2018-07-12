@@ -264,8 +264,9 @@ type CmdStageCallback func(mod *Module, s CmdStage, err error)
 
 // FilterOptions describe how to filter the modules in a manifest
 type FilterOptions struct {
-	Name  string
-	Fuzzy bool
+	Name       string
+	Fuzzy      bool
+	Dependents bool
 }
 
 // CmdOptions defines various options required by methods executing
@@ -450,6 +451,16 @@ func FuzzyFilter(name string) *FilterOptions {
 // ExactMatchFilter is a helper to create an exact match FilterOptions
 func ExactMatchFilter(name string) *FilterOptions {
 	return &FilterOptions{Name: name}
+}
+
+// FuzzyDependentsFilter is a helper to create a fuzzy match FilterOptions
+func FuzzyDependentsFilter(name string) *FilterOptions {
+	return &FilterOptions{Name: name, Fuzzy: true, Dependents: true}
+}
+
+// ExactMatchDependentsFilter is a helper to create an exact match FilterOptions
+func ExactMatchDependentsFilter(name string) *FilterOptions {
+	return &FilterOptions{Name: name, Dependents: true}
 }
 
 func initSystem(log Log, repo Repo, mb ManifestBuilder, discover Discover, reducer Reducer, workspaceManager WorkspaceManager, processManager ProcessManager) System {

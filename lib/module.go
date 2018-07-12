@@ -166,6 +166,12 @@ func (l Modules) expandRequiredByDependencies() (Modules, error) {
 	return r, nil
 }
 
+// expandRequiresDependencies takes a list of Modules and
+// returns a new list of Modules including the ones in their
+// requires (see below) dependency chain.
+// requires dependency
+// Module dependencies are described in two forms requires and requiredBy.
+// If A needs B, then, A requires B and B is requiredBy A.
 func (l Modules) expandRequiresDependencies() (Modules, error) {
 	g := make([]interface{}, 0, len(l))
 	for _, a := range l {

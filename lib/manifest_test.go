@@ -1184,25 +1184,43 @@ func TestManifestByWorkspaceChangesForRootModule(t *testing.T) {
 }
 
 func TestApplyFilter(t *testing.T) {
-	m := &Manifest{
-		Modules: []*Module{
-			{metadata: &moduleMetadata{spec: &Spec{Name: "app-a"}}},
-			{metadata: &moduleMetadata{spec: &Spec{Name: "app-b"}}},
-			{metadata: &moduleMetadata{spec: &Spec{Name: "app-aa"}}},
-		},
+	appA := &Module{metadata: &moduleMetadata{spec: &Spec{Name: "app-a"}}}
+	appB := &Module{
+		metadata:   &moduleMetadata{spec: &Spec{Name: "app-b", Dependencies: []string{"app-a"}}},
+		requiredBy: Modules{appA},
 	}
+	appAa := &Module{metadata: &moduleMetadata{spec: &Spec{Name: "app-aa"}}}
 
-	assert.Equal(t, m, m.ApplyFilters(NoFilter))
+	m := &Manifest{Modules: []*Module{appA, appB, appAa}}
 
-	m1 := m.ApplyFilters(ExactMatchFilter("app"))
+	m1, err := m.ApplyFilters(NoFilter)
+	check(t, err)
+	assert.Equal(t, m, m1)
+
+	m1, err = m.ApplyFilters(ExactMatchFilter("app"))
+	check(t, err)
 	assert.Len(t, m1.Modules, 0)
 
-	m1 = m.ApplyFilters(ExactMatchFilter("app-a"))
+	m1, err = m.ApplyFilters(ExactMatchFilter("app-a"))
+	check(t, err)
 	assert.Len(t, m1.Modules, 1)
 	assert.Equal(t, "app-a", m1.Modules[0].Name())
 
-	m1 = m.ApplyFilters(FuzzyFilter("app-a"))
+	m1, err = m.ApplyFilters(FuzzyFilter("app-a"))
+	check(t, err)
 	assert.Len(t, m1.Modules, 2)
 	assert.Equal(t, "app-a", m1.Modules[0].Name())
 	assert.Equal(t, "app-aa", m1.Modules[1].Name())
+
+	m1, err = m.ApplyFilters(ExactMatchDependentsFilter("app-b"))
+	check(t, err)
+	assert.Len(t, m1.Modules, 2)
+	assert.Equal(t, "app-b", m1.Modules[0].Name())
+	assert.Equal(t, "app-a", m1.Modules[1].Name())
+
+	m1, err = m.ApplyFilters(FuzzyDependentsFilter("app-b"))
+	check(t, err)
+	assert.Len(t, m1.Modules, 2)
+	assert.Equal(t, "app-b", m1.Modules[0].Name())
+	assert.Equal(t, "app-a", m1.Modules[1].Name())
 }

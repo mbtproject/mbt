@@ -75,6 +75,9 @@ var RootCmd = &cobra.Command{
 		if parent != nil && parent.Name() == "run-in" && command == "" {
 			return e.NewError(lib.ErrClassUser, "--command (-m) is not specified")
 		}
+		if parent != nil && parent.Name() == "describe" && dependents && name == "" {
+			return e.NewError(lib.ErrClassUser, "--dependents flag can only be specified with the --name (-n) flag")
+		}
 
 		level := lib.LogLevelNormal
 		if debug {
