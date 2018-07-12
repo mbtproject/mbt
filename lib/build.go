@@ -32,7 +32,12 @@ func (s *stdSystem) BuildBranch(name string, filterOptions *FilterOptions, optio
 		return nil, err
 	}
 
-	return s.checkoutAndBuildManifest(m.ApplyFilters(filterOptions), options)
+	m, err = m.ApplyFilters(filterOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.checkoutAndBuildManifest(m, options)
 }
 
 func (s *stdSystem) BuildPr(src, dst string, options *CmdOptions) (*BuildSummary, error) {
@@ -59,7 +64,12 @@ func (s *stdSystem) BuildCurrentBranch(filterOptions *FilterOptions, options *Cm
 		return nil, err
 	}
 
-	return s.checkoutAndBuildManifest(m.ApplyFilters(filterOptions), options)
+	m, err = m.ApplyFilters(filterOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.checkoutAndBuildManifest(m, options)
 }
 
 func (s *stdSystem) BuildCommit(commit string, filterOptions *FilterOptions, options *CmdOptions) (*BuildSummary, error) {
@@ -68,7 +78,12 @@ func (s *stdSystem) BuildCommit(commit string, filterOptions *FilterOptions, opt
 		return nil, err
 	}
 
-	return s.checkoutAndBuildManifest(m.ApplyFilters(filterOptions), options)
+	m, err = m.ApplyFilters(filterOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.checkoutAndBuildManifest(m, options)
 }
 
 func (s *stdSystem) BuildCommitContent(commit string, options *CmdOptions) (*BuildSummary, error) {
@@ -86,7 +101,11 @@ func (s *stdSystem) BuildWorkspace(filterOptions *FilterOptions, options *CmdOpt
 		return nil, err
 	}
 
-	m = m.ApplyFilters(filterOptions)
+	m, err = m.ApplyFilters(filterOptions)
+	if err != nil {
+		return nil, err
+	}
+
 	return s.buildManifest(m, options)
 }
 

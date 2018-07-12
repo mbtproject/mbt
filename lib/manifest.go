@@ -85,20 +85,11 @@ func (m *Manifest) FilterByName(filterOptions *FilterOptions) *Manifest {
 
 	for _, m := range m.Modules {
 		lowerModuleName := strings.ToLower(m.Name())
-		for _, f := range filters {
-			var match bool
-			if filterOptions.Fuzzy {
-				match = utils.IsSubsequence(lowerModuleName, f, true)
-			} else {
-				match = lowerModuleName == f
-			}
-			if match {
-				// We've got a match. Append it to the list
-				// and discard rest of the filters for this
-				// module.
-				filteredModules = append(filteredModules, m)
-				break
-			}
+
+		match := matches(lowerModuleName, filters, filterOptions.Fuzzy)
+
+		if match {
+			filteredModules = append(filteredModules, m)
 		}
 	}
 
@@ -108,13 +99,41 @@ func (m *Manifest) FilterByName(filterOptions *FilterOptions) *Manifest {
 // ApplyFilters will filter the modules in the manifest to the ones that
 // matches the specified filter. If filter is not specified, original
 // manifest is returned.
-func (m *Manifest) ApplyFilters(filterOptions *FilterOptions) *Manifest {
+func (m *Manifest) ApplyFilters(filterOptions *FilterOptions) (*Manifest, error) {
 	if filterOptions == nil {
 		panic("filterOptions cannot be nil")
 	}
 
 	if filterOptions.Name != "" {
-		return m.FilterByName(filterOptions)
+		m = m.FilterByName(filterOptions)
 	}
-	return m
+
+	if filterOptions.Dependents {
+		var err error
+
+		m.Modules, err = m.Modules.expandRequiredByDependencies()
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return m, nil
+}
+
+func matches(value string, filters []string, fuzzy bool) bool {
+	match := false
+
+	for _, f := range filters {
+		if fuzzy {
+			match = utils.IsSubsequence(value, f, true)
+		} else {
+			match = value == f
+		}
+		if match {
+			break
+		}
+	}
+
+	return match
 }

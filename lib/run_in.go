@@ -27,7 +27,12 @@ func (s *stdSystem) RunInBranch(command, name string, filterOptions *FilterOptio
 		return nil, err
 	}
 
-	return s.checkoutAndRunManifest(command, m.ApplyFilters(filterOptions), options)
+	m, err = m.ApplyFilters(filterOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.checkoutAndRunManifest(command, m, options)
 }
 
 func (s *stdSystem) RunInPr(command, src, dst string, options *CmdOptions) (*RunResult, error) {
@@ -54,7 +59,12 @@ func (s *stdSystem) RunInCurrentBranch(command string, filterOptions *FilterOpti
 		return nil, err
 	}
 
-	return s.checkoutAndRunManifest(command, m.ApplyFilters(filterOptions), options)
+	m, err = m.ApplyFilters(filterOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.checkoutAndRunManifest(command, m, options)
 }
 
 func (s *stdSystem) RunInCommit(command, commit string, filterOptions *FilterOptions, options *CmdOptions) (*RunResult, error) {
@@ -63,7 +73,12 @@ func (s *stdSystem) RunInCommit(command, commit string, filterOptions *FilterOpt
 		return nil, err
 	}
 
-	return s.checkoutAndRunManifest(command, m.ApplyFilters(filterOptions), options)
+	m, err = m.ApplyFilters(filterOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.checkoutAndRunManifest(command, m, options)
 }
 
 func (s *stdSystem) RunInCommitContent(command, commit string, options *CmdOptions) (*RunResult, error) {
@@ -81,7 +96,11 @@ func (s *stdSystem) RunInWorkspace(command string, filterOptions *FilterOptions,
 		return nil, err
 	}
 
-	m = m.ApplyFilters(filterOptions)
+	m, err = m.ApplyFilters(filterOptions)
+	if err != nil {
+		return nil, err
+	}
+
 	return s.runManifest(command, m, options)
 }
 

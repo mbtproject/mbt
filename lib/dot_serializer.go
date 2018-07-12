@@ -40,3 +40,28 @@ func (mods Modules) SerializeAsDot() string {
   %s
 }`, strings.Join(paths, "\n  "))
 }
+
+// GroupedSerializeAsDot converts specified modules into a dot graph
+// that can be used for visualization with gv package.
+//
+// This variant groups impacted modules in red, while plotting
+// the rest of the graph in powderblue
+func (mods Modules) GroupedSerializeAsDot() string {
+	auxiliaryPaths := []string{}
+	impactedPaths := []string{}
+
+	for _, m := range mods {
+		impactedPaths = append(impactedPaths, fmt.Sprintf("\"%s\"", m.Name()))
+
+		for _, r := range m.Requires() {
+			auxiliaryPaths = append(auxiliaryPaths, fmt.Sprintf("\"%s\" -> \"%s\"", m.Name(), r.Name()))
+		}
+	}
+
+	return fmt.Sprintf(`digraph mbt {
+  node [shape=box fillcolor=red style=filled fontcolor=black];
+  %s
+  node [shape=box fillcolor=powderblue style=filled fontcolor=black];
+  %s
+}`, strings.Join(impactedPaths, "\n  "), strings.Join(auxiliaryPaths, "\n  "))
+}
