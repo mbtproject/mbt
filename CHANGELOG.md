@@ -1,3 +1,7 @@
+## 0.21.0
+- [6c9f0d4](https://github.com/mbtproject/mbt/commit/6c9f0d4) [feat] Fail fast option for user defined commands
+- [f53f196](https://github.com/mbtproject/mbt/commit/f53f196) [a4ab9ae](https://github.com/mbtproject/mbt/commit/a4ab9ae) [a9903c4](https://github.com/mbtproject/mbt/commit/a9903c4) [feat] Default build command
+
 ## 0.20.1
 - [e3a0fbb](https://github.com/mbtproject/mbt/commit/e3a0fbb) [f855765](https://github.com/mbtproject/mbt/commit/f855765) [perf] Faster discovery of local modules
 
