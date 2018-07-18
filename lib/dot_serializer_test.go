@@ -72,3 +72,63 @@ func TestSerializeAsDotOfAnEmptyRepo(t *testing.T) {
   
 }`, s)
 }
+
+func TestTransitiveDependencies(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+
+	check(t, repo.InitModule("app-c"))
+	check(t, repo.InitModuleWithOptions("app-b", &Spec{
+		Name:         "app-b",
+		Dependencies: []string{"app-c"},
+	}))
+
+	check(t, repo.InitModuleWithOptions("app-a", &Spec{
+		Name:         "app-a",
+		Dependencies: []string{"app-b"},
+	}))
+
+	check(t, repo.Commit("first"))
+
+	m, err := NewWorld(t, ".tmp/repo").ManifestBuilder.ByCurrentBranch()
+	check(t, err)
+
+	s := m.Modules.SerializeAsDot()
+
+	assert.Equal(t, `digraph mbt {
+  node [shape=box fillcolor=powderblue style=filled fontcolor=black];
+  "app-c"
+  "app-b" -> "app-c"
+  "app-a" -> "app-b"
+}`, s)
+}
+
+func TestTransitiveDependenciesWithFiltering(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+
+	check(t, repo.InitModule("app-c"))
+	check(t, repo.InitModuleWithOptions("app-b", &Spec{
+		Name:         "app-b",
+		Dependencies: []string{"app-c"},
+	}))
+
+	check(t, repo.InitModuleWithOptions("app-a", &Spec{
+		Name:         "app-a",
+		Dependencies: []string{"app-b"},
+	}))
+
+	check(t, repo.Commit("first"))
+
+	m, err := NewWorld(t, ".tmp/repo").ManifestBuilder.ByCurrentBranch()
+	check(t, err)
+
+	m = m.ApplyFilters(&FilterOptions{Name: "app-a"})
+	s := m.Modules.SerializeAsDot()
+
+	// Should only include filtered modules in the graph
+	assert.Equal(t, `digraph mbt {
+  node [shape=box fillcolor=powderblue style=filled fontcolor=black];
+  "app-a" -> "app-b"
+}`, s)
+}
