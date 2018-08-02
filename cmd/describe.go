@@ -83,7 +83,11 @@ var describeBranchCmd = &cobra.Command{
 			return err
 		}
 
-		m, err = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy, Dependents: dependents})
+		// When running with --graph option
+		// we'll let the Serialize mehtod
+		// extract the dependents. This
+		// is to ensure proper grouping
+		m, err = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy, Dependents: dependents && !toGraph})
 
 		if err != nil {
 			return err
@@ -101,7 +105,11 @@ var describeHeadCmd = &cobra.Command{
 			return err
 		}
 
-		m, err = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy, Dependents: dependents})
+		// When running with --graph option
+		// we'll let the Serialize mehtod
+		// extract the dependents. This
+		// is to ensure proper grouping
+		m, err = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy, Dependents: dependents && !toGraph})
 
 		if err != nil {
 			return err
@@ -126,7 +134,11 @@ var describeLocalCmd = &cobra.Command{
 				return err
 			}
 
-			m, err = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy, Dependents: dependents})
+			// When running with --graph option
+			// we'll let the Serialize mehtod
+			// extract the dependents. This
+			// is to ensure proper grouping
+			m, err = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy, Dependents: dependents && !toGraph})
 		} else {
 			m, err = system.ManifestByWorkspaceChanges()
 		}
@@ -155,7 +167,11 @@ var describePrCmd = &cobra.Command{
 			return err
 		}
 
-		m, err = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy, Dependents: dependents})
+		// When running with --graph option
+		// we'll let the Serialize mehtod
+		// extract the dependents. This
+		// is to ensure proper grouping
+		m, err = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy, Dependents: dependents && !toGraph})
 
 		if err != nil {
 			return err
@@ -189,7 +205,11 @@ var describeCommitCmd = &cobra.Command{
 			return err
 		}
 
-		m, err = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy, Dependents: dependents})
+		// When running with --graph option
+		// we'll let the Serialize mehtod
+		// extract the dependents. This
+		// is to ensure proper grouping
+		m, err = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy, Dependents: dependents && !toGraph})
 
 		if err != nil {
 			return err
@@ -250,7 +270,11 @@ var describeDiffCmd = &cobra.Command{
 			return err
 		}
 
-		m, err = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy, Dependents: dependents})
+		// When running with --graph option
+		// we'll let the Serialize mehtod
+		// extract the dependents. This
+		// is to ensure proper grouping
+		m, err = m.ApplyFilters(&lib.FilterOptions{Name: name, Fuzzy: fuzzy, Dependents: dependents && !toGraph})
 
 		if err != nil {
 			return err
@@ -279,11 +303,20 @@ func output(mods lib.Modules) error {
 		}
 		fmt.Println(string(buff))
 	} else if toGraph {
-		if dependents {
-			fmt.Println(mods.GroupedSerializeAsDot())
-		} else {
-			fmt.Println(mods.SerializeAsDot())
+		serializeOptions := &lib.SerializeOpts{
+			ShowDependents:    dependents,
+			ShowDependencies:  true,
+			MainColor:         "powderblue",
+			DependentsColor:   "red",
+			DependenciesColor: "blue",
 		}
+
+		out, err := mods.Serialize(serializeOptions)
+		if err != nil {
+			return err
+		}
+
+		fmt.Println(out)
 	} else {
 		w := tabwriter.NewWriter(os.Stdout, 0, 4, 4, ' ', 0)
 		fmt.Fprintf(w, "Name\tPATH\tVERSION\n")

@@ -65,3 +65,119 @@ func (mods Modules) GroupedSerializeAsDot() string {
   %s
 }`, strings.Join(impactedPaths, "\n  "), strings.Join(auxiliaryPaths, "\n  "))
 }
+
+// SerializeOpts something something
+type SerializeOpts struct {
+	ShowDependents    bool
+	ShowDependencies  bool
+	MainColor         string
+	DependentsColor   string
+	DependenciesColor string
+}
+
+// Serialize something something
+func (mods Modules) Serialize(options *SerializeOpts) (string, error) {
+	if options == nil {
+		panic("options cannot be nil")
+	}
+
+	// We need to separate Nodes from Edges
+	// in order to properly color (group)
+	// them in the resulting Dot graph
+	nodes := []string{}
+	edges := []string{}
+
+	tmpNodes, tmpEdges := mods.dotPaths(options.ShowDependencies)
+
+	nodes = append(nodes, fmt.Sprintf("node [shape=box fillcolor=%s style=filled fontcolor=black];", options.MainColor))
+	nodes = append(nodes, tmpNodes...)
+	edges = append(edges, tmpEdges...)
+
+	if options.ShowDependents {
+		dependents, err := mods.extractRequiredByDependencies()
+
+		if err != nil {
+			return "", err
+		}
+
+		tmpNodes, tmpEdges = dependents.dotPaths(true)
+
+		nodes = append(nodes, fmt.Sprintf("node [shape=box fillcolor=%s style=filled fontcolor=black];", options.DependentsColor))
+		nodes = append(nodes, tmpNodes...)
+		edges = append(edges, tmpEdges...)
+	}
+
+	if options.ShowDependencies {
+		dependencies, err := mods.extractRequiresDependencies()
+
+		if err != nil {
+			return "", err
+		}
+
+		nodes = append(nodes, fmt.Sprintf("node [shape=box fillcolor=%s style=filled fontcolor=black];", options.DependenciesColor))
+		tmpNodes, tmpEdges = dependencies.dotPaths(true)
+
+		nodes = append(nodes, tmpNodes...)
+		edges = append(edges, tmpEdges...)
+	}
+
+	return fmt.Sprintf(`digraph mbt {
+  %s
+  %s
+}`, strings.Join(nodes, "\n  "), strings.Join(edges, "\n  ")), nil
+}
+
+func (mods Modules) dotPaths(includeDirectEdges bool) ([]string, []string) {
+	nodes := []string{}
+	edges := []string{}
+
+	for _, m := range mods {
+		nodes = append(nodes, fmt.Sprintf("\"%s\"", m.Name()))
+
+		if includeDirectEdges {
+			for _, r := range m.Requires() {
+				edges = append(edges, fmt.Sprintf("\"%s\" -> \"%s\"", m.Name(), r.Name()))
+			}
+		}
+	}
+
+	return nodes, edges
+}
+
+func (mods Modules) extractRequiresDependencies() (Modules, error) {
+	withDependencies, err := mods.expandRequiresDependencies()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return filterNotIn(withDependencies, mods), nil
+}
+
+func (mods Modules) extractRequiredByDependencies() (Modules, error) {
+	withDependents, err := mods.expandRequiredByDependencies()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return filterNotIn(withDependents, mods), nil
+}
+
+func filterNotIn(haystack, needles Modules) Modules {
+	r := Modules{}
+
+	filters := make(map[string]bool)
+
+	for _, m := range needles {
+		filters[m.Name()] = true
+	}
+
+	for _, m := range haystack {
+		if _, ok := filters[m.Name()]; !ok {
+			r = append(r, m)
+		}
+	}
+
+	return r
+}
