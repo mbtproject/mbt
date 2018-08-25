@@ -230,7 +230,7 @@ func (r *libgitRepo) WalkBlobs(commit Commit, callback BlobWalkCallback) error {
 func (r *libgitRepo) BlobContents(blob Blob) ([]byte, error) {
 	bl, err := r.Repo.LookupBlob(blob.(*libgitBlob).entry.Id)
 	if err != nil {
-		return nil, e.Wrapf(ErrClassInternal, err, "error while fetching the blob object for %s%s", blob.Path, blob.Name)
+		return nil, e.Wrapf(ErrClassInternal, err, "error while fetching the blob object for %s%s", blob.Path(), blob.Name())
 	}
 
 	return bl.Contents(), nil
