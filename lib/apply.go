@@ -101,7 +101,7 @@ func (s *stdSystem) ApplyHead(templatePath string, output io.Writer) error {
 func (s *stdSystem) ApplyLocal(templatePath string, output io.Writer) error {
 	absDir, err := filepath.Abs(s.Repo.Path())
 	if err != nil {
-		return e.Wrapf(ErrClassUser, err, msgFailedLocalPath)
+		return e.Wrapf(ErrClassUser, err, msgFailedLocalPath, s.Repo.Path())
 	}
 
 	absTemplatePath := filepath.Join(absDir, templatePath)

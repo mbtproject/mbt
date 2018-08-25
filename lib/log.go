@@ -62,7 +62,7 @@ func (l *stdLog) Warn(args ...interface{}) {
 }
 
 func (l *stdLog) Warnf(format string, args ...interface{}) {
-	logrus.Warnf(format, args)
+	logrus.Warnf(format, args...)
 }
 
 func (l *stdLog) Error(err error) {
