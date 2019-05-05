@@ -70,8 +70,8 @@ go build -o "build/${OUT}"
 shasum -a 1 -p "build/${OUT}" | cut -d ' ' -f 1 > "build/${OUT}.sha1"
 
 # Run go vet (this should happen after the build)
-go tool vet ./*.go
-go tool vet ./e ./dtrace ./trie ./intercept ./lib
+go vet ./*.go
+go vet ./e ./dtrace ./trie ./intercept ./lib ./graph
 
 echo "testing the bin"
 "./build/${OUT}" version
@@ -93,4 +93,3 @@ if [ ! -z $PUBLISH_TOKEN ]; then
     -H "X-Bintray-Version:$VERSION" \
     "https://api.bintray.com/content/buddyspike/bin/$OUT/$VERSION/$VERSION/$OUT?publish=1"
 fi
-
