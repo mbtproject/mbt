@@ -15,7 +15,17 @@ limitations under the License.
 
 package graph
 
-import "errors"
+import (
+	"errors"
+)
+
+type tState int
+
+const (
+	stateNew = iota
+	stateOpen
+	stateClosed
+)
 
 // NodeProvider is the interface between the vertices stored in the graph
 // and various graph functions.
@@ -57,18 +67,40 @@ func TopSort(nodeProvider NodeProvider, graph ...interface{}) ([]interface{}, er
 	results := make([]interface{}, 0)
 
 	for _, node := range graph {
-		nodes, err := newDepthFirst(nodeProvider, node, traversalState).Run()
+		err := dfsVisit(nodeProvider, node, traversalState, &results, make([]interface{}, 0))
 		if err != nil {
 			return nil, err
 		}
-		results = append(results, nodes...)
 	}
 
 	return results, nil
 }
 
-// GetVertices returns the list of vetices found in the input graph.
-// Input graph should be represented as adjacency list.
-func GetVertices(nodeProvider NodeProvider, graph ...interface{}) ([]interface{}, error) {
-	return TopSort(nodeProvider, graph...)
+func dfsVisit(nodeProvider NodeProvider, node interface{}, traversalState map[interface{}]tState, sorted *[]interface{}, path []interface{}) error {
+	id := nodeProvider.ID(node)
+	if traversalState[id] == stateOpen {
+		return &CycleError{Path: append(path, node)}
+	}
+
+	if traversalState[id] == stateClosed {
+		return nil
+	}
+
+	traversalState[id] = stateOpen
+	path = append(path, node)
+
+	for i := 0; i < nodeProvider.ChildCount(node); i++ {
+		c, err := nodeProvider.Child(node, i)
+		if err != nil {
+			return err
+		}
+		err = dfsVisit(nodeProvider, c, traversalState, sorted, path)
+		if err != nil {
+			return err
+		}
+	}
+
+	traversalState[id] = stateClosed
+	*sorted = append(*sorted, node)
+	return nil
 }
