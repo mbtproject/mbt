@@ -89,8 +89,8 @@ func TestDiamondDependency(t *testing.T) {
 
 	assert.Equal(t, 4, len(s))
 	assert.Equal(t, d, s[0])
-	assert.Equal(t, c, s[1])
-	assert.Equal(t, b, s[2])
+	assert.Equal(t, b, s[1])
+	assert.Equal(t, c, s[2])
 	assert.Equal(t, a, s[3])
 }
 
@@ -216,10 +216,10 @@ func TestComplexGraph(t *testing.T) {
 	assert.Equal(t, 7, len(s))
 	assert.Equal(t, e, s[0])
 	assert.Equal(t, c, s[1])
-	assert.Equal(t, f, s[2])
-	assert.Equal(t, g, s[3])
-	assert.Equal(t, d, s[4])
-	assert.Equal(t, b, s[5])
+	assert.Equal(t, b, s[2])
+	assert.Equal(t, f, s[3])
+	assert.Equal(t, g, s[4])
+	assert.Equal(t, d, s[5])
 	assert.Equal(t, a, s[6])
 }
 
@@ -254,19 +254,11 @@ func TestComplexCycle(t *testing.T) {
 
 	assert.Nil(t, s)
 	assert.EqualError(t, cErr, "not a dag")
-	assert.Len(t, cErr.Path, 4)
-	assert.Equal(t, f, cErr.Path[0])
-	assert.Equal(t, c, cErr.Path[1])
-	assert.Equal(t, e, cErr.Path[2])
-	assert.Equal(t, f, cErr.Path[3])
-}
-
-func TestGetVertices(t *testing.T) {
-	a := newNode("a")
-	b := newNode("b")
-	a.children = []*node{b}
-
-	s, _ := GetVertices(&testNodeProvider{}, a, b)
-	assert.Equal(t, b, s[0])
-	assert.Equal(t, a, s[1])
+	assert.Len(t, cErr.Path, 6)
+	assert.Equal(t, a, cErr.Path[0])
+	assert.Equal(t, b, cErr.Path[1])
+	assert.Equal(t, c, cErr.Path[2])
+	assert.Equal(t, e, cErr.Path[3])
+	assert.Equal(t, f, cErr.Path[4])
+	assert.Equal(t, c, cErr.Path[5])
 }
