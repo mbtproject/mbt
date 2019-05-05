@@ -1,3 +1,6 @@
+## 0.22.0
+- [f2489cd](https://github.com/mbtproject/mbt/commit/f2489cd) [build] Upgraded go tool-chain
+
 ## 0.21.0
 - [6c9f0d4](https://github.com/mbtproject/mbt/commit/6c9f0d4) [feat] Fail fast option for user defined commands
 - [f53f196](https://github.com/mbtproject/mbt/commit/f53f196) [a4ab9ae](https://github.com/mbtproject/mbt/commit/a4ab9ae) [a9903c4](https://github.com/mbtproject/mbt/commit/a9903c4) [feat] Default build command
