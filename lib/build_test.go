@@ -25,7 +25,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/libgit2/git2go"
+	git "github.com/libgit2/git2go"
 	"github.com/mbtproject/mbt/e"
 	"github.com/stretchr/testify/assert"
 )
@@ -657,17 +657,14 @@ func TestRestorationOfPristineWorkspace(t *testing.T) {
 	_, err := w.System.BuildBranch("feature", NoFilter, stdTestCmdOptions(buff))
 	check(t, err)
 
-	idx, err := repo.Repo.Index()
-	check(t, err)
-
-	diff, err := repo.Repo.DiffIndexToWorkdir(idx, &git.DiffOptions{
-		Flags: git.DiffIncludeUntracked | git.DiffRecurseUntracked,
+	status, err := repo.Repo.StatusList(&git.StatusOptions{
+		Flags: git.StatusOptIncludeUntracked,
 	})
 	check(t, err)
 
-	numDeltas, err := diff.NumDeltas()
+	statusEntriesCount, err := status.EntryCount()
 	check(t, err)
-	assert.Equal(t, 0, numDeltas)
+	assert.Equal(t, 0, statusEntriesCount)
 
 	head, err := repo.Repo.Head()
 	check(t, err)
@@ -701,18 +698,14 @@ func TestBuildingDetachedHead(t *testing.T) {
 	_, err := w.System.BuildBranch("feature", NoFilter, stdTestCmdOptions(buff))
 	check(t, err)
 
-	// Ensure that we don't touch this workspace
-	idx, err := repo.Repo.Index()
-	check(t, err)
-
-	diff, err := repo.Repo.DiffIndexToWorkdir(idx, &git.DiffOptions{
-		Flags: git.DiffIncludeUntracked | git.DiffRecurseUntracked,
+	status, err := repo.Repo.StatusList(&git.StatusOptions{
+		Flags: git.StatusOptIncludeUntracked,
 	})
 	check(t, err)
 
-	numDeltas, err := diff.NumDeltas()
+	statusEntriesCount, err := status.EntryCount()
 	check(t, err)
-	assert.Equal(t, 0, numDeltas)
+	assert.Equal(t, 0, statusEntriesCount)
 
 	detached, err := repo.Repo.IsHeadDetached()
 	check(t, err)

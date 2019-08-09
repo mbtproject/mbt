@@ -58,11 +58,16 @@ func (c *libgitCommit) String() string {
 }
 
 type libgitReference struct {
-	reference *git.Reference
+	reference    *git.Reference
+	symbolicName string
 }
 
 func (r *libgitReference) Name() string {
 	return r.reference.Name()
+}
+
+func (r *libgitReference) SymbolicName() string {
+	return r.symbolicName
 }
 
 type libgitRepo struct {
@@ -385,13 +390,31 @@ func (r *libgitRepo) BlobContentsFromTree(commit Commit, path string) ([]byte, e
 	return blob.Contents(), nil
 }
 
-func (r *libgitRepo) Checkout(commit Commit) (Reference, error) {
+func (r *libgitRepo) readHeadReference() (Reference, error) {
 	ref, err := r.Repo.Head()
 	if err != nil {
 		return nil, e.Wrap(ErrClassInternal, err)
 	}
 
 	reference := &libgitReference{reference: ref}
+
+	detached, err := r.Repo.IsHeadDetached()
+	if err != nil {
+		return nil, e.Wrap(ErrClassInternal, err)
+	}
+
+	if !detached {
+		reference.symbolicName = ref.Name()
+	}
+
+	return reference, nil
+}
+
+func (r *libgitRepo) Checkout(commit Commit) (Reference, error) {
+	reference, err := r.readHeadReference()
+	if err != nil {
+		return nil, err
+	}
 
 	gitCommit := commit.(*libgitCommit)
 	tree, err := gitCommit.Tree()
@@ -434,7 +457,12 @@ func (r *libgitRepo) CheckoutReference(reference Reference) error {
 		return e.Wrap(ErrClassInternal, err)
 	}
 
-	err = r.Repo.SetHead(gitRef.Name())
+	if reference.SymbolicName() != "" {
+		err = r.Repo.SetHead(reference.SymbolicName())
+	} else {
+		err = r.Repo.SetHeadDetached(commit.Id())
+	}
+
 	if err != nil {
 		return e.Wrap(ErrClassInternal, err)
 	}
