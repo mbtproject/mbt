@@ -63,6 +63,7 @@ type Commit interface {
 // this could be pointing to a branch, tag or commit.
 type Reference interface {
 	Name() string
+	SymbolicName() string
 }
 
 // Repo defines the set of interactions with the git repository.
