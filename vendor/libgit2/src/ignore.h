@@ -33,6 +33,7 @@ typedef struct {
 	size_t dir_root; /* offset in dir to repo root */
 	int ignore_case;
 	int depth;
+	uint32_t flags;
 } git_ignores;
 
 extern int git_ignore__for_path(
@@ -49,6 +50,10 @@ enum {
 	GIT_IGNORE_NOTFOUND = -1,
 	GIT_IGNORE_FALSE = 0,
 	GIT_IGNORE_TRUE = 1,
+};
+
+enum {
+	GIT_IGNORE_TOP_DOWN_DISCOVERY = (1u << 0),
 };
 
 extern int git_ignore__lookup(int *out, git_ignores *ign, const char *path, git_dir_flag dir_flag);
