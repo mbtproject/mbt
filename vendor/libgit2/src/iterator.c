@@ -1822,6 +1822,7 @@ static int filesystem_iterator_init(filesystem_iterator *iter)
 		return error;
 
 	iter->base.flags &= ~GIT_ITERATOR_FIRST_ACCESS;
+	iter->ignores.flags |= GIT_IGNORE_TOP_DOWN_DISCOVERY;
 
 	return 0;
 }

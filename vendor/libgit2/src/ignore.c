@@ -453,7 +453,7 @@ static bool ignore_lookup_in_rules(
 int git_ignore__lookup(
 	int *out, git_ignores *ignores, const char *pathname, git_dir_flag dir_flag)
 {
-	unsigned int i;
+	size_t i;
 	git_attr_file *file;
 	git_attr_path path;
 
@@ -467,10 +467,25 @@ int git_ignore__lookup(
 	if (ignore_lookup_in_rules(out, ignores->ign_internal, &path))
 		goto cleanup;
 
-	/* next process files in the path */
-	git_vector_foreach(&ignores->ign_path, i, file) {
-		if (ignore_lookup_in_rules(out, file, &path))
-			goto cleanup;
+	/* next process files in the path.
+	 * this process has to consider the order that .ignore
+	 * files were discovered to ensure correct prioritization of rules
+	 */
+	if (ignores->flags & GIT_IGNORE_TOP_DOWN_DISCOVERY)
+	{
+		git_vector_rforeach(&ignores->ign_path, i, file) {
+			if (ignore_lookup_in_rules(out, file, &path)) {
+				goto cleanup;
+			}
+		}
+	}
+	else
+	{
+		git_vector_foreach(&ignores->ign_path, i, file) {
+			if (ignore_lookup_in_rules(out, file, &path)) {
+				goto cleanup;
+			}
+		}
 	}
 
 	/* last process global ignores */
