@@ -1,13 +1,392 @@
-v0.26 + 1
+v0.27.9
+-------
+
+This is a security release fixing the following issues:
+
+* A carefully constructed commit object with a very large number
+  of parents may lead to potential out-of-bounds writes or
+  potential denial of service.
+
+* The ProgramData configuration file is always read for compatibility
+  with Git for Windows and Portable Git installations.  The ProgramData
+  location is not necessarily writable only by administrators, so we
+  now ensure that the configuration file is owned by the administrator
+  or the current user.
+
+v0.27.8
+-------
+
+This is a bugfix release with the following changes:
+
+- Negative gitignore rules should match git's behavior.  For example,
+  given a gitignore rule of `*.test` and a second gitignore rule of
+  `!dir/*`, we would incorrect apply the negation rules.  With this
+  fix, we behave like git.
+
+- Always provide custom transport implementations with the URL in the
+  action function.  v0.27.7 included a change that would erroneously
+  provide NULL to subsequent calls to the action function.  This is
+  fixed.
+
+- Fix several bugs parsing malformed commits and malformed trees.
+
+- Allow configuration file directory locations to be specified as
+  `/dev/null`.
+
+- Ensure that when an error occurs reading from the loose ODB backend
+  that we do not segfault.
+
+- Ensure that when a filter stream application fails that we do not
+  segfault.
+
+- Ensure that any configuration reading failures are propagated while
+  loading submodule information.
+
+- Peel annotated tags fully when creating an annotated commit.
+
+- Ensure that numbers are parsed correctly in a variety of places.
+
+v0.27.7
+-------
+
+This is a bugfix release with the following changes or improvements:
+
+- Our continuous integration environment has switched from Travis and
+  AppVeyor to Azure Pipelines CI.
+
+- Fix adding worktrees for bare repositories.
+
+- Fix parsed patches not computing the old respectively new line
+  numbers correctly.
+
+- Fix parsing configuration variables which do not have a section.
+
+- Fix a zero-byte allocation when trying to detect file renames and
+  copies of a diff without any hunks.
+
+- Fix a zero-byte allocation when trying to resize or duplicate
+  vectors.
+
+- Fix return value when trying to unlock worktrees which aren't
+  locked.
+
+- Fix returning an unitialized error code when preparing a revision
+  walk without any pushed commits.
+
+- Fix return value of `git_remote_lookup` when lookup of
+  "remote.$remote.tagopt" fails.
+
+- Fix the revision walk always labelling commits as interesting due
+  to a mishandling of the commit date.
+
+- Fix the packbuilder inserting uninteresting blobs when adding a
+  tree containing references to such blobs.
+
+- Ignore unsupported authentication schemes in HTTP transport.
+
+- Improve performane of `git_remote_prune`.
+
+- Fix detection of whether `qsort_r` has a BSD or GNU function
+  signature.
+
+- Fix detection of iconv if it is provided by libc.
+
+v0.27.6
+-------
+
+This as a security release fixing the following list of issues:
+
+- The function family `git__strtol` is used to parse integers
+  from a buffer. As the functions do not take a buffer length as
+  argument, they will scan either until the end of the current
+  number or until a NUL byte is encountered. Many callers have
+  been misusing the function and called it on potentially
+  non-NUL-terminated buffers, resulting in possible out-of-bounds
+  reads. Callers have been fixed to use `git__strntol` functions
+  instead and `git__strtol` functions were removed.
+
+- The function `git__strntol64` relied on the undefined behavior
+  of signed integer overflows. While the code tried to detect
+  such overflows after they have happened, this is unspecified
+  behavior and may lead to weird behavior on uncommon platforms.
+
+- In the case where `git__strntol32` was unable to parse an
+  integer because it doesn't fit into an `int32_t`, it printed an
+  error message containing the string that is currently being
+  parsed. The code didn't truncate the string though, which
+  caused it to print the complete string until a NUL byte is
+  encountered and not only the currently parsed number. In case
+  where the string was not NUL terminated, this could have lead
+  to an out-of-bounds read.
+
+- When parsing tags, all unknown fields that appear before the
+  tag message are skipped. This skipping is done by using a plain
+  `strstr(buffer, "\n\n")` to search for the two newlines that
+  separate tag fields from tag message. As it is not possible to
+  supply a buffer length to `strstr`, this call may skip over the
+  buffer's end and thus result in an out of bounds read. As
+  `strstr` may return a pointer that is out of bounds, the
+  following computation of `buffer_end - buffer` will overflow
+  and result in an allocation of an invalid length. Note that
+  when reading objects from the object database, we make sure to
+  always NUL terminate them, making the use of `strstr` safe.
+
+- When parsing the "encoding" field of a commit, we may perform
+  an out of bounds read due to using `git__prefixcmp` instead of
+  `git__prefixncmp`. This can result in the parsed commit object
+  containing uninitialized data in both its message encoding and
+  message fields. Note that when reading objects from the object
+  database, we make sure to always NUL terminate them, making the
+  use of `strstr` safe.
+
+v0.27.5
+-------
+
+This is a security release fixing the following list of issues:
+
+- Submodule URLs and paths with a leading "-" are now ignored.
+  This is due to the recently discovered CVE-2018-17456, which
+  can lead to arbitrary code execution in upstream git. While
+  libgit2 itself is not vulnerable, it can be used to inject
+  options in an implementation which performs a recursive clone
+  by executing an external command.
+
+- When running repack while doing repo writes,
+  `packfile_load__cb()` could see some temporary files in the
+  directory that were bigger than the usual, and makes `memcmp`
+  overflow on the `p->pack_name` string. This issue was reported
+  and fixed by bisho.
+
+- The configuration file parser used unbounded recursion to parse
+  multiline variables, which could lead to a stack overflow. The
+  issue was reported by the oss-fuzz project, issue 10048 and
+  fixed by Nelson Elhage.
+
+- The fix to the unbounded recursion introduced a memory leak in
+  the config parser. While this leak was never in a public
+  release, the oss-fuzz project reported this as issue 10127. The
+  fix was implemented by Nelson Elhage and Patrick Steinhardt.
+
+- When parsing "ok" packets received via the smart protocol, our
+  parsing code did not correctly verify the bounds of the
+  packets, which could result in a heap-buffer overflow. The
+  issue was reported by the oss-fuzz project, issue 9749 and
+  fixed by Patrick Steinhardt.
+
+- The parsing code for the smart protocol has been tightened in
+  general, fixing heap-buffer overflows when parsing the packet
+  type as well as for "ACK" and "unpack" packets. The issue was
+  discovered and fixed by Patrick Steinhardt.
+
+- Fixed potential integer overflows on platforms with 16 bit
+  integers when parsing packets for the smart protocol. The issue
+  was discovered and fixed by Patrick Steinhardt.
+
+- Fixed potential NULL pointer dereference when parsing
+  configuration files which have "include.path" or
+  "includeIf..path" statements without a value.
+
+v0.27.4
+-------
+
+This is a security release fixing out-of-bounds reads when
+processing smart-protocol "ng" packets.
+
+When parsing an "ng" packet, we keep track of both the current position
+as well as the remaining length of the packet itself. But instead of
+taking care not to exceed the length, we pass the current pointer's
+position to `strchr`, which will search for a certain character until
+hitting NUL. It is thus possible to create a crafted packet which
+doesn't contain a NUL byte to trigger an out-of-bounds read.
+
+The issue was discovered by the oss-fuzz project, issue 9406.
+
+v0.27.3
+-------
+
+This is a security release fixing out-of-bounds reads when
+reading objects from a packfile. This corresponds to
+CVE-2018-10887 and CVE-2018-10888, which were both reported by
+Riccardo Schirone.
+
+When packing objects into a single so-called packfile, objects
+may not get stored as complete copies but instead as deltas
+against another object "base". A specially crafted delta object
+could trigger an integer overflow and thus bypass our input
+validation, which may result in copying memory before or after
+the base object into the final deflated object. This may lead to
+objects containing copies of system memory being written into the
+object database. As the hash of those objects cannot be easily
+controlled by the attacker, it is unlikely that any of those
+objects will be valid and referenced by the commit graph.
+
+Note that the error could also be triggered by the function
+`git_apply__patch`. But as this function is not in use outside of
+our test suite, it is not a possible attack vector.
+
+v0.27.2
 ---------
 
 ### Changes or improvements
 
+* Fix builds with LibreSSL 2.7.
+
+* Fix for `git_diff_status_char()` not returning the correct mapping for
+  `GIT_DELTA_TYPECHANGE`.
+
+* Fix for the submodules API not reporting errors when parsing the ".gitmodules"
+  file.
+
+* Fix for accepting a ".gitmodules" file where two submodules have the same
+  path.
+
+* Fix for hiding references in a graph walk not always limiting the graph
+  correctly.
+
+* Fix for directory patterns with trailing spaces in attribute files not being
+  handled correctly.
+
+* Fix SSH transports not properly disconnecting from the server.
+
+* Fix reading HEAD reflog in worktrees.
+
+* Update our copy of SHA1DC to fix errors with endianess on some platforms.
+
+v0.27.1
+---------
+
+This is a security release fixing insufficient validation of submodule names
+(CVE-2018-11235, reported by Etienne Stalmans) and disallows `.gitmodules` files
+as symlinks.
+
+While submodule names come from the untrusted ".gitmodules" file, we blindly
+append the name to "$GIT_DIR/modules" to construct the final path of the
+submodule repository. In case the name contains e.g. "../", an adversary would
+be able to escape your repository and write data at arbitrary paths. In
+accordance with git, we now enforce some rules for submodule names which will
+cause libgit2 to ignore these malicious names.
+
+Adding a symlink as `.gitmodules` into the index from the workdir or checking
+out such files is not allowed as this can make a Git implementation write
+outside of the repository and bypass the `fsck` checks for CVE-2018-11235.
+
+libgit2 is not susceptible to CVE-2018-11233.
+
+v0.27
+---------
+
+### Changes or improvements
+
+* Improved `p_unlink` in `posix_w32.c` to try and make a file writable
+  before sleeping in the retry loop to prevent unnecessary calls to sleep.
+
+* The CMake build infrastructure has been improved to speed up building time.
+
+* A new CMake option "-DUSE_HTTPS=<backend>" makes it possible to explicitly
+  choose an HTTP backend.
+
+* A new CMake option "-DSHA1_BACKEND=<backend>" makes it possible to explicitly
+  choose an SHA1 backend. The collision-detecting backend is now the default.
+
+* A new CMake option "-DUSE_BUNDLED_ZLIB" makes it possible to explicitly use
+  the bundled zlib library.
+
+* A new CMake option "-DENABLE_REPRODUCIBLE_BUILDS" makes it possible to
+  generate a reproducible static archive. This requires support from your
+  toolchain.
+
+* The minimum required CMake version has been bumped to 2.8.11.
+
+* Writing to a configuration file now preserves the case of the key given by the
+  caller for the case-insensitive portions of the key (existing sections are
+  used even if they don't match).
+
+* We now support conditional includes in configuration files.
+
+* Fix for handling re-reading of configuration files with includes.
+
+* Fix for reading patches which contain exact renames only.
+
+* Fix for reading patches with whitespace in the compared files' paths.
+
+* We will now fill `FETCH_HEAD` from all passed refspecs instead of overwriting
+  with the last one.
+
+* There is a new diff option, `GIT_DIFF_INDENT_HEURISTIC` which activates a
+  heuristic which takes into account whitespace and indentation in order to
+  produce better diffs when dealing with ambiguous diff hunks.
+
+* Fix for pattern-based ignore rules where files ignored by a rule cannot be
+  un-ignored by another rule.
+
+* Sockets opened by libgit2 are now being closed on exec(3) if the platform
+  supports it.
+
+* Fix for peeling annotated tags from packed-refs files.
+
+* Fix reading huge loose objects from the object database.
+
+* Fix files not being treated as modified when only the file mode has changed.
+
+* We now explicitly reject adding submodules to the index via
+  `git_index_add_frombuffer`.
+
+* Fix handling of `GIT_DIFF_FIND_RENAMES_FROM_REWRITES` raising `SIGABRT` when
+  one file has been deleted and another file has been rewritten.
+
+* Fix for WinHTTP not properly handling NTLM and Negotiate challenges.
+
+* When using SSH-based transports, we now repeatedly ask for the passphrase to
+  decrypt the private key in case a wrong passphrase is being provided.
+
+* When generating conflict markers, they will now use the same line endings as
+  the rest of the file.
+
 ### API additions
+
+* The `git_merge_file_options` structure now contains a new setting,
+  `marker_size`.  This allows users to set the size of markers that
+  delineate the sides of merged files in the output conflict file.
+  By default this is 7 (`GIT_MERGE_CONFLICT_MARKER_SIZE`), which
+  produces output markers like `<<<<<<<` and `>>>>>>>`.
+
+* `git_remote_create_detached()` creates a remote that is not associated
+  to any repository (and does not apply configuration like 'insteadof' rules).
+  This is mostly useful for e.g. emulating `git ls-remote` behavior.
+
+* `git_diff_patchid()` lets you generate patch IDs for diffs.
+
+* `git_status_options` now has an additional field `baseline` to allow creating
+  status lists against different trees.
+
+* New family of functions to allow creating notes for a specific notes commit
+  instead of for a notes reference.
+
+* New family of functions to allow parsing message trailers. This API is still
+  experimental and may change in future releases.
 
 ### API removals
 
 ### Breaking API changes
+
+* Signatures now distinguish between +0000 and -0000 UTC offsets.
+
+* The certificate check callback in the WinHTTP transport will now receive the
+  `message_cb_payload` instead of the `cred_acquire_payload`.
+
+* We are now reading symlinked directories under .git/refs.
+
+* We now refuse creating branches named "HEAD".
+
+* We now refuse reading and writing all-zero object IDs into the
+  object database.
+
+* We now read the effective user's configuration file instead of the real user's
+  configuration in case libgit2 runs as part of a setuid binary.
+
+* The `git_odb_open_rstream` function and its `readstream` callback in the
+  `git_odb_backend` interface have changed their signatures to allow providing
+  the object's size and type to the caller.
 
 v0.26
 -----

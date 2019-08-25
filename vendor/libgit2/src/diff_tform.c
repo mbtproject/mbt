@@ -4,7 +4,8 @@
  * This file is part of libgit2, distributed under the GNU GPL v2 with
  * a Linking Exception. For full terms see the included COPYING file.
  */
-#include "common.h"
+
+#include "diff_tform.h"
 
 #include "git2/config.h"
 #include "git2/blob.h"
@@ -685,8 +686,10 @@ static bool is_rename_target(
 			break;
 		}
 		if (FLAG_SET(opts, GIT_DIFF_FIND_RENAMES_FROM_REWRITES) &&
-			delta->similarity < opts->rename_from_rewrite_threshold)
+			delta->similarity < opts->rename_from_rewrite_threshold) {
+			delta->flags |= GIT_DIFF_FLAG__TO_SPLIT;
 			break;
+		}
 
 		return false;
 
@@ -813,13 +816,15 @@ int git_diff_find_similar(
 	diff_find_match *best_match;
 	git_diff_file swap;
 
+	assert(diff);
+
 	if ((error = normalize_find_opts(diff, &opts, given_opts)) < 0)
 		return error;
 
 	num_deltas = diff->deltas.length;
 
 	/* TODO: maybe abort if deltas.length > rename_limit ??? */
-	if (!git__is_uint32(num_deltas))
+	if (!num_deltas || !git__is_uint32(num_deltas))
 		goto cleanup;
 
 	/* No flags set; nothing to do */

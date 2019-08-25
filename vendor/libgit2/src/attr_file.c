@@ -1,7 +1,14 @@
-#include "common.h"
+/*
+ * Copyright (C) the libgit2 contributors. All rights reserved.
+ *
+ * This file is part of libgit2, distributed under the GNU GPL v2 with
+ * a Linking Exception. For full terms see the included COPYING file.
+ */
+
+#include "attr_file.h"
+
 #include "repository.h"
 #include "filebuf.h"
-#include "attr_file.h"
 #include "attrcache.h"
 #include "git2/blob.h"
 #include "git2/tree.h"
@@ -587,8 +594,9 @@ int git_attr_fnmatch__parse(
 	}
 
 	if (*pattern == '!' && (spec->flags & GIT_ATTR_FNMATCH_ALLOWNEG) != 0) {
-		spec->flags = spec->flags |
-			GIT_ATTR_FNMATCH_NEGATIVE | GIT_ATTR_FNMATCH_LEADINGDIR;
+		spec->flags = spec->flags | GIT_ATTR_FNMATCH_NEGATIVE;
+		if ((spec->flags & GIT_ATTR_FNMATCH_NOLEADINGDIR) == 0)
+			spec->flags |= GIT_ATTR_FNMATCH_LEADINGDIR;
 		pattern++;
 	}
 
@@ -623,6 +631,11 @@ int git_attr_fnmatch__parse(
 	 * \r there to match against.
 	 */
 	if (pattern[spec->length - 1] == '\r')
+		if (--spec->length == 0)
+			return GIT_ENOTFOUND;
+
+	/* Remove trailing spaces. */
+	while (pattern[spec->length - 1] == ' ' || pattern[spec->length - 1] == '\t')
 		if (--spec->length == 0)
 			return GIT_ENOTFOUND;
 

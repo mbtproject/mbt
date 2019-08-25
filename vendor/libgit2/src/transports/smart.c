@@ -4,8 +4,10 @@
  * This file is part of libgit2, distributed under the GNU GPL v2 with
  * a Linking Exception. For full terms see the included COPYING file.
  */
-#include "git2.h"
+
 #include "smart.h"
+
+#include "git2.h"
 #include "refs.h"
 #include "refspec.h"
 #include "proxy.h"
@@ -43,9 +45,13 @@ GIT_INLINE(int) git_smart__reset_stream(transport_smart *t, bool close_subtransp
 		t->current_stream = NULL;
 	}
 
-	if (close_subtransport &&
-		t->wrapped->close(t->wrapped) < 0)
-		return -1;
+	if (close_subtransport) {
+		git__free(t->url);
+		t->url = NULL;
+
+		if (t->wrapped->close(t->wrapped) < 0)
+			return -1;
+	}
 
 	return 0;
 }

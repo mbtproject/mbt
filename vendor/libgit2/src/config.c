@@ -5,9 +5,9 @@
  * a Linking Exception. For full terms see the included COPYING file.
  */
 
-#include "common.h"
-#include "sysdir.h"
 #include "config.h"
+
+#include "sysdir.h"
 #include "git2/config.h"
 #include "git2/sys/config.h"
 #include "vector.h"
@@ -99,6 +99,7 @@ int git_config_add_file_ondisk(
 	git_config *cfg,
 	const char *path,
 	git_config_level_t level,
+	const git_repository *repo,
 	int force)
 {
 	git_config_backend *file = NULL;
@@ -108,7 +109,7 @@ int git_config_add_file_ondisk(
 	assert(cfg && path);
 
 	res = p_stat(path, &st);
-	if (res < 0 && errno != ENOENT) {
+	if (res < 0 && errno != ENOENT && errno != ENOTDIR) {
 		giterr_set(GITERR_CONFIG, "failed to stat '%s'", path);
 		return -1;
 	}
@@ -116,7 +117,7 @@ int git_config_add_file_ondisk(
 	if (git_config_file__ondisk(&file, path) < 0)
 		return -1;
 
-	if ((res = git_config_add_backend(cfg, file, level, force)) < 0) {
+	if ((res = git_config_add_backend(cfg, file, level, repo, force)) < 0) {
 		/*
 		 * free manually; the file is not owned by the config
 		 * instance yet and will not be freed on cleanup
@@ -138,7 +139,7 @@ int git_config_open_ondisk(git_config **out, const char *path)
 	if (git_config_new(&config) < 0)
 		return -1;
 
-	if ((error = git_config_add_file_ondisk(config, path, GIT_CONFIG_LEVEL_LOCAL, 0)) < 0)
+	if ((error = git_config_add_file_ondisk(config, path, GIT_CONFIG_LEVEL_LOCAL, NULL, 0)) < 0)
 		git_config_free(config);
 	else
 		*out = config;
@@ -164,7 +165,7 @@ int git_config_snapshot(git_config **out, git_config *in)
 		if ((error = internal->file->snapshot(&b, internal->file)) < 0)
 			break;
 
-		if ((error = git_config_add_backend(config, b, internal->level, 0)) < 0) {
+		if ((error = git_config_add_backend(config, b, internal->level, NULL, 0)) < 0) {
 			b->free(b);
 			break;
 		}
@@ -307,6 +308,7 @@ int git_config_add_backend(
 	git_config *cfg,
 	git_config_backend *file,
 	git_config_level_t level,
+	const git_repository *repo,
 	int force)
 {
 	file_internal *internal;
@@ -316,7 +318,7 @@ int git_config_add_backend(
 
 	GITERR_CHECK_VERSION(file, GIT_CONFIG_BACKEND_VERSION, "git_config_backend");
 
-	if ((result = file->open(file, level)) < 0)
+	if ((result = file->open(file, level, repo)) < 0)
 		return result;
 
 	internal = git__malloc(sizeof(file_internal));
@@ -510,6 +512,8 @@ int git_config_backend_foreach_match(
 	git_config_iterator* iter;
 	regex_t regex;
 	int error = 0;
+
+	assert(backend && cb);
 
 	if (regexp != NULL) {
 		if ((error = p_regcomp(&regex, regexp, REG_EXTENDED)) != 0) {
@@ -1107,8 +1111,15 @@ int git_config_find_system(git_buf *path)
 
 int git_config_find_programdata(git_buf *path)
 {
+	int ret;
+
 	git_buf_sanitize(path);
-	return git_sysdir_find_programdata_file(path, GIT_CONFIG_FILENAME_PROGRAMDATA);
+	ret = git_sysdir_find_programdata_file(path,
+					       GIT_CONFIG_FILENAME_PROGRAMDATA);
+	if (ret != GIT_OK)
+		return ret;
+
+	return git_path_validate_system_file_ownership(path->ptr);
 }
 
 int git_config__global_location(git_buf *buf)
@@ -1147,20 +1158,20 @@ int git_config_open_default(git_config **out)
 
 	if (!git_config_find_global(&buf) || !git_config__global_location(&buf)) {
 		error = git_config_add_file_ondisk(cfg, buf.ptr,
-			GIT_CONFIG_LEVEL_GLOBAL, 0);
+			GIT_CONFIG_LEVEL_GLOBAL, NULL, 0);
 	}
 
 	if (!error && !git_config_find_xdg(&buf))
 		error = git_config_add_file_ondisk(cfg, buf.ptr,
-			GIT_CONFIG_LEVEL_XDG, 0);
+			GIT_CONFIG_LEVEL_XDG, NULL, 0);
 
 	if (!error && !git_config_find_system(&buf))
 		error = git_config_add_file_ondisk(cfg, buf.ptr,
-			GIT_CONFIG_LEVEL_SYSTEM, 0);
+			GIT_CONFIG_LEVEL_SYSTEM, NULL, 0);
 
 	if (!error && !git_config_find_programdata(&buf))
 		error = git_config_add_file_ondisk(cfg, buf.ptr,
-			GIT_CONFIG_LEVEL_PROGRAMDATA, 0);
+			GIT_CONFIG_LEVEL_PROGRAMDATA, NULL, 0);
 
 	git_buf_free(&buf);
 
@@ -1298,7 +1309,7 @@ int git_config_parse_int64(int64_t *out, const char *value)
 	const char *num_end;
 	int64_t num;
 
-	if (!value || git__strtol64(&num, value, &num_end, 0) < 0)
+	if (!value || git__strntol64(&num, value, strlen(value), &num_end, 0) < 0)
 		goto fail_parse;
 
 	switch (*num_end) {

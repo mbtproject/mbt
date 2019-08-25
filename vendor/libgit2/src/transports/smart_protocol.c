@@ -4,6 +4,9 @@
  * This file is part of libgit2, distributed under the GNU GPL v2 with
  * a Linking Exception. For full terms see the included COPYING file.
  */
+
+#include "common.h"
+
 #include "git2.h"
 #include "git2/odb_backend.h"
 
@@ -41,7 +44,7 @@ int git_smart__store_refs(transport_smart *t, int flushes)
 
 	do {
 		if (buf->offset > 0)
-			error = git_pkt_parse_line(&pkt, buf->data, &line_end, buf->offset);
+			error = git_pkt_parse_line(&pkt, &line_end, buf->data, buf->offset);
 		else
 			error = GIT_EBUFS;
 
@@ -206,15 +209,15 @@ int git_smart__detect_caps(git_pkt_ref *pkt, transport_smart_caps *caps, git_vec
 	return 0;
 }
 
-static int recv_pkt(git_pkt **out, gitno_buffer *buf)
+static int recv_pkt(git_pkt **out, git_pkt_type *pkt_type, gitno_buffer *buf)
 {
 	const char *ptr = buf->data, *line_end = ptr;
 	git_pkt *pkt = NULL;
-	int pkt_type, error = 0, ret;
+	int error = 0, ret;
 
 	do {
 		if (buf->offset > 0)
-			error = git_pkt_parse_line(&pkt, ptr, &line_end, buf->offset);
+			error = git_pkt_parse_line(&pkt, &line_end, ptr, buf->offset);
 		else
 			error = GIT_EBUFS;
 
@@ -233,13 +236,14 @@ static int recv_pkt(git_pkt **out, gitno_buffer *buf)
 	} while (error);
 
 	gitno_consume(buf, line_end);
-	pkt_type = pkt->type;
+	if (pkt_type)
+		*pkt_type = pkt->type;
 	if (out != NULL)
 		*out = pkt;
 	else
 		git__free(pkt);
 
-	return pkt_type;
+	return error;
 }
 
 static int store_common(transport_smart *t)
@@ -249,7 +253,7 @@ static int store_common(transport_smart *t)
 	int error;
 
 	do {
-		if ((error = recv_pkt(&pkt, buf)) < 0)
+		if ((error = recv_pkt(&pkt, NULL, buf)) < 0)
 			return error;
 
 		if (pkt->type == GIT_PKT_ACK) {
@@ -270,7 +274,7 @@ static int fetch_setup_walk(git_revwalk **out, git_repository *repo)
 	git_revwalk *walk = NULL;
 	git_strarray refs;
 	unsigned int i;
-	git_reference *ref;
+	git_reference *ref = NULL;
 	int error;
 
 	if ((error = git_reference_list(&refs, repo)) < 0)
@@ -282,6 +286,9 @@ static int fetch_setup_walk(git_revwalk **out, git_repository *repo)
 	git_revwalk_sorting(walk, GIT_SORT_TIME);
 
 	for (i = 0; i < refs.count; ++i) {
+		git_reference_free(ref);
+		ref = NULL;
+
 		/* No tags */
 		if (!git__prefixcmp(refs.strings[i], GIT_REFS_TAGS_DIR))
 			continue;
@@ -294,16 +301,13 @@ static int fetch_setup_walk(git_revwalk **out, git_repository *repo)
 
 		if ((error = git_revwalk_push(walk, git_reference_target(ref))) < 0)
 			goto on_error;
-
-		git_reference_free(ref);
 	}
 
-	git_strarray_free(&refs);
 	*out = walk;
-	return 0;
 
 on_error:
-	git_revwalk_free(walk);
+	if (error)
+		git_revwalk_free(walk);
 	git_reference_free(ref);
 	git_strarray_free(&refs);
 	return error;
@@ -317,7 +321,7 @@ static int wait_while_ack(gitno_buffer *buf)
 	while (1) {
 		git__free(pkt);
 
-		if ((error = recv_pkt((git_pkt **)&pkt, buf)) < 0)
+		if ((error = recv_pkt((git_pkt **)&pkt, NULL, buf)) < 0)
 			return error;
 
 		if (pkt->type == GIT_PKT_NAK)
@@ -342,7 +346,8 @@ int git_smart__negotiate_fetch(git_transport *transport, git_repository *repo, c
 	gitno_buffer *buf = &t->buffer;
 	git_buf data = GIT_BUF_INIT;
 	git_revwalk *walk = NULL;
-	int error = -1, pkt_type;
+	int error = -1;
+	git_pkt_type pkt_type;
 	unsigned int i;
 	git_oid oid;
 
@@ -392,16 +397,13 @@ int git_smart__negotiate_fetch(git_transport *transport, git_repository *repo, c
 				if ((error = store_common(t)) < 0)
 					goto on_error;
 			} else {
-				pkt_type = recv_pkt(NULL, buf);
-
-				if (pkt_type == GIT_PKT_ACK) {
+				error = recv_pkt(NULL, &pkt_type, buf);
+				if (error < 0) {
+					goto on_error;
+				} else if (pkt_type == GIT_PKT_ACK) {
 					break;
 				} else if (pkt_type == GIT_PKT_NAK) {
 					continue;
-				} else if (pkt_type < 0) {
-					/* recv_pkt returned an error */
-					error = pkt_type;
-					goto on_error;
 				} else {
 					giterr_set(GITERR_NET, "Unexpected pkt type");
 					error = -1;
@@ -467,10 +469,10 @@ int git_smart__negotiate_fetch(git_transport *transport, git_repository *repo, c
 
 	/* Now let's eat up whatever the server gives us */
 	if (!t->caps.multi_ack && !t->caps.multi_ack_detailed) {
-		pkt_type = recv_pkt(NULL, buf);
+		error = recv_pkt(NULL, &pkt_type, buf);
 
-		if (pkt_type < 0) {
-			return pkt_type;
+		if (error < 0) {
+			return error;
 		} else if (pkt_type != GIT_PKT_ACK && pkt_type != GIT_PKT_NAK) {
 			giterr_set(GITERR_NET, "Unexpected pkt type");
 			return -1;
@@ -591,7 +593,7 @@ int git_smart__download_pack(
 			goto done;
 		}
 
-		if ((error = recv_pkt(&pkt, buf)) >= 0) {
+		if ((error = recv_pkt(&pkt, NULL, buf)) >= 0) {
 			/* Check cancellation after network call */
 			if (t->cancelled.val) {
 				giterr_clear();
@@ -749,7 +751,7 @@ static int add_push_report_sideband_pkt(git_push *push, git_pkt_data *data_pkt, 
 	}
 
 	while (line_len > 0) {
-		error = git_pkt_parse_line(&pkt, line, &line_end, line_len);
+		error = git_pkt_parse_line(&pkt, &line_end, line, line_len);
 
 		if (error == GIT_EBUFS) {
 			/* Buffer the data when the inner packet is split
@@ -792,8 +794,8 @@ static int parse_report(transport_smart *transport, git_push *push)
 
 	for (;;) {
 		if (buf->offset > 0)
-			error = git_pkt_parse_line(&pkt, buf->data,
-						   &line_end, buf->offset);
+			error = git_pkt_parse_line(&pkt, &line_end,
+						   buf->data, buf->offset);
 		else
 			error = GIT_EBUFS;
 

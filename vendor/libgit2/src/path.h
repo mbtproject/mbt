@@ -8,6 +8,7 @@
 #define INCLUDE_path_h__
 
 #include "common.h"
+
 #include "posix.h"
 #include "buffer.h"
 #include "vector.h"
@@ -104,6 +105,12 @@ GIT_INLINE(int) git_path_is_dot_or_dotdotW(const wchar_t *name)
 				(name[1] == L'.' && name[2] == L'\0')));
 }
 
+#define git_path_is_absolute(p) \
+	(git__isalpha((p)[0]) && (p)[1] == ':' && ((p)[2] == '\\' || (p)[2] == '/'))
+
+#define git_path_is_dirsep(p) \
+	((p) == '/' || (p) == '\\')
+
 /**
  * Convert backslashes in path to forward slashes.
  */
@@ -118,6 +125,13 @@ GIT_INLINE(void) git_path_mkposix(char *path)
 }
 #else
 #	define git_path_mkposix(p) /* blank */
+
+#define git_path_is_absolute(p) \
+	((p)[0] == '/')
+
+#define git_path_is_dirsep(p) \
+	((p) == '/')
+
 #endif
 
 /**
@@ -623,11 +637,96 @@ extern int git_path_from_url_or_path(git_buf *local_path_out, const char *url_or
 extern bool git_path_isvalid(
 	git_repository *repo,
 	const char *path,
+	uint16_t mode,
 	unsigned int flags);
 
 /**
  * Convert any backslashes into slashes
  */
 int git_path_normalize_slashes(git_buf *out, const char *path);
+
+/**
+ * Check whether a path component corresponds to a .gitmodules file
+ *
+ * @param name the path component to check
+ * @param len the length of `name`
+ */
+extern int git_path_is_dotgit_modules(const char *name, size_t len);
+
+/**
+ * Check whether a path component corresponds to a .gitmodules file in NTFS
+ *
+ * @param name the path component to check
+ * @param len the length of `name`
+ */
+extern int git_path_is_ntfs_dotgit_modules(const char *name, size_t len);
+
+/**
+ * Check whether a path component corresponds to a .gitmodules file in HFS+
+ *
+ * @param name the path component to check
+ * @param len the length of `name`
+ */
+extern int git_path_is_hfs_dotgit_modules(const char *name, size_t len);
+
+/**
+ * Check whether a path component corresponds to a .gitignore file
+ *
+ * @param name the path component to check
+ * @param len the length of `name`
+ */
+extern int git_path_is_dotgit_ignore(const char *name, size_t len);
+
+/**
+ * Check whether a path component corresponds to a .gitignore file in NTFS
+ *
+ * @param name the path component to check
+ * @param len the length of `name`
+ */
+extern int git_path_is_ntfs_dotgit_ignore(const char *name, size_t len);
+
+/**
+ * Check whether a path component corresponds to a .gitignore file in HFS+
+ *
+ * @param name the path component to check
+ * @param len the length of `name`
+ */
+extern int git_path_is_hfs_dotgit_ignore(const char *name, size_t len);
+
+/**
+ * Check whether a path component corresponds to a .gitignore file
+ *
+ * @param name the path component to check
+ * @param len the length of `name`
+ */
+extern int git_path_is_dotgit_attributes(const char *name, size_t len);
+
+/**
+ * Check whether a path component corresponds to a .gitattributes file in NTFS
+ *
+ * @param name the path component to check
+ * @param len the length of `name`
+ */
+extern int git_path_is_ntfs_dotgit_attributes(const char *name, size_t len);
+
+/**
+ * Check whether a path component corresponds to a .gitattributes file in HFS+
+ *
+ * @param name the path component to check
+ * @param len the length of `name`
+ */
+extern int git_path_is_hfs_dotgit_attributes(const char *name, size_t len);
+
+/*
+ * Validate a system file's ownership
+ *
+ * Verify that the file in question is owned by an administrator or system
+ * account, or at least by the current user.
+ *
+ * This function returns 0 if successful. If the file is not owned by any of
+ * these, or any other if there have been problems determining the file
+ * ownership, it returns -1.
+ */
+int git_path_validate_system_file_ownership(const char *path);
 
 #endif

@@ -5,9 +5,9 @@
  * a Linking Exception. For full terms see the included COPYING file.
  */
 
-#include "common.h"
-#include "commit.h"
 #include "tree.h"
+
+#include "commit.h"
 #include "git2/repository.h"
 #include "git2/object.h"
 #include "fileops.h"
@@ -54,7 +54,7 @@ GIT_INLINE(git_filemode_t) normalize_filemode(git_filemode_t filemode)
 static int valid_entry_name(git_repository *repo, const char *filename)
 {
 	return *filename != '\0' &&
-		git_path_isvalid(repo, filename,
+		git_path_isvalid(repo, filename, 0,
 		GIT_PATH_REJECT_TRAVERSAL | GIT_PATH_REJECT_DOT_GIT | GIT_PATH_REJECT_SLASH);
 }
 
@@ -399,21 +399,21 @@ static int tree_error(const char *str, const char *path)
 	return -1;
 }
 
-static int parse_mode(unsigned int *modep, const char *buffer, const char **buffer_out)
+static int parse_mode(uint16_t *mode_out, const char *buffer, size_t buffer_len, const char **buffer_out)
 {
-	unsigned char c;
-	unsigned int mode = 0;
+	int32_t mode;
+	int error;
 
-	if (*buffer == ' ')
+	if (!buffer_len || git__isspace(*buffer))
 		return -1;
 
-	while ((c = *buffer++) != ' ') {
-		if (c < '0' || c > '7')
-			return -1;
-		mode = (mode << 3) + (c - '0');
-	}
-	*modep = mode;
-	*buffer_out = buffer;
+	if ((error = git__strntol32(&mode, buffer, buffer_len, buffer_out, 8)) < 0)
+		return error;
+
+	if (mode < 0 || mode > UINT16_MAX)
+		return -1;
+
+	*mode_out = mode;
 
 	return 0;
 }
@@ -437,19 +437,22 @@ int git_tree__parse(void *_tree, git_odb_object *odb_obj)
 		git_tree_entry *entry;
 		size_t filename_len;
 		const char *nul;
-		unsigned int attr;
+		uint16_t attr;
 
-		if (parse_mode(&attr, buffer, &buffer) < 0 || !buffer)
-			return tree_error("Failed to parse tree. Can't parse filemode", NULL);
+		if (parse_mode(&attr, buffer, buffer_end - buffer, &buffer) < 0 || !buffer)
+			return tree_error("failed to parse tree: can't parse filemode", NULL);
+
+		if (buffer >= buffer_end || (*buffer++) != ' ')
+			return tree_error("failed to parse tree: missing space after filemode", NULL);
 
 		if ((nul = memchr(buffer, 0, buffer_end - buffer)) == NULL)
-			return tree_error("Failed to parse tree. Object is corrupted", NULL);
+			return tree_error("failed to parse tree: object is corrupted", NULL);
 
 		if ((filename_len = nul - buffer) == 0)
-			return tree_error("Failed to parse tree. Can't parse filename", NULL);
+			return tree_error("failed to parse tree: can't parse filename", NULL);
 
 		if ((buffer_end - (nul + 1)) < GIT_OID_RAWSZ)
-			return tree_error("Failed to parse tree. Can't parse OID", NULL);
+			return tree_error("failed to parse tree: can't parse OID", NULL);
 
 		/* Allocate the entry */
 		{
@@ -490,13 +493,17 @@ static int append_entry(
 	git_treebuilder *bld,
 	const char *filename,
 	const git_oid *id,
-	git_filemode_t filemode)
+	git_filemode_t filemode,
+	bool validate)
 {
 	git_tree_entry *entry;
 	int error = 0;
 
-	if (!valid_entry_name(bld->repo, filename))
-		return tree_error("Failed to insert entry. Invalid name for a tree entry", filename);
+	if (validate && !valid_entry_name(bld->repo, filename))
+		return tree_error("failed to insert entry: invalid name for a tree entry", filename);
+
+	if (validate && git_oid_iszero(id))
+		return tree_error("failed to insert entry: invalid null OID for a tree entry", filename);
 
 	entry = alloc_entry(filename, strlen(filename), id);
 	GITERR_CHECK_ALLOC(entry);
@@ -593,12 +600,12 @@ static int write_tree(
 				last_comp = subdir;
 			}
 
-			error = append_entry(bld, last_comp, &sub_oid, S_IFDIR);
+			error = append_entry(bld, last_comp, &sub_oid, S_IFDIR, true);
 			git__free(subdir);
 			if (error < 0)
 				goto on_error;
 		} else {
-			error = append_entry(bld, filename, &entry->id, entry->mode);
+			error = append_entry(bld, filename, &entry->id, entry->mode, true);
 			if (error < 0)
 				goto on_error;
 		}
@@ -696,7 +703,8 @@ int git_treebuilder_new(
 			if (append_entry(
 				bld, entry_src->filename,
 				entry_src->oid,
-				entry_src->attr) < 0)
+				entry_src->attr,
+				false) < 0)
 				goto on_error;
 		}
 	}
@@ -735,14 +743,17 @@ int git_treebuilder_insert(
 	assert(bld && id && filename);
 
 	if (!valid_filemode(filemode))
-		return tree_error("Failed to insert entry. Invalid filemode for file", filename);
+		return tree_error("failed to insert entry: invalid filemode for file", filename);
 
 	if (!valid_entry_name(bld->repo, filename))
-		return tree_error("Failed to insert entry. Invalid name for a tree entry", filename);
+		return tree_error("failed to insert entry: invalid name for a tree entry", filename);
+
+	if (git_oid_iszero(id))
+		return tree_error("failed to insert entry: invalid null OID", filename);
 
 	if (filemode != GIT_FILEMODE_COMMIT &&
 	    !git_object__is_valid(bld->repo, id, otype_from_mode(filemode)))
-		return tree_error("Failed to insert entry; invalid object specified", filename);
+		return tree_error("failed to insert entry: invalid object specified", filename);
 
 	pos = git_strmap_lookup_index(bld->map, filename);
 	if (git_strmap_valid_index(bld->map, pos)) {
@@ -793,7 +804,7 @@ int git_treebuilder_remove(git_treebuilder *bld, const char *filename)
 	git_tree_entry *entry = treebuilder_get(bld, filename);
 
 	if (entry == NULL)
-		return tree_error("Failed to remove entry. File isn't in the tree", filename);
+		return tree_error("failed to remove entry: file isn't in the tree", filename);
 
 	git_strmap_delete(bld->map, filename);
 	git_tree_entry_free(entry);
@@ -946,12 +957,12 @@ int git_tree_entry_bypath(
 			return GIT_ENOTFOUND;
 		}
 
-		/* If there's only a slash left in the path, we 
+		/* If there's only a slash left in the path, we
 		 * return the current entry; otherwise, we keep
 		 * walking down the path */
 		if (path[filename_len + 1] != '\0')
 			break;
-
+		/* fall through */
 	case '\0':
 		/* If there are no more components in the path, return
 		 * this entry */

@@ -5,7 +5,8 @@
  * a Linking Exception. For full terms see the included COPYING file.
  */
 
-#include "common.h"
+#include "submodule.h"
+
 #include "git2/config.h"
 #include "git2/sys/config.h"
 #include "git2/types.h"
@@ -17,7 +18,6 @@
 #include "config_file.h"
 #include "config.h"
 #include "repository.h"
-#include "submodule.h"
 #include "tree.h"
 #include "iterator.h"
 #include "path.h"
@@ -91,7 +91,7 @@ __KHASH_IMPL(
 
 static int submodule_alloc(git_submodule **out, git_repository *repo, const char *name);
 static git_config_backend *open_gitmodules(git_repository *repo, int gitmod);
-static git_config *gitmodules_snapshot(git_repository *repo);
+static int gitmodules_snapshot(git_config **snap, git_repository *repo);
 static int get_url_base(git_buf *url, git_repository *repo);
 static int lookup_head_remote_key(git_buf *remote_key, git_repository *repo);
 static int lookup_default_remote(git_remote **remote, git_repository *repo);
@@ -169,33 +169,53 @@ static void free_submodule_names(git_strmap *names)
  * TODO: for some use-cases, this might need case-folding on a
  * case-insensitive filesystem
  */
-static int load_submodule_names(git_strmap *out, git_config *cfg)
+static int load_submodule_names(git_strmap *out, git_repository *repo, git_config *cfg)
 {
 	const char *key = "submodule\\..*\\.path";
 	git_config_iterator *iter;
 	git_config_entry *entry;
 	git_buf buf = GIT_BUF_INIT;
-	int rval;
+	int rval, isvalid;
 	int error = 0;
 
 	if ((error = git_config_iterator_glob_new(&iter, cfg, key)) < 0)
 		return error;
 
-	while (git_config_next(&entry, iter) == 0) {
+	while ((error = git_config_next(&entry, iter)) == 0) {
 		const char *fdot, *ldot;
 		fdot = strchr(entry->name, '.');
 		ldot = strrchr(entry->name, '.');
 
+		if (git_strmap_exists(out, entry->value)) {
+			giterr_set(GITERR_SUBMODULE,
+				   "duplicated submodule path '%s'", entry->value);
+			error = -1;
+			goto out;
+		}
+
+		git_buf_clear(&buf);
 		git_buf_put(&buf, fdot + 1, ldot - fdot - 1);
+		isvalid = git_submodule_name_is_valid(repo, buf.ptr, 0);
+		if (isvalid < 0) {
+			error = isvalid;
+			goto out;
+		}
+		if (!isvalid)
+			continue;
+
 		git_strmap_insert(out, entry->value, git_buf_detach(&buf), &rval);
 		if (rval < 0) {
 			giterr_set(GITERR_NOMEMORY, "error inserting submodule into hash table");
 			return -1;
 		}
 	}
+	if (error == GIT_ITEROVER)
+		error = 0;
 
+out:
+	git_buf_free(&buf);
 	git_config_iterator_free(iter);
-	return 0;
+	return error;
 }
 
 int git_submodule_lookup(
@@ -208,6 +228,11 @@ int git_submodule_lookup(
 	git_submodule *sm;
 
 	assert(repo && name);
+
+	if (repo->is_bare) {
+		giterr_set(GITERR_SUBMODULE, "cannot get submodules without a working tree");
+		return -1;
+	}
 
 	if (repo->submodule_cache != NULL) {
 		khiter_t pos = git_strmap_lookup_index(repo->submodule_cache, name);
@@ -309,6 +334,28 @@ int git_submodule_lookup(
 	return 0;
 }
 
+int git_submodule_name_is_valid(git_repository *repo, const char *name, int flags)
+{
+	git_buf buf = GIT_BUF_INIT;
+	int error, isvalid;
+
+	if (flags == 0)
+		flags = GIT_PATH_REJECT_FILESYSTEM_DEFAULTS;
+
+	/* Avoid allocating a new string if we can avoid it */
+	if (strchr(name, '\\') != NULL) {
+		if ((error = git_path_normalize_slashes(&buf, name)) < 0)
+			return error;
+	} else {
+		git_buf_attach_notowned(&buf, name, strlen(name));
+	}
+
+	isvalid =  git_path_isvalid(repo, buf.ptr, 0, flags);
+	git_buf_free(&buf);
+
+	return isvalid;
+}
+
 static void submodule_free_dup(void *sm)
 {
 	git_submodule_free(sm);
@@ -354,7 +401,7 @@ static int submodules_from_index(git_strmap *map, git_index *idx, git_config *cf
 	git_strmap *names = 0;
 
 	git_strmap_alloc(&names);
-	if ((error = load_submodule_names(names, cfg)))
+	if ((error = load_submodule_names(names, git_index_owner(idx), cfg)))
 		goto done;
 
 	if ((error = git_iterator_for_index(&i, git_index_owner(idx), idx, NULL)) < 0)
@@ -406,7 +453,7 @@ static int submodules_from_head(git_strmap *map, git_tree *head, git_config *cfg
 	const git_index_entry *entry;
 	git_strmap *names = 0;
 	git_strmap_alloc(&names);
-	if ((error = load_submodule_names(names, cfg)))
+	if ((error = load_submodule_names(names, git_tree_owner(head), cfg)))
 		goto done;
 
 	if ((error = git_iterator_for_tree(&i, head, NULL)) < 0)
@@ -504,8 +551,11 @@ int git_submodule__map(git_repository *repo, git_strmap *map)
 		data.map = map;
 		data.repo = repo;
 
-		if ((mods = gitmodules_snapshot(repo)) == NULL)
+		if ((error = gitmodules_snapshot(&mods, repo)) < 0) {
+			if (error == GIT_ENOTFOUND)
+				error = 0;
 			goto cleanup;
+		}
 
 		data.mods = mods;
 		if ((error = git_config_foreach(
@@ -548,6 +598,11 @@ int git_submodule_foreach(
 	git_submodule *sm;
 	int error;
 	size_t i;
+
+	if (repo->is_bare) {
+		giterr_set(GITERR_SUBMODULE, "cannot get submodules without a working tree");
+		return -1;
+	}
 
 	if ((error = git_strmap_alloc(&submodules)) < 0)
 		return error;
@@ -1492,16 +1547,23 @@ static int submodule_update_head(git_submodule *submodule)
 
 int git_submodule_reload(git_submodule *sm, int force)
 {
-	int error = 0;
+	int error = 0, isvalid;
 	git_config *mods;
 
 	GIT_UNUSED(force);
 
 	assert(sm);
 
+	isvalid = git_submodule_name_is_valid(sm->repo, sm->name, 0);
+	if (isvalid <= 0) {
+		/* This should come with a warning, but we've no API for that */
+		return isvalid;
+	}
+
 	if (!git_repository_is_bare(sm->repo)) {
 		/* refresh config data */
-		mods = gitmodules_snapshot(sm->repo);
+		if ((error = gitmodules_snapshot(&mods, sm->repo)) < 0 && error != GIT_ENOTFOUND)
+			return error;
 		if (mods != NULL) {
 			error = submodule_read_config(sm, mods);
 			git_config_free(mods);
@@ -1751,6 +1813,14 @@ static int get_value(const char **out, git_config *cfg, git_buf *buf, const char
 	return error;
 }
 
+static bool looks_like_command_line_option(const char *s)
+{
+	if (s && s[0] == '-')
+		return true;
+
+	return false;
+}
+
 static int submodule_read_config(git_submodule *sm, git_config *cfg)
 {
 	git_buf key = GIT_BUF_INIT;
@@ -1764,24 +1834,31 @@ static int submodule_read_config(git_submodule *sm, git_config *cfg)
 
 	if ((error = get_value(&value, cfg, &key, sm->name, "path")) == 0) {
 		in_config = 1;
+		/* We would warn here if we had that API */
+		if (!looks_like_command_line_option(value)) {
 	/*
 	 * TODO: if case insensitive filesystem, then the following strcmp
 	 * should be strcasecmp
 	 */
-		if (strcmp(sm->name, value) != 0) {
-			if (sm->path != sm->name)
-				git__free(sm->path);
-			sm->path = git__strdup(value);
-			GITERR_CHECK_ALLOC(sm->path);
+			if (strcmp(sm->name, value) != 0) {
+				if (sm->path != sm->name)
+					git__free(sm->path);
+				sm->path = git__strdup(value);
+				GITERR_CHECK_ALLOC(sm->path);
+			}
+
 		}
 	} else if (error != GIT_ENOTFOUND) {
 		goto cleanup;
 	}
 
 	if ((error = get_value(&value, cfg, &key, sm->name, "url")) == 0) {
-		in_config = 1;
-		sm->url = git__strdup(value);
-		GITERR_CHECK_ALLOC(sm->url);
+		/* We would warn here if we had that API */
+		if (!looks_like_command_line_option(value)) {
+			in_config = 1;
+			sm->url = git__strdup(value);
+			GITERR_CHECK_ALLOC(sm->url);
+		}
 	} else if (error != GIT_ENOTFOUND) {
 		goto cleanup;
 	}
@@ -1839,7 +1916,7 @@ static int submodule_load_each(const git_config_entry *entry, void *payload)
 	git_strmap *map = data->map;
 	git_buf name = GIT_BUF_INIT;
 	git_submodule *sm;
-	int error;
+	int error, isvalid;
 
 	if (git__prefixcmp(entry->name, "submodule.") != 0)
 		return 0;
@@ -1854,6 +1931,12 @@ static int submodule_load_each(const git_config_entry *entry, void *payload)
 
 	if ((error = git_buf_set(&name, namestart, property - namestart -1)) < 0)
 		return error;
+
+	isvalid = git_submodule_name_is_valid(data->repo, name.ptr, 0);
+	if (isvalid <= 0) {
+		error = isvalid;
+		goto done;
+	}
 
 	/*
 	 * Now that we have the submodule's name, we can use that to
@@ -1905,32 +1988,37 @@ static int submodule_load_from_wd_lite(git_submodule *sm)
 }
 
 /**
- * Returns a snapshot of $WORK_TREE/.gitmodules.
+ * Requests a snapshot of $WORK_TREE/.gitmodules.
  *
- * We ignore any errors and just pretend the file isn't there.
+ * Returns GIT_ENOTFOUND in case no .gitmodules file exist
  */
-static git_config *gitmodules_snapshot(git_repository *repo)
+static int gitmodules_snapshot(git_config **snap, git_repository *repo)
 {
 	const char *workdir = git_repository_workdir(repo);
-	git_config *mods = NULL, *snap = NULL;
+	git_config *mods = NULL;
 	git_buf path = GIT_BUF_INIT;
+	int error;
 
-	if (workdir != NULL) {
-		if (git_buf_joinpath(&path, workdir, GIT_MODULES_FILE) != 0)
-			return NULL;
+	if (!workdir)
+		return GIT_ENOTFOUND;
 
-		if (git_config_open_ondisk(&mods, path.ptr) < 0)
-			mods = NULL;
-	}
+	if ((error = git_buf_joinpath(&path, workdir, GIT_MODULES_FILE)) < 0)
+		return error;
 
+	if ((error = git_config_open_ondisk(&mods, path.ptr)) < 0)
+		goto cleanup;
+
+	if ((error = git_config_snapshot(snap, mods)) < 0)
+		goto cleanup;
+
+	error = 0;
+
+cleanup:
+	if (mods)
+		git_config_free(mods);
 	git_buf_free(&path);
 
-	if (mods) {
-		git_config_snapshot(&snap, mods);
-		git_config_free(mods);
-	}
-
-	return snap;
+	return error;
 }
 
 static git_config_backend *open_gitmodules(
@@ -1950,7 +2038,7 @@ static git_config_backend *open_gitmodules(
 			if (git_config_file__ondisk(&mods, path.ptr) < 0)
 				mods = NULL;
 			/* open should only fail here if the file is malformed */
-			else if (git_config_file_open(mods, GIT_CONFIG_LEVEL_LOCAL) < 0) {
+			else if (git_config_file_open(mods, GIT_CONFIG_LEVEL_LOCAL, repo) < 0) {
 				git_config_file_free(mods);
 				mods = NULL;
 			}
