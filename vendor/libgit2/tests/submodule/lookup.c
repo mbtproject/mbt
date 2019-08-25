@@ -11,6 +11,11 @@ void test_submodule_lookup__initialize(void)
 	g_repo = setup_fixture_submod2();
 }
 
+void test_submodule_lookup__cleanup(void)
+{
+	cl_git_sandbox_cleanup();
+}
+
 void test_submodule_lookup__simple_lookup(void)
 {
 	assert_submodule_exists(g_repo, "sm_unchanged");
@@ -125,6 +130,27 @@ void test_submodule_lookup__foreach(void)
 
 	cl_git_pass(git_submodule_foreach(g_repo, sm_lookup_cb, &data));
 	cl_assert_equal_i(8, data.count);
+}
+
+static int foreach_cb(git_submodule *sm, const char *name, void *payload)
+{
+	GIT_UNUSED(sm);
+	GIT_UNUSED(name);
+	GIT_UNUSED(payload);
+	return 0;
+}
+
+void test_submodule_lookup__duplicated_path(void)
+{
+	cl_git_rewritefile("submod2/.gitmodules",
+			   "[submodule \"sm1\"]\n"
+			   "    path = duplicated-path\n"
+			   "    url = sm1\n"
+			   "[submodule \"sm2\"]\n"
+			   "    path = duplicated-path\n"
+			   "    url = sm2\n");
+
+	cl_git_fail(git_submodule_foreach(g_repo, foreach_cb, NULL));
 }
 
 void test_submodule_lookup__lookup_even_with_unborn_head(void)
@@ -389,7 +415,8 @@ void test_submodule_lookup__renamed(void)
 	cl_assert_equal_i(8, data.count);
 }
 
-void test_submodule_lookup_cached(void) {
+void test_submodule_lookup__cached(void)
+{
 	git_submodule *sm;
 	git_submodule *sm2;
 	/* See that the simple tests still pass. */
@@ -412,4 +439,38 @@ void test_submodule_lookup_cached(void) {
 	cl_assert(sm != sm2);
 	git_submodule_free(sm);
 	git_submodule_free(sm2);
+}
+
+void test_submodule_lookup__lookup_in_bare_repository_fails(void)
+{
+	git_submodule *sm;
+
+	cl_git_sandbox_cleanup();
+	g_repo = cl_git_sandbox_init("submodules.git");
+
+	cl_git_fail(git_submodule_lookup(&sm, g_repo, "nonexisting"));
+}
+
+void test_submodule_lookup__foreach_in_bare_repository_fails(void)
+{
+	cl_git_sandbox_cleanup();
+	g_repo = cl_git_sandbox_init("submodules.git");
+
+	cl_git_fail(git_submodule_foreach(g_repo, foreach_cb, NULL));
+}
+
+void test_submodule_lookup__fail_invalid_gitmodules(void)
+{
+	git_submodule *sm;
+	sm_lookup_data data;
+	memset(&data, 0, sizeof(data));
+
+	cl_git_rewritefile("submod2/.gitmodules",
+			   "[submodule \"Test_App\"\n"
+			   "    path = Test_App\n"
+			   "    url = ../Test_App\n");
+
+	cl_git_fail(git_submodule_lookup(&sm, g_repo, "Test_App"));
+
+	cl_git_fail(git_submodule_foreach(g_repo, sm_lookup_cb, &data));
 }

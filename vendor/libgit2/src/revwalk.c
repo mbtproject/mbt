@@ -5,12 +5,12 @@
  * a Linking Exception. For full terms see the included COPYING file.
  */
 
-#include "common.h"
+#include "revwalk.h"
+
 #include "commit.h"
 #include "odb.h"
 #include "pool.h"
 
-#include "revwalk.h"
 #include "git2/revparse.h"
 #include "merge.h"
 #include "vector.h"
@@ -375,20 +375,6 @@ static int add_parents_to_list(git_revwalk *walk, git_commit_list_node *commit, 
 	return 0;
 }
 
-static int everybody_uninteresting(git_commit_list *orig)
-{
-	git_commit_list *list = orig;
-
-	while (list) {
-		git_commit_list_node *commit = list->item;
-		list = list->next;
-		if (!commit->uninteresting)
-			return 0;
-	}
-
-	return 1;
-}
-
 /* How many unintersting commits we want to look at after we run out of interesting ones */
 #define SLOP 5
 
@@ -399,15 +385,20 @@ static int still_interesting(git_commit_list *list, int64_t time, int slop)
 		return 0;
 
 	/*
-	 * If the destination list has commits with an earlier date
-	 * than our source we want to continue looking.
+	 * If the destination list has commits with an earlier date than our
+	 * source, we want to reset the slop counter as we're not done.
 	 */
 	if (time <= list->item->time)
 		return SLOP;
 
-	/* If we find interesting commits, we reset the slop count */
-	if (!everybody_uninteresting(list))
-		return SLOP;
+	for (; list; list = list->next) {
+		/*
+		 * If the destination list still contains interesting commits we
+		 * want to continue looking.
+		 */
+		if (!list->item->uninteresting || list->item->time > time)
+			return SLOP;
+	}
 
 	/* Everything's uninteresting, reduce the count */
 	return slop - 1;
@@ -416,7 +407,7 @@ static int still_interesting(git_commit_list *list, int64_t time, int slop)
 static int limit_list(git_commit_list **out, git_revwalk *walk, git_commit_list *commits)
 {
 	int error, slop = SLOP;
-	int64_t time = ~0ll;
+	int64_t time = INT64_MAX;
 	git_commit_list *list = commits;
 	git_commit_list *newlist = NULL;
 	git_commit_list **p = &newlist;
@@ -537,7 +528,7 @@ cleanup:
 
 static int prepare_walk(git_revwalk *walk)
 {
-	int error;
+	int error = 0;
 	git_commit_list *list, *commits = NULL;
 	git_commit_list_node *next;
 

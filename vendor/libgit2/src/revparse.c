@@ -5,9 +5,10 @@
  * a Linking Exception. For full terms see the included COPYING file.
  */
 
+#include "common.h"
+
 #include <assert.h>
 
-#include "common.h"
 #include "buffer.h"
 #include "tree.h"
 #include "refdb.h"
@@ -127,7 +128,8 @@ static int try_parse_numeric(int *n, const char *curly_braces_content)
 	int32_t content;
 	const char *end_ptr;
 
-	if (git__strtol32(&content, curly_braces_content, &end_ptr, 10) < 0)
+	if (git__strntol32(&content, curly_braces_content, strlen(curly_braces_content),
+			   &end_ptr, 10) < 0)
 		return -1;
 
 	if (*end_ptr != '\0')
@@ -577,7 +579,7 @@ static int extract_how_many(int *n, const char *spec, size_t *pos)
 		} while (spec[(*pos)] == kind && kind == '~');
 
 		if (git__isdigit(spec[*pos])) {
-			if (git__strtol32(&parsed, spec + *pos, &end_ptr, 10) < 0)
+			if (git__strntol32(&parsed, spec + *pos, strlen(spec + *pos), &end_ptr, 10) < 0)
 				return GIT_EINVALIDSPEC;
 
 			accumulated += (parsed - 1);
@@ -769,7 +771,6 @@ int revparse__ext(
 		}
 
 		case '@':
-		{
 			if (spec[pos+1] == '{') {
 				git_object *temp_object = NULL;
 
@@ -785,10 +786,8 @@ int revparse__ext(
 				if (temp_object != NULL)
 					base_rev = temp_object;
 				break;
-			} else {
-				/* Fall through */
 			}
-		}
+			/* fall through */
 
 		default:
 			if ((error = ensure_left_hand_identifier_is_not_known_yet(base_rev, reference)) < 0)

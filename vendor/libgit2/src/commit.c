@@ -5,13 +5,14 @@
  * a Linking Exception. For full terms see the included COPYING file.
  */
 
+#include "commit.h"
+
 #include "git2/common.h"
 #include "git2/object.h"
 #include "git2/repository.h"
 #include "git2/signature.h"
 #include "git2/sys/commit.h"
 
-#include "common.h"
 #include "odb.h"
 #include "commit.h"
 #include "signature.h"
@@ -418,7 +419,7 @@ int git_commit__parse(void *_commit, git_odb_object *odb_obj)
 		return -1;
 
 	/* Some tools create multiple author fields, ignore the extra ones */
-	while ((size_t)(buffer_end - buffer) >= strlen("author ") && !git__prefixcmp(buffer, "author ")) {
+	while (!git__prefixncmp(buffer, buffer_end - buffer, "author ")) {
 		if (git_signature__parse(&dummy_sig, &buffer, buffer_end, "author ", '\n') < 0)
 			return -1;
 
@@ -442,7 +443,7 @@ int git_commit__parse(void *_commit, git_odb_object *odb_obj)
 		while (eoln < buffer_end && *eoln != '\n')
 			++eoln;
 
-		if (git__prefixcmp(buffer, "encoding ") == 0) {
+		if (git__prefixncmp(buffer, buffer_end - buffer, "encoding ") == 0) {
 			buffer += strlen("encoding ");
 
 			commit->message_encoding = git__strndup(buffer, eoln - buffer);

@@ -5,14 +5,13 @@
  * a Linking Exception. For full terms see the included COPYING file.
  */
 
-#include "common.h"
+#include "worktree.h"
 
 #include "git2/branch.h"
 #include "git2/commit.h"
 #include "git2/worktree.h"
 
 #include "repository.h"
-#include "worktree.h"
 
 static bool is_worktree_dir(const char *dir)
 {
@@ -132,7 +131,7 @@ static int open_worktree_dir(git_worktree **out, const char *parent, const char 
 		goto out;
 	}
 
-	if ((wt = git__calloc(1, sizeof(struct git_repository))) == NULL) {
+	if ((wt = git__calloc(1, sizeof(*wt))) == NULL) {
 		error = -1;
 		goto out;
 	}
@@ -140,7 +139,7 @@ static int open_worktree_dir(git_worktree **out, const char *parent, const char 
 	if ((wt->name = git__strdup(name)) == NULL
 	    || (wt->commondir_path = git_worktree__read_link(dir, "commondir")) == NULL
 	    || (wt->gitlink_path = git_worktree__read_link(dir, "gitdir")) == NULL
-	    || (wt->parent_path = git__strdup(parent)) == NULL) {
+	    || (parent && (wt->parent_path = git__strdup(parent)) == NULL)) {
 		error = -1;
 		goto out;
 	}
@@ -384,7 +383,7 @@ out:
 	return err;
 }
 
-int git_worktree_lock(git_worktree *wt, char *creason)
+int git_worktree_lock(git_worktree *wt, const char *reason)
 {
 	git_buf buf = GIT_BUF_INIT, path = GIT_BUF_INIT;
 	int err;
@@ -397,8 +396,8 @@ int git_worktree_lock(git_worktree *wt, char *creason)
 	if ((err = git_buf_joinpath(&path, wt->gitdir_path, "locked")) < 0)
 		goto out;
 
-	if (creason)
-		git_buf_attach_notowned(&buf, creason, strlen(creason));
+	if (reason)
+		git_buf_attach_notowned(&buf, reason, strlen(reason));
 
 	if ((err = git_futils_writebuffer(&buf, path.ptr, O_CREAT|O_EXCL|O_WRONLY, 0644)) < 0)
 		goto out;
@@ -418,7 +417,7 @@ int git_worktree_unlock(git_worktree *wt)
 	assert(wt);
 
 	if (!git_worktree_is_locked(NULL, wt))
-		return 0;
+		return 1;
 
 	if (git_buf_joinpath(&path, wt->gitdir_path, "locked") < 0)
 		return -1;
