@@ -37,7 +37,7 @@ export CGO_LDFLAGS="$(pkg-config --libs --static $LIBGIT2_PATH/build/libgit2.pc)
 cd $DIR
 
 OUT="mbt_${OS}_${ARCH}"
-VERSION=$TRAVIS_TAG
+VERSION=$VERSION
 if [ -z $VERSION ]; then
   OUT="mbt_dev_${OS}_${ARCH}"
   if [ ! -z $TRAVIS_COMMIT ]; then
