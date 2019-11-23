@@ -3,7 +3,7 @@
 # Upload binary artifacts when a new release is made.
 #
 
-set -ex
+set -e
 
 # Ensure that the GITHUB_TOKEN secret is included
 if [[ -z "$GITHUB_TOKEN" ]]; then
