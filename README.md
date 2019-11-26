@@ -37,8 +37,8 @@ chmod +x /usr/local/bin/mbt
 
 |OS               |Download|
 |-----------------|--------|
-|darwin x86_64    |[![Download](https://api.bintray.com/packages/buddyspike/bin/mbt_darwin_x86_64/images/download.svg)](https://bintray.com/buddyspike/bin/mbt_darwin_x86_64/_latestVersion)|
-|linux x86_64     |[![Download](https://api.bintray.com/packages/buddyspike/bin/mbt_linux_x86_64/images/download.svg)](https://bintray.com/buddyspike/bin/mbt_linux_x86_64/_latestVersion)|
+|darwin x86_64    |[![Download](https://img.shields.io/github/v/release/mbtproject/mbt?sort=semver)](https://github.com/mbtproject/mbt/releases/latest/download/mbt_darwin_x86_64)|
+|linux x86_64     |[![Download](https://img.shields.io/github/v/release/mbtproject/mbt?sort=semver)](https://bintray.com/buddyspike/bin/mbt_linux_x86_64/_latestVersion)|
 |windows          |[![Download](https://api.bintray.com/packages/buddyspike/bin/mbt_windows_x86/images/download.svg)](https://bintray.com/buddyspike/bin/mbt_windows_x86/_latestVersion)|
 
 ### Dev Channel
