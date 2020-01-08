@@ -44,10 +44,10 @@ build: Dictionary of build commands specific to a platform (optional)
 dependencies: An array of modules that this module's build depend on (optional)
 fileDependencies: An array of file names that this module's build depend on (optional)
 commands: Optional dictionary of custom commands (optional)
-  name: Custom command name (required)
-  cmd: Command name (required)
-  args: Array of arguments (optional)
-	os: Array of os identifiers where this command should run (optional)
+  name:
+    cmd: Command name (required)
+    args: Array of arguments (optional)
+    os: Array of os identifiers where this command should run (optional)
 properties: Custom dictionary to hold any module specific information (optional)
 {{c ""}}
 
