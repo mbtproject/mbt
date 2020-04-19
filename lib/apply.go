@@ -31,11 +31,12 @@ import (
 
 // TemplateData is the data passed into template.
 type TemplateData struct {
-	Args        map[string]interface{}
-	Sha         string
-	Env         map[string]string
-	Modules     map[string]*Module
-	ModulesList []*Module
+	Args           map[string]interface{}
+	Sha            string
+	Env            map[string]string
+	Modules        map[string]*Module
+	ModulesList    []*Module
+	OrderedModules []*Module
 }
 
 // KVP is a key value pair.
@@ -288,10 +289,11 @@ func processTemplate(buffer []byte, m *Manifest, output io.Writer) error {
 	}
 
 	data := &TemplateData{
-		Sha:         m.Sha,
-		Env:         getEnvMap(),
-		Modules:     m.Modules.indexByName(),
-		ModulesList: sortedModules,
+		Sha:            m.Sha,
+		Env:            getEnvMap(),
+		Modules:        m.Modules.indexByName(),
+		ModulesList:    sortedModules,
+		OrderedModules: m.Modules,
 	}
 
 	return temp.Execute(output, data)
