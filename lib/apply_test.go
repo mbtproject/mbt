@@ -388,3 +388,25 @@ func TestTheOrderOfModulesList(t *testing.T) {
 
 	assert.Equal(t, "app-a,app-b,app-c,\n", output.String())
 }
+
+func TestTheOrderOfOrderedModulesList(t *testing.T) {
+	clean()
+	repo := NewTestRepo(t, ".tmp/repo")
+
+	check(t, repo.InitModuleWithOptions("app-a", &Spec{Name: "app-a", Dependencies: []string{"app-b"}}))
+	check(t, repo.InitModuleWithOptions("app-b", &Spec{Name: "app-b", Dependencies: []string{"app-c"}}))
+	check(t, repo.InitModule("app-c"))
+
+	check(t, repo.WriteContent("template.tmpl", `
+{{- range $i, $mod := .OrderedModules}}
+{{- $mod.Name }},
+{{- end}}
+`))
+
+	check(t, repo.Commit("first"))
+
+	output := new(bytes.Buffer)
+	check(t, NewWorld(t, ".tmp/repo").System.ApplyHead("template.tmpl", output))
+
+	assert.Equal(t, "app-c,app-b,app-a,\n", output.String())
+}
