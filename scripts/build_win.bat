@@ -1,5 +1,5 @@
 SET MBT=%GOPATH%\src\github.com\mbtproject\mbt
-SET LIBGIT2_PATH=%MBT%\vendor\libgit2
+SET LIBGIT2_PATH=%MBT%\libgit2
 SET OS=windows
 SET ARCH=x86
 set OUT="mbt.exe"
