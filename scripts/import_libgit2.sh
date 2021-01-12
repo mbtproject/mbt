@@ -8,8 +8,8 @@
 set -e
 
 DIR="$(pwd)"
-GIT2GO_PATH=vendor/github.com/libgit2/git2go
-LIBGIT2_PATH=vendor/libgit2
+GIT2GO_PATH="$GOPATH/pkg/mod/github.com/libgit2/git2go"
+LIBGIT2_PATH="$GOPATH/pkg/mod/libgit2"
 GIT2GO_VERSION="v28.8.6"
 LIBGIT2_VERSION="v1.1.0"
 
