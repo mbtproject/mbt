@@ -1,11 +1,14 @@
 SET MBT=%GOPATH%\src\github.com\mbtproject\mbt
-SET GIT2GO_PATH=%MBT%\vendor\github.com\libgit2\git2go
-SET LIBGIT2_PATH=%MBT%\vendor\libgit2
+SET GIT2GO_PATH=%GOPATH%\pkg\mod\github.com\libgit2\git2go
+SET LIBGIT2_PATH=%GOPATH%\pkg\mod\libgit2
 SET OS=windows
 SET ARCH=x86
 set OUT="mbt.exe"
 
 go version
+
+cd %MBT%
+go mod download
 
 cd %LIBGIT2_PATH%
 mkdir install
