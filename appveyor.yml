@@ -1,4 +1,4 @@
-version: '{build}'
+version: "{build}"
 image:
   - Visual Studio 2015
 environment:
@@ -12,15 +12,15 @@ before_build:
   - cmd: curl -L -o %SYSTEMDRIVE%\downloads\pkg-config_0.26-1_win32.zip http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/pkg-config_0.26-1_win32.zip
   - cmd: curl -L -o %SYSTEMDRIVE%\downloads\glib_2.28.8-1_win32.zip http://ftp.gnome.org/pub/gnome/binaries/win32/glib/2.28/glib_2.28.8-1_win32.zip
   - cmd: curl -L -o %SYSTEMDRIVE%\downloads\gettext-runtime_0.18.1.1-2_win32.zip http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/gettext-runtime_0.18.1.1-2_win32.zip
-  - cmd: curl -L -o %SYSTEMDRIVE%\downloads\go.zip https://dl.google.com/go/go1.12.4.windows-386.zip
+  - cmd: curl -L -o %SYSTEMDRIVE%\downloads\go.zip https://golang.org/dl/go1.15.6.windows-386.zip
   - ps: Expand-Archive $ENV:SYSTEMDRIVE\downloads\pkg-config_0.26-1_win32.zip -DestinationPath $ENV:SYSTEMDRIVE/ -Force
-  - ps: Expand-Archive $ENV:SYSTEMDRIVE\downloads\glib_2.28.8-1_win32.zip -DestinationPath $ENV:SYSTEMDRIVE/ -Force 
-  - ps: Expand-Archive $ENV:SYSTEMDRIVE\downloads\gettext-runtime_0.18.1.1-2_win32.zip -DestinationPath $ENV:SYSTEMDRIVE/ -Force  
-  - ps: Expand-Archive $ENV:SYSTEMDRIVE\downloads\go.zip -DestinationPath $ENV:SYSTEMDRIVE/go386/ -Force  
+  - ps: Expand-Archive $ENV:SYSTEMDRIVE\downloads\glib_2.28.8-1_win32.zip -DestinationPath $ENV:SYSTEMDRIVE/ -Force
+  - ps: Expand-Archive $ENV:SYSTEMDRIVE\downloads\gettext-runtime_0.18.1.1-2_win32.zip -DestinationPath $ENV:SYSTEMDRIVE/ -Force
+  - ps: Expand-Archive $ENV:SYSTEMDRIVE\downloads\go.zip -DestinationPath $ENV:SYSTEMDRIVE/go386/ -Force
   - cmd: SET GOROOT=%SYSTEMDRIVE%\go386\go
   - cmd: SET GOPATH=%SYSTEMDRIVE%\gopath
   - cmd: SET PATH=%SYSTEMDRIVE%\bin;%SYSTEMDRIVE%\MinGW\bin;%SYSTEMDRIVE%\go386\go\bin;%PATH%
-build_script: 
+build_script:
   - cmd: ./scripts/build_win.bat
   - ps: ./scripts/appveyor_publish.ps1
 artifacts:
