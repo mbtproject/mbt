@@ -3,7 +3,9 @@
 set -e
 
 DIR=$(pwd)
-LIBGIT2_PATH=$DIR/vendor/libgit2
+LIBGIT2_PATH=$DIR/libgit2
+
+mkdir -p $LIBGIT2_PATH
 
 cd $LIBGIT2_PATH &&
 mkdir -p install/lib &&

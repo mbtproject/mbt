@@ -1,18 +1,13 @@
 SET MBT=%GOPATH%\src\github.com\mbtproject\mbt
-SET GIT2GO_PATH=%GOPATH%\pkg\mod\github.com\libgit2\git2go
-SET LIBGIT2_PATH=%GOPATH%\pkg\mod\libgit2
+SET LIBGIT2_PATH=%MBT%\vendor\libgit2
 SET OS=windows
 SET ARCH=x86
 set OUT="mbt.exe"
 
 go version
 
-cd %MBT%
-go mod download
-
 cd %LIBGIT2_PATH%
-mkdir install
-mkdir install/lib
+mkdir -p install/lib
 mkdir build
 cd build
 cmake -DTHREADSAFE=ON -DBUILD_CLAR=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_C_FLAGS=-fPIC -DCMAKE_INSTALL_PREFIX=../install -DUSE_SSH=OFF -DCURL=OFF ..

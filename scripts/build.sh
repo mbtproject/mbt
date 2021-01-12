@@ -17,7 +17,7 @@ lint() {
 }
 
 DIR=$(pwd)
-LIBGIT2_PATH=$DIR/vendor/libgit2
+LIBGIT2_PATH=$DIR/libgit2
 OS=$(uname -s | awk '{print tolower($0)}')
 ARCH=$(uname -m)
 
