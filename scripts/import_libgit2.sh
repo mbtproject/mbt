@@ -10,8 +10,8 @@ set -e
 DIR="$(pwd)"
 GIT2GO_PATH=vendor/github.com/libgit2/git2go
 LIBGIT2_PATH=vendor/libgit2
-GIT2GO_VERSION="v27"
-LIBGIT2_VERSION="v0.27.9"
+GIT2GO_VERSION="v28.8.6"
+LIBGIT2_VERSION="v1.1.0"
 
 
 if [ -d $LIBGIT2_PATH ]; then
