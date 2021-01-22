@@ -55,18 +55,18 @@ make restore
 lint *.go ./e ./dtrace ./trie ./intercept ./lib
 
 # Run tests
-go test ./e -v -covermode=count
-go test ./dtrace -v -covermode=count
-go test ./trie -v -covermode=count
-go test ./intercept -v -covermode=count
-go test ./graph -v -covermode=count
-go test ./utils -v -covermode=count
-go test ./lib -v -covermode=count -coverprofile=coverage.out
+go test -tags static,system_libgit2 ./e -v -covermode=count
+go test -tags static,system_libgit2 ./dtrace -v -covermode=count
+go test -tags static,system_libgit2 ./trie -v -covermode=count
+go test -tags static,system_libgit2 ./intercept -v -covermode=count
+go test -tags static,system_libgit2 ./graph -v -covermode=count
+go test -tags static,system_libgit2 ./utils -v -covermode=count
+go test -tags static,system_libgit2 ./lib -v -covermode=count -coverprofile=coverage.out
 if [ ! -z $COVERALLS_TOKEN ] && [ -f ./coverage.out ]; then
   $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
 fi
 
-go build -o "build/${OUT}"
+go build -tags static,system_libgit2 -o "build/${OUT}"
 shasum -a 1 -p "build/${OUT}" | cut -d ' ' -f 1 > "build/${OUT}.sha1"
 
 # Run go vet (this should happen after the build)
