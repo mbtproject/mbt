@@ -76,16 +76,12 @@ However, the specifics can be found in our CI scripts (`appveyor.yml` and `build
 
 ## In alpine
 
-exising `mbt` binary in release does not work in alpine becuase of `glibc` so compiled new one in alpine and if you want to use it...
+exising `mbt` binary in release does not work in alpine becuase of `glibc` so compiled new one in alpine, for alpine.
 
-```Dockerfile
-FROM improwised/mbt:0-23-0-alpine AS MBT_ALPINE
-
-FROM <alpine>
-# mbt required libgit2-dev 0.27
-RUN apk add --no-cache -X http://dl-cdn.alpinelinux.org/alpine/v3.9/main libgit2-dev=0.27.7-r0
-COPY --from=MBT_ALPINE /usr/bin/mbt /usr/bin/mbt
-RUN mbt version
+```sh
+apk add --no-cache -X http://dl-cdn.alpinelinux.org/alpine/v3.9/main libgit2-dev=0.27.7-r0
+curl -L -o /usr/local/bin/mbt https://github.com/pratikbalar/mbt/releases/download/v0.23.0/mbt_linux_x86_64
+chmod +x /usr/local/bin/mbt
 
 ```
 
