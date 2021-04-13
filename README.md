@@ -67,12 +67,27 @@ chmod +x /usr/local/bin/mbt
 
 ### Windows
 
-Local builds on Windows is not currently supported. 
+Local builds on Windows is not currently supported.
 However, the specifics can be found in our CI scripts (`appveyor.yml` and `build_win.bat`)
 
 ## Demo
 
 [![asciicast](https://asciinema.org/a/KJxXNgrTs9KZbVV4GYNN5DScC.png)](https://asciinema.org/a/KJxXNgrTs9KZbVV4GYNN5DScC)
+
+## In alpine
+
+exising `mbt` binary in release does not work in alpine becuase of `glibc` so compiled new one in alpine and if you want to use it...
+
+```Dockerfile
+FROM improwised/mbt:0-23-0-alpine AS MBT_ALPINE
+
+FROM <alpine>
+# mbt required libgit2-dev 0.27
+RUN apk add --no-cache -X http://dl-cdn.alpinelinux.org/alpine/v3.9/main libgit2-dev=0.27.7-r0
+COPY --from=MBT_ALPINE /usr/bin/mbt /usr/bin/mbt
+RUN mbt version
+
+```
 
 ## Credits
 
