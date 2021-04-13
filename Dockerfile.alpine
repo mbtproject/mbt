@@ -1,8 +1,9 @@
 # Build MBT
 FROM golang:1.15-alpine AS MBT_ALPINE
 
-RUN apk add --no-cache -X http://dl-cdn.alpinelinux.org/alpine/v3.9/main libgit2-dev=0.27.7-r0 && \
-    apk update && apk upgrade && apk add --no-cache bash git openssh alpine-sdk cmake perl-utils
+RUN apk update && apk upgrade && \
+    apk add --no-cache bash git openssh alpine-sdk cmake perl-utils && \
+    apk add --no-cache -X http://dl-cdn.alpinelinux.org/alpine/v3.9/main libgit2-dev=0.27.7-r0
 RUN go get -v github.com/mbtproject/mbt
 RUN cd src/github.com/mbtproject/mbt/ && \
     make install
