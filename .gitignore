@@ -5,7 +5,6 @@
 tmp/
 repo/
 build/
-vendor/libgit2/build/
-vendor/libgit2/install/
+libgit2/
 
 .idea/

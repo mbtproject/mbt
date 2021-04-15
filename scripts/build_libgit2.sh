@@ -3,12 +3,20 @@
 set -e
 
 DIR=$(pwd)
-LIBGIT2_PATH=$DIR/vendor/libgit2
+LIBGIT2_PATH=$DIR/libgit2
 
-cd $LIBGIT2_PATH &&
-mkdir -p install/lib &&
-mkdir -p build &&
-cd build &&
+# First ensure that libgit2 source tree is available
+if [ ! -d libgit2 ]
+then
+    ./scripts/import_libgit2.sh
+fi
+
+mkdir -p $LIBGIT2_PATH
+
+cd $LIBGIT2_PATH
+mkdir -p install/lib
+mkdir -p build
+cd build
 cmake -DTHREADSAFE=ON \
       -DBUILD_CLAR=OFF \
       -DBUILD_SHARED_LIBS=OFF \
@@ -17,9 +25,9 @@ cmake -DTHREADSAFE=ON \
       -DCMAKE_INSTALL_PREFIX=../install \
       -DUSE_SSH=OFF \
       -DCURL=OFF \
-      .. &&
+      ..
 
-cmake --build . &&
-make -j2 install &&
+cmake --build .
+make -j2 install
 
 cd $DIR

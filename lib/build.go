@@ -18,7 +18,7 @@ package lib
 import (
 	"runtime"
 
-	git "github.com/libgit2/git2go"
+	git "github.com/libgit2/git2go/v28"
 	"github.com/mbtproject/mbt/e"
 )
 

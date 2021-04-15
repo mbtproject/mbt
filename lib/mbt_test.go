@@ -25,7 +25,7 @@ import (
 	"time"
 
 	yaml "github.com/go-yaml/yaml"
-	git "github.com/libgit2/git2go"
+	git "github.com/libgit2/git2go/v28"
 	"github.com/mbtproject/mbt/e"
 	"github.com/mbtproject/mbt/intercept"
 )
