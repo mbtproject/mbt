@@ -1,50 +1,307 @@
-name: Deploy Release
+name: CI
 
 on:
-  release:
-    types: 
-    - created 
+  push:
+    branches: [main]
+  pull_request:
 
 jobs:
-  buildAndDeploy:
+  test-deploy:
+    name: Test and deploy
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: 
-          - ubuntu-18.04
-          - macos-latest
+        go: [1.16]
+        os: [ubuntu-latest, macos-latest]
+        upload-coverage: [true]
         include:
-          - os: ubuntu-18.04
-            artifact_name: mbt_linux_x86_64
-          - os: macos-latest
-            artifact_name: mbt_darwin_x86_64
+          - go: 1.16
+            os: windows-latest
+            upload-coverage: false
+
     steps:
-    - uses: actions/checkout@master
-      with:
-        path: ./src
+      - uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
 
-    - uses: actions/setup-go@v1
-      with:
-        go-version: '1.12.x'
+      - name: Build for Linux/macOS x86_64
+        if: startsWith(matrix.os, 'windows-') != true
+        run: make build
 
-    - name: Install pkg-config
-      run: |
-        if [ "$RUNNER_OS" == "macOS" ]; then
-          brew install pkg-config
-        fi
+      - name: Build for macOS arm64
+        if: startsWith(matrix.os, 'macos-') == true
+        run: make build
 
-    - name: Build MBT
-      env:
-        GOPATH: ${{ github.workspace }}/..
-        GOBIN: ${{ github.workspace }}/../bin
-      run: |
-        # Get the release version
-        export VERSION=$(jq --raw-output '.release.id' "$GITHUB_EVENT_PATH") 
-        make build;
+      - name: Build for Windows
+        if: startsWith(matrix.os, 'windows-')
+        run: |
+          mkdir %SYSTEMDRIVE%\downloads
+          mkdir %SYSTEMDRIVE%\go386
+          curl -L -o %SYSTEMDRIVE%\downloads\pkg-config_0.26-1_win32.zip http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/pkg-config_0.26-1_win32.zip
+          curl -L -o %SYSTEMDRIVE%\downloads\glib_2.28.8-1_win32.zip http://ftp.gnome.org/pub/gnome/binaries/win32/glib/2.28/glib_2.28.8-1_win32.zip
+          curl -L -o %SYSTEMDRIVE%\downloads\gettext-runtime_0.18.1.1-2_win32.zip http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/gettext-runtime_0.18.1.1-2_win32.zip
+          curl -L -o %SYSTEMDRIVE%\downloads\go.zip https://golang.org/dl/go1.15.6.windows-386.zip
+  #     - name: Run test cases using SQLite provider
+  #       run: go test -v -p 1 -timeout 10m ./... -coverprofile=coverage.txt -covermode=atomic
 
-    - name: Push Binaries
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        chmod +x ./scripts/*
-        ./scripts/upload_git.sh build/${{ matrix.artifact_name }}
+  #     - name: Upload coverage to Codecov
+  #       if: ${{ matrix.upload-coverage }}
+  #       uses: codecov/codecov-action@v1
+  #       with:
+  #         file: ./coverage.txt
+  #         fail_ci_if_error: false
+
+  #     - name: Run test cases using bolt provider
+  #       run: |
+  #         go test -v -p 1 -timeout 2m ./config -covermode=atomic
+  #         go test -v -p 1 -timeout 5m ./common -covermode=atomic
+  #         go test -v -p 1 -timeout 5m ./httpd -covermode=atomic
+  #         go test -v -p 1 -timeout 8m ./sftpd -covermode=atomic
+  #         go test -v -p 1 -timeout 5m ./ftpd -covermode=atomic
+  #         go test -v -p 1 -timeout 5m ./webdavd -covermode=atomic
+  #         go test -v -p 1 -timeout 2m ./telemetry -covermode=atomic
+  #       env:
+  #         SFTPGO_DATA_PROVIDER__DRIVER: bolt
+  #         SFTPGO_DATA_PROVIDER__NAME: 'sftpgo_bolt.db'
+
+  #     - name: Run test cases using memory provider
+  #       run: go test -v -p 1 -timeout 10m ./... -covermode=atomic
+  #       env:
+  #         SFTPGO_DATA_PROVIDER__DRIVER: memory
+  #         SFTPGO_DATA_PROVIDER__NAME: ''
+
+  #     - name: Prepare build artifact for macOS
+  #       if: startsWith(matrix.os, 'macos-') == true
+  #       run: |
+  #         mkdir -p output/{init,bash_completion,zsh_completion}
+  #         cp sftpgo output/sftpgo_x86_64
+  #         cp sftpgo_arm64 output/
+  #         cp sftpgo.json output/
+  #         cp -r templates output/
+  #         cp -r static output/
+  #         cp init/com.github.drakkan.sftpgo.plist output/init/
+  #         ./sftpgo gen completion bash > output/bash_completion/sftpgo
+  #         ./sftpgo gen completion zsh > output/zsh_completion/_sftpgo
+  #         ./sftpgo gen man -d output/man/man1
+  #         gzip output/man/man1/*
+
+  #     - name: Prepare build artifact for Windows
+  #       if: startsWith(matrix.os, 'windows-')
+  #       run: |
+  #         mkdir output
+  #         copy .\sftpgo.exe .\output
+  #         copy .\sftpgo.json .\output
+  #         mkdir output\templates
+  #         xcopy .\templates .\output\templates\ /E
+  #         mkdir output\static
+  #         xcopy .\static .\output\static\ /E
+
+  #     - name: Upload build artifact
+  #       if: startsWith(matrix.os, 'ubuntu-') != true
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: sftpgo-${{ matrix.os }}-go-${{ matrix.go }}
+  #         path: output
+
+  # test-postgresql-mysql-crdb:
+  #   name: Test with PgSQL/MySQL/Cockroach
+  #   runs-on: ubuntu-latest
+
+  #   services:
+  #     postgres:
+  #       image: postgres:latest
+  #       env:
+  #         POSTGRES_PASSWORD: postgres
+  #         POSTGRES_DB: sftpgo
+  #       options: >-
+  #         --health-cmd pg_isready
+  #         --health-interval 10s
+  #         --health-timeout 5s
+  #         --health-retries 5
+  #       ports:
+  #         - 5432:5432
+
+  #     mariadb:
+  #       image: mariadb:latest
+  #       env:
+  #         MYSQL_ROOT_PASSWORD: mysql
+  #         MYSQL_DATABASE: sftpgo
+  #         MYSQL_USER: sftpgo
+  #         MYSQL_PASSWORD: sftpgo
+  #       options: >-
+  #         --health-cmd "mysqladmin status -h 127.0.0.1 -P 3306 -u root -p$MYSQL_ROOT_PASSWORD"
+  #         --health-interval 10s
+  #         --health-timeout 5s
+  #         --health-retries 6
+  #       ports:
+  #         - 3307:3306
+
+  #   steps:
+  #     - uses: actions/checkout@v2
+
+  #     - name: Set up Go
+  #       uses: actions/setup-go@v2
+  #       with:
+  #         go-version: 1.16
+
+  #     - name: Build
+  #       run: go build -ldflags "-s -w -X github.com/drakkan/sftpgo/version.commit=`git describe --always --dirty` -X github.com/drakkan/sftpgo/version.date=`date -u +%FT%TZ`" -o sftpgo
+
+  #     - name: Run tests using PostgreSQL provider
+  #       run: |
+  #         go test -v -p 1 -timeout 10m ./... -covermode=atomic
+  #       env:
+  #         SFTPGO_DATA_PROVIDER__DRIVER: postgresql
+  #         SFTPGO_DATA_PROVIDER__NAME: sftpgo
+  #         SFTPGO_DATA_PROVIDER__HOST: localhost
+  #         SFTPGO_DATA_PROVIDER__PORT: 5432
+  #         SFTPGO_DATA_PROVIDER__USERNAME: postgres
+  #         SFTPGO_DATA_PROVIDER__PASSWORD: postgres
+
+  #     - name: Run tests using MySQL provider
+  #       run: |
+  #         go test -v -p 1 -timeout 10m ./... -covermode=atomic
+  #       env:
+  #         SFTPGO_DATA_PROVIDER__DRIVER: mysql
+  #         SFTPGO_DATA_PROVIDER__NAME: sftpgo
+  #         SFTPGO_DATA_PROVIDER__HOST: localhost
+  #         SFTPGO_DATA_PROVIDER__PORT: 3307
+  #         SFTPGO_DATA_PROVIDER__USERNAME: sftpgo
+  #         SFTPGO_DATA_PROVIDER__PASSWORD: sftpgo
+
+  #     - name: Run tests using CockroachDB provider
+  #       run: |
+  #         docker run --rm --name crdb --health-cmd "curl -I http://127.0.0.1:8080" --health-interval 10s --health-timeout 5s --health-retries 6 -p 26257:26257 -d cockroachdb/cockroach:latest start-single-node --insecure --listen-addr 0.0.0.0:26257
+  #         docker exec crdb cockroach sql --insecure -e 'create database "sftpgo"'
+  #         go test -v -p 1 -timeout 10m ./... -covermode=atomic
+  #         docker stop crdb
+  #       env:
+  #         SFTPGO_DATA_PROVIDER__DRIVER: cockroachdb
+  #         SFTPGO_DATA_PROVIDER__NAME: sftpgo
+  #         SFTPGO_DATA_PROVIDER__HOST: localhost
+  #         SFTPGO_DATA_PROVIDER__PORT: 26257
+  #         SFTPGO_DATA_PROVIDER__USERNAME: root
+  #         SFTPGO_DATA_PROVIDER__PASSWORD:
+
+  # build-linux-packages:
+  #   name: Build Linux packages
+  #   runs-on: ubuntu-18.04
+  #   strategy:
+  #     matrix:
+  #       include:
+  #         - arch: amd64
+  #           go: 1.16
+  #           go-arch: amd64
+  #         - arch: aarch64
+  #           distro: ubuntu18.04
+  #           go: latest
+  #           go-arch: arm64
+  #         - arch: ppc64le
+  #           distro: ubuntu18.04
+  #           go: latest
+  #           go-arch: ppc64le
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #       with:
+  #         fetch-depth: 0
+  #     - name: Set up Go
+  #       if: ${{ matrix.arch == 'amd64' }}
+  #       uses: actions/setup-go@v2
+  #       with:
+  #         go-version: ${{ matrix.go }}
+
+  #     - name: Build on amd64
+  #       if: ${{ matrix.arch == 'amd64' }}
+  #       run: |
+  #         go build -ldflags "-s -w -X github.com/drakkan/sftpgo/version.commit=`git describe --always --dirty` -X github.com/drakkan/sftpgo/version.date=`date -u +%FT%TZ`" -o sftpgo
+  #         mkdir -p output/{init,bash_completion,zsh_completion}
+  #         cp sftpgo.json output/
+  #         cp -r templates output/
+  #         cp -r static output/
+  #         cp init/sftpgo.service output/init/
+  #         ./sftpgo gen completion bash > output/bash_completion/sftpgo
+  #         ./sftpgo gen completion zsh > output/zsh_completion/_sftpgo
+  #         ./sftpgo gen man -d output/man/man1
+  #         gzip output/man/man1/*
+  #         cp sftpgo output/
+
+  #     - uses: uraimo/run-on-arch-action@v2.0.9
+  #       if: ${{ matrix.arch != 'amd64' }}
+  #       name: Build for ${{ matrix.arch }}
+  #       id: build
+  #       with:
+  #         arch: ${{ matrix.arch }}
+  #         distro: ${{ matrix.distro }}
+  #         setup: |
+  #           mkdir -p "${PWD}/output"
+  #         dockerRunArgs: |
+  #           --volume "${PWD}/output:/output"
+  #         shell: /bin/bash
+  #         install: |
+  #           apt-get update -q -y
+  #           apt-get install -q -y curl gcc git
+  #           if [ ${{ matrix.go }} == 'latest' ]
+  #           then
+  #             GO_VERSION=$(curl https://golang.org/VERSION?m=text)
+  #           else
+  #             GO_VERSION=${{ matrix.go }}
+  #           fi
+  #           curl --retry 5 --retry-delay 2 --connect-timeout 10 -o go.tar.gz -L https://golang.org/dl/${GO_VERSION}.linux-${{ matrix.go-arch }}.tar.gz
+  #           tar -C /usr/local -xzf go.tar.gz
+  #         run: |
+  #           export PATH=$PATH:/usr/local/go/bin
+  #           go build -ldflags "-s -w -X github.com/drakkan/sftpgo/version.commit=`git describe --always --dirty` -X github.com/drakkan/sftpgo/version.date=`date -u +%FT%TZ`" -o sftpgo
+  #           mkdir -p output/{init,bash_completion,zsh_completion}
+  #           cp sftpgo.json output/
+  #           cp -r templates output/
+  #           cp -r static output/
+  #           cp init/sftpgo.service output/init/
+  #           ./sftpgo gen completion bash > output/bash_completion/sftpgo
+  #           ./sftpgo gen completion zsh > output/zsh_completion/_sftpgo
+  #           ./sftpgo gen man -d output/man/man1
+  #           gzip output/man/man1/*
+  #           cp sftpgo output/
+
+  #     - name: Upload build artifact
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: sftpgo-linux-${{ matrix.arch }}-go-${{ matrix.go }}
+  #         path: output
+
+  #     - name: Build Packages
+  #       id: build_linux_pkgs
+  #       run: |
+  #         export NFPM_ARCH=${{ matrix.go-arch }}
+  #         cd pkgs
+  #         ./build.sh
+  #         PKG_VERSION=$(cat dist/version)
+  #         echo "::set-output name=pkg-version::${PKG_VERSION}"
+
+  #     - name: Upload Debian Package
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: sftpgo-${{ steps.build_linux_pkgs.outputs.pkg-version }}-${{ matrix.go-arch }}-deb
+  #         path: pkgs/dist/deb/*
+
+  #     - name: Upload RPM Package
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: sftpgo-${{ steps.build_linux_pkgs.outputs.pkg-version }}-${{ matrix.go-arch }}-rpm
+  #         path: pkgs/dist/rpm/*
+
+  golangci-lint:
+    name: golangci-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: latest
+          skip-go-installation: true
