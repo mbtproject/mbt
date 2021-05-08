@@ -1,6 +1,6 @@
 name: CI
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   build-test:
@@ -24,63 +24,61 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
 
-      # - name: Build for Linux/macOS x86_64
-      #   if: startsWith(matrix.os, 'ubuntu-') == true
-      #   run: make build
+      - name: Build for Linux/macOS x86_64
+        if: startsWith(matrix.os, 'ubuntu-') == true
+        run: make build
 
-      # - name: Build for macOS arm64
-      #   if: startsWith(matrix.os, 'macos-') == true
-      #   run: make build
+      - name: Build for macOS arm64
+        if: startsWith(matrix.os, 'macos-') == true
+        run: make build
 
-      - name: Build for Windows 1
-        if: startsWith(matrix.os, 'windows-')
-        # shell: pwsh
-        run: |
-          ./scripts/build_win.bat
+      # - name: Build for Windows 1
+      #   if: startsWith(matrix.os, 'windows-')
+      #   # shell: pwsh
+      #   run: |
+      #     ./scripts/build_win.bat
 
-  # install-upload:
-  #   name: Build
-  #   needs: [build-test]
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     matrix:
-  #       go: [1.16]
-  #       os: [ubuntu-latest, macos-latest, windows-latest]
-  #       # os: [windows-latest]
-  #       # upload-coverage: [true]
-  #       # include:
-  #       #   - go: 1.16
-  #       #     os: windows-latest
-  #       #     upload-coverage: false
+  install-upload:
+    name: Build
+    needs: [build-test]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        go: [1.16]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        # os: [windows-latest]
+        # upload-coverage: [true]
+        # include:
+        #   - go: 1.16
+        #     os: windows-latest
+        #     upload-coverage: false
 
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - name: Set up Go
-  #       uses: actions/setup-go@v2
-  #       with:
-  #         go-version: ${{ matrix.go }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
 
-  #     - name: Install for Linux
-  #       if: startsWith(matrix.os, 'ubuntu-') == true
-  #       run: make install
-  #     - name: Archive linux artifacts
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: linuxm-bt
-  #         path: |
-  #           dist
-  #           !dist/**/*.md
+      - name: Install for Linux
+        if: startsWith(matrix.os, 'ubuntu-') == true
+        run: make install
+      - name: Archive linux artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: linuxm-bt
+          path: |
+            **/*mbt
 
-  #     - name: Install for macOS
-  #       if: startsWith(matrix.os, 'macos-') == true
-  #       run: make install
-  #     - name: Archive MacOS artifacts
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: macos-mbt
-  #         path: |
-  #           dist
-  #           !dist/**/*.md
+      - name: Install for macOS
+        if: startsWith(matrix.os, 'macos-') == true
+        run: make install
+      - name: Archive MacOS artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: macos-mbt
+          path: |
+            **/*mbt
 
   #     - name: Install for Windows
   #       if: startsWith(matrix.os, 'windows-')
