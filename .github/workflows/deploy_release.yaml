@@ -36,19 +36,19 @@ jobs:
         if: startsWith(matrix.os, 'windows-')
         shell: pwsh
         run: |
-          mkdir %SYSTEMDRIVE%\downloads
-          mkdir %SYSTEMDRIVE%\go386
-          curl -L -o %SYSTEMDRIVE%\downloads\pkg-config_0.26-1_win32.zip http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/pkg-config_0.26-1_win32.zip
-          curl -L -o %SYSTEMDRIVE%\downloads\glib_2.28.8-1_win32.zip http://ftp.gnome.org/pub/gnome/binaries/win32/glib/2.28/glib_2.28.8-1_win32.zip
-          curl -L -o %SYSTEMDRIVE%\downloads\gettext-runtime_0.18.1.1-2_win32.zip http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/gettext-runtime_0.18.1.1-2_win32.zip
-          curl -L -o %SYSTEMDRIVE%\downloads\go.zip https://golang.org/dl/go1.15.6.windows-386.zip
-          Expand-Archive $ENV:SYSTEMDRIVE\downloads\pkg-config_0.26-1_win32.zip -DestinationPath $ENV:SYSTEMDRIVE/ -Force
-          Expand-Archive $ENV:SYSTEMDRIVE\downloads\glib_2.28.8-1_win32.zip -DestinationPath $ENV:SYSTEMDRIVE/ -Force
-          Expand-Archive $ENV:SYSTEMDRIVE\downloads\gettext-runtime_0.18.1.1-2_win32.zip -DestinationPath $ENV:SYSTEMDRIVE/ -Force
-          Expand-Archive $ENV:SYSTEMDRIVE\downloads\go.zip -DestinationPath $ENV:SYSTEMDRIVE/go386/ -Force
-          SET GOROOT=%SYSTEMDRIVE%\go386\go
-          SET GOPATH=%SYSTEMDRIVE%\gopath
-          SET PATH=%SYSTEMDRIVE%\bin;%SYSTEMDRIVE%\MinGW\bin;%SYSTEMDRIVE%\go386\go\bin;%PATH%
+          # mkdir %SYSTEMDRIVE%\downloads
+          # mkdir %SYSTEMDRIVE%\go386
+          # curl -L -o %SYSTEMDRIVE%\downloads\pkg-config_0.26-1_win32.zip http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/pkg-config_0.26-1_win32.zip
+          # curl -L -o %SYSTEMDRIVE%\downloads\glib_2.28.8-1_win32.zip http://ftp.gnome.org/pub/gnome/binaries/win32/glib/2.28/glib_2.28.8-1_win32.zip
+          # curl -L -o %SYSTEMDRIVE%\downloads\gettext-runtime_0.18.1.1-2_win32.zip http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/gettext-runtime_0.18.1.1-2_win32.zip
+          # curl -L -o %SYSTEMDRIVE%\downloads\go.zip https://golang.org/dl/go1.15.6.windows-386.zip
+          # # Expand-Archive $ENV:SYSTEMDRIVE\downloads\pkg-config_0.26-1_win32.zip -DestinationPath $ENV:SYSTEMDRIVE/ -Force
+          # # Expand-Archive $ENV:SYSTEMDRIVE\downloads\glib_2.28.8-1_win32.zip -DestinationPath $ENV:SYSTEMDRIVE/ -Force
+          # # Expand-Archive $ENV:SYSTEMDRIVE\downloads\gettext-runtime_0.18.1.1-2_win32.zip -DestinationPath $ENV:SYSTEMDRIVE/ -Force
+          # # Expand-Archive $ENV:SYSTEMDRIVE\downloads\go.zip -DestinationPath $ENV:SYSTEMDRIVE/go386/ -Force
+          # SET GOROOT=%SYSTEMDRIVE%\go386\go
+          # SET GOPATH=%SYSTEMDRIVE%\gopath
+          # SET PATH=%SYSTEMDRIVE%\bin;%SYSTEMDRIVE%\MinGW\bin;%SYSTEMDRIVE%\go386\go\bin;%PATH%
           ./scripts/build_win.bat
 
 
