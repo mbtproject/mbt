@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         go: [1.16]
-        # os: [ubuntu-latest, macos-latest, windows-latest]
+        # os: [ubuntu-latest, macos-latest]
         os: [windows-latest]
         # upload-coverage: [true]
         # include:
@@ -34,22 +34,65 @@ jobs:
 
       - name: Build for Windows 1
         if: startsWith(matrix.os, 'windows-')
-        shell: pwsh
+        # shell: pwsh
         run: |
-          # mkdir %SYSTEMDRIVE%\downloads
-          # mkdir %SYSTEMDRIVE%\go386
-          # curl -L -o %SYSTEMDRIVE%\downloads\pkg-config_0.26-1_win32.zip http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/pkg-config_0.26-1_win32.zip
-          # curl -L -o %SYSTEMDRIVE%\downloads\glib_2.28.8-1_win32.zip http://ftp.gnome.org/pub/gnome/binaries/win32/glib/2.28/glib_2.28.8-1_win32.zip
-          # curl -L -o %SYSTEMDRIVE%\downloads\gettext-runtime_0.18.1.1-2_win32.zip http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/gettext-runtime_0.18.1.1-2_win32.zip
-          # curl -L -o %SYSTEMDRIVE%\downloads\go.zip https://golang.org/dl/go1.15.6.windows-386.zip
-          # # Expand-Archive $ENV:SYSTEMDRIVE\downloads\pkg-config_0.26-1_win32.zip -DestinationPath $ENV:SYSTEMDRIVE/ -Force
-          # # Expand-Archive $ENV:SYSTEMDRIVE\downloads\glib_2.28.8-1_win32.zip -DestinationPath $ENV:SYSTEMDRIVE/ -Force
-          # # Expand-Archive $ENV:SYSTEMDRIVE\downloads\gettext-runtime_0.18.1.1-2_win32.zip -DestinationPath $ENV:SYSTEMDRIVE/ -Force
-          # # Expand-Archive $ENV:SYSTEMDRIVE\downloads\go.zip -DestinationPath $ENV:SYSTEMDRIVE/go386/ -Force
-          # SET GOROOT=%SYSTEMDRIVE%\go386\go
-          # SET GOPATH=%SYSTEMDRIVE%\gopath
-          # SET PATH=%SYSTEMDRIVE%\bin;%SYSTEMDRIVE%\MinGW\bin;%SYSTEMDRIVE%\go386\go\bin;%PATH%
           ./scripts/build_win.bat
+
+  # install-upload:
+  #   name: Build
+  #   needs: [build-test]
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     matrix:
+  #       go: [1.16]
+  #       os: [ubuntu-latest, macos-latest, windows-latest]
+  #       # os: [windows-latest]
+  #       # upload-coverage: [true]
+  #       # include:
+  #       #   - go: 1.16
+  #       #     os: windows-latest
+  #       #     upload-coverage: false
+
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Set up Go
+  #       uses: actions/setup-go@v2
+  #       with:
+  #         go-version: ${{ matrix.go }}
+
+  #     - name: Install for Linux
+  #       if: startsWith(matrix.os, 'ubuntu-') == true
+  #       run: make install
+  #     - name: Archive linux artifacts
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: linuxm-bt
+  #         path: |
+  #           dist
+  #           !dist/**/*.md
+
+  #     - name: Install for macOS
+  #       if: startsWith(matrix.os, 'macos-') == true
+  #       run: make install
+  #     - name: Archive MacOS artifacts
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: macos-mbt
+  #         path: |
+  #           dist
+  #           !dist/**/*.md
+
+  #     - name: Install for Windows
+  #       if: startsWith(matrix.os, 'windows-')
+  #       shell: pwsh
+  #       run: ./scripts/build_win.bat
+  #     - name: Archive windows artifacts
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: windows-mbt
+  #         path: |
+  #           dist
+  #           !dist/**/*.md
 
 
   #     - name: Run test cases using SQLite provider
