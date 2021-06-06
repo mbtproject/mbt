@@ -13,15 +13,17 @@ before_install:
     esac
 go:
   - 1.15.x
-script: 
-  - |-
-    case $TRAVIS_OS_NAME in
-      windows)
-        scripts/build_win.bat
-        ;;
-      default)
-        make build
-    esac
+jobs:
+  include:
+    - stage: osx build
+      os: osx
+      script: make build
+    - stage: linux build
+      os: linux
+      script: make build
+    - stage: windows build
+      os: windows
+      script: scripts/build_win.bat
 matrix:
   allow_failures:
     - go: tip
