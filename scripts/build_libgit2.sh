@@ -29,6 +29,6 @@ cmake -DTHREADSAFE=ON \
       ..
 
 cmake --build .
-cmake --install .
+make -j2 install
 
 cd $DIR
