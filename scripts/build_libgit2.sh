@@ -1,6 +1,7 @@
 #!/bin/sh
 
 set -e
+set -x
 
 DIR=$(pwd)
 LIBGIT2_PATH=$DIR/libgit2
