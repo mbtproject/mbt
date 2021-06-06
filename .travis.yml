@@ -3,6 +3,14 @@ os:
   - linux
   - osx
   - windows
+before_install:
+- |-
+    case $TRAVIS_OS_NAME in
+      windows)
+        [[ ! -f C:/tools/msys64/msys2_shell.cmd ]] && rm -rf C:/tools/msys64
+        choco install -y make
+        ;;
+    esac
 go:
   - 1.15.x
 script: make build
