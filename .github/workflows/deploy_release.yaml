@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         go: [1.16]
-        os: [macos-latest]
+        os: [windows-latest]
 
         # os: [ubuntu-latest, macos-latest]
         # os: [windows-latest]
@@ -28,18 +28,36 @@ jobs:
 
       # - name: Build for Linux
       #   if: startsWith(matrix.os, 'ubuntu-') == true
-      #   run: make build
+        # run: |
+        #   make build
+        #   make install
 
-      - name: Build for macOS arm64
-        if: startsWith(matrix.os, 'macos-') == true
-        run: make build
-
-      # - name: Build for Windows 1
-      #   if: startsWith(matrix.os, 'windows-')
-      #   # shell: pwsh
+      # - name: Build for macOS
+      #   if: startsWith(matrix.os, 'macos-') == true
       #   run: |
-      #     ./scripts/build_win.bat
+      #     make build
+      #     make install
 
+      - name: Build for Windows
+        if: startsWith(matrix.os, 'windows-')
+        # shell: pwsh
+        working-directory: "%SYSTEMDRIVE%\gopath\src\github.com\mbtproject\mbt"
+        run: |
+          %SYSTEMDRIVE%\gopath\src\github.com\mbtproject\mbt
+          mkdir %SYSTEMDRIVE%\downloads
+          mkdir %SYSTEMDRIVE%\go386
+          curl -L -o %SYSTEMDRIVE%\downloads\pkg-config_0.26-1_win32.zip http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/pkg-config_0.26-1_win32.zip
+          curl -L -o %SYSTEMDRIVE%\downloads\glib_2.28.8-1_win32.zip http://ftp.gnome.org/pub/gnome/binaries/win32/glib/2.28/glib_2.28.8-1_win32.zip
+          curl -L -o %SYSTEMDRIVE%\downloads\gettext-runtime_0.18.1.1-2_win32.zip http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/gettext-runtime_0.18.1.1-2_win32.zip
+          curl -L -o %SYSTEMDRIVE%\downloads\go.zip https://golang.org/dl/go1.15.6.windows-386.zip
+          7z x %SYSTEMDRIVE%\downloads\pkg-config_0.26-1_win32.zip -o%SYSTEMDRIVE%\
+          7z x %SYSTEMDRIVE%\downloads\glib_2.28.8-1_win32.zip -o%SYSTEMDRIVE%\
+          7z x %SYSTEMDRIVE%\downloads\gettext-runtime_0.18.1.1-2_win32.zip -o%SYSTEMDRIVE%\
+          7z x %SYSTEMDRIVE%\downloads\go.zip -o%SYSTEMDRIVE%\go386\
+          SET GOROOT=%SYSTEMDRIVE%\go386\go
+          SET GOPATH=%SYSTEMDRIVE%\gopath
+          SET PATH=%SYSTEMDRIVE%\bin;%SYSTEMDRIVE%\MinGW\bin;%SYSTEMDRIVE%\go386\go\bin;%PATH%
+          ./scripts/build_win.bat
   # install-upload:
   #   name: Build
   #   needs: [build-test]
