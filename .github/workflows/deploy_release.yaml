@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         go: [1.16]
-        os: [ubuntu-latest]
+        os: [macos-latest]
 
         # os: [ubuntu-latest, macos-latest]
         # os: [windows-latest]
@@ -26,13 +26,13 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
 
-      - name: Build for Linux/macOS x86_64
-        if: startsWith(matrix.os, 'ubuntu-') == true
-        run: make build
-
-      # - name: Build for macOS arm64
-      #   if: startsWith(matrix.os, 'macos-') == true
+      # - name: Build for Linux
+      #   if: startsWith(matrix.os, 'ubuntu-') == true
       #   run: make build
+
+      - name: Build for macOS arm64
+        if: startsWith(matrix.os, 'macos-') == true
+        run: make build
 
       # - name: Build for Windows 1
       #   if: startsWith(matrix.os, 'windows-')
