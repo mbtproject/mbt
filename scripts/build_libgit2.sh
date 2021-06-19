@@ -5,8 +5,7 @@ set -e
 DIR=$(pwd)
 
 # First ensure that libgit2 source tree is available
-if [ ! -d libgit2 ]
-then
+if [ ! -d libgit2 ]; then
     ./scripts/import_libgit2.sh
 fi
 

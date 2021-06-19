@@ -7,8 +7,8 @@ set -e
 
 # Ensure that the GITHUB_TOKEN secret is included
 if [[ -z "$GITHUB_TOKEN" ]]; then
-  echo "Set the GITHUB_TOKEN env variable."
-  exit 1
+    echo "Set the GITHUB_TOKEN env variable."
+    exit 1
 fi
 
 # Ensure that there is a pattern specified.
@@ -16,7 +16,6 @@ if [[ -z "$1" ]]; then
     echo "Missing file (pattern) to upload."
     exit 1
 fi
-
 
 #
 # In the past we invoked a build-script to generate the artifacts
@@ -77,7 +76,6 @@ for file in $*; do
         echo "**************************"
         continue
     fi
-
 
     FILENAME=$(basename "${file}")
 

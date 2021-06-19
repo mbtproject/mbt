@@ -10,7 +10,9 @@ DIR="$(pwd)"
 LIBGIT2_PATH="$DIR/libgit2"
 LIBGIT2_VERSION="v0.28.5"
 
-[[ -n "$LIBGIT2_VERSION" ]] && LIBGIT2_BRANCH="-b ${LIBGIT2_VERSION}"
+if [ -n "$LIBGIT2_VERSION" ]; then
+  LIBGIT2_BRANCH="-b ${LIBGIT2_VERSION}"
+fi
 
 if [ -d $LIBGIT2_PATH ]; then
   rm -rf $LIBGIT2_PATH

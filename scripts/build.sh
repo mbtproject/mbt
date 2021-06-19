@@ -5,8 +5,7 @@ set -e
 # Utility functions
 lint() {
   paths=$@
-  for path in "${paths[@]}"
-  do
+  for path in "${paths[@]}"; do
     r=$(gofmt -s -d $path)
     if [ ! -z "$r" ]; then
       echo "ERROR: Linting failed. Review errors and try running gofmt -s -w $path"
@@ -48,7 +47,6 @@ if [ -z $VERSION ]; then
   fi
 fi
 
-
 make restore
 
 # Run linter
@@ -68,7 +66,7 @@ fi
 
 go build -tags static,system_libgit2 -o "build/${OUT}"
 
-shasum -a 1 -p "build/${OUT}" | cut -d ' ' -f 1 > "build/${OUT}.sha1"
+shasum -a 1 -p "build/${OUT}" | cut -d ' ' -f 1 >"build/${OUT}.sha1"
 
 # Run go vet (this should happen after the build)
 go vet ./*.go
