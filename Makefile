@@ -1,3 +1,7 @@
+MAKEFLAGS += --warn-undefined-variables
+MAKEFLAGS += --no-builtin-rules
+MAKEFLAGS += --print-directory
+
 default: install
 
 .PHONY: install
