@@ -10,15 +10,12 @@ DIR="$(pwd)"
 LIBGIT2_PATH="$DIR/libgit2"
 LIBGIT2_VERSION="v0.28.5"
 
+[[ -n "$LIBGIT2_VERSION" ]] && LIBGIT2_BRANCH="-b ${LIBGIT2_VERSION}"
 
 if [ -d $LIBGIT2_PATH ]; then
   rm -rf $LIBGIT2_PATH
 fi
 
-git clone https://github.com/libgit2/libgit2.git $LIBGIT2_PATH
+git clone $LIBGIT2_BRANCH https://github.com/libgit2/libgit2.git $LIBGIT2_PATH
 
-cd $LIBGIT2_PATH
-git checkout $LIBGIT2_VERSION
-
-cd $DIR
 rm -rf $LIBGIT2_PATH/.git

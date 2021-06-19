@@ -63,7 +63,7 @@ go test -tags static,system_libgit2 ./graph -v -covermode=count
 go test -tags static,system_libgit2 ./utils -v -covermode=count
 go test -tags static,system_libgit2 ./lib -v -covermode=count -coverprofile=coverage.out
 if [ ! -z $COVERALLS_TOKEN ] && [ -f ./coverage.out ]; then
-  $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
+  $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=github -repotoken $COVERALLS_TOKEN
 fi
 
 go build -tags static,system_libgit2 -o "build/${OUT}"
@@ -76,21 +76,3 @@ go vet ./e ./dtrace ./trie ./intercept ./lib ./graph
 
 echo "testing the bin"
 "./build/${OUT}" version
-
-if [ ! -z $PUBLISH_TOKEN ]; then
-  echo "publishing $OUT"
-  curl \
-    -ubuddyspike:$PUBLISH_TOKEN \
-    -X POST \
-    -H "Content-Type: application/json" \
-    -d "{\"name\": \"$VERSION\", \"description\": \"$VERSION\", \"published\": true}" \
-    "https://api.bintray.com/packages/buddyspike/bin/$OUT/versions"
-
-  curl \
-    -ubuddyspike:$PUBLISH_TOKEN \
-    --progress-bar \
-    -T "build/$OUT" \
-    -H "X-Bintray-Package:$OUT" \
-    -H "X-Bintray-Version:$VERSION" \
-    "https://api.bintray.com/content/buddyspike/bin/$OUT/$VERSION/$VERSION/$OUT?publish=1"
-fi

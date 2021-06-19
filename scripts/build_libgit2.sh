@@ -3,7 +3,6 @@
 set -e
 
 DIR=$(pwd)
-LIBGIT2_PATH=$DIR/libgit2
 
 # First ensure that libgit2 source tree is available
 if [ ! -d libgit2 ]
@@ -11,7 +10,7 @@ then
     ./scripts/import_libgit2.sh
 fi
 
-mkdir -p $LIBGIT2_PATH
+LIBGIT2_PATH=$DIR/libgit2
 
 cd $LIBGIT2_PATH
 mkdir -p install/lib
@@ -28,6 +27,6 @@ cmake -DTHREADSAFE=ON \
       ..
 
 cmake --build .
-make -j2 install
+make -j4 install
 
 cd $DIR
