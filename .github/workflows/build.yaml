@@ -1,0 +1,30 @@
+---
+name: Build
+
+on: pull_request
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ${{ matrix.runs-on }}
+
+    steps:
+      - uses: actions/checkout@v3.0.2
+
+      - uses: actions/setup-go@v3.2.0
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - run: |
+          make build
+
+    strategy:
+      matrix:
+        runs-on:
+          - macos-latest
+          - ubuntu-latest
+        go-version:
+          - 1.15.x
