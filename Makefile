@@ -2,11 +2,16 @@ default: install
 
 .PHONY: install
 install: build_libgit2
+	build_git2go
 	go install ./...
 
 .PHONY: build_libgit2
 build_libgit2:
 	./scripts/build_libgit2.sh
+
+.PHONY: build_git2go
+build_git2go:
+	./scripts/build_git2go.sh
 
 .PHONY: build
 build: clean

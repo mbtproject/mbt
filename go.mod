@@ -2,6 +2,8 @@ module github.com/mbtproject/mbt
 
 go 1.15
 
+replace github.com/libgit2/git2go/v34 => ./git2go
+
 require (
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/libgit2/git2go/v34 v34.0.0

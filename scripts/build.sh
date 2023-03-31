@@ -28,6 +28,9 @@ go get github.com/mattn/goveralls
 # Build libgit2
 ./scripts/build_libgit2.sh
 
+# Build git2go
+./scripts/build_git2go.sh
+
 # Set environment so to static link libgit2 when building git2go
 export PKG_CONFIG_PATH="$LIBGIT2_PATH/build"
 export CGO_LDFLAGS="$(pkg-config --libs --static $LIBGIT2_PATH/build/libgit2.pc)"
