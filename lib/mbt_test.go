@@ -25,7 +25,7 @@ import (
 	"time"
 
 	yaml "github.com/go-yaml/yaml"
-	git "github.com/libgit2/git2go/v28"
+	git "github.com/libgit2/git2go/v34"
 	"github.com/mbtproject/mbt/e"
 	"github.com/mbtproject/mbt/intercept"
 )
@@ -108,8 +108,8 @@ func (r *TestRepository) Commit(message string) error {
 		return err
 	}
 
-	err = idx.AddAll([]string{"."}, git.IndexAddCheckPathspec, func(p string, f string) int {
-		return 0
+	err = idx.AddAll([]string{"."}, git.IndexAddCheckPathspec, func(p string, f string) error {
+		return nil
 	})
 	if err != nil {
 		return err

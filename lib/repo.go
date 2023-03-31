@@ -18,7 +18,7 @@ package lib
 import (
 	"fmt"
 
-	git "github.com/libgit2/git2go/v28"
+	git "github.com/libgit2/git2go/v34"
 	"github.com/mbtproject/mbt/e"
 )
 
@@ -206,7 +206,8 @@ func (r *libgitRepo) WalkBlobs(commit Commit, callback BlobWalkCallback) error {
 		walkErr error
 	)
 
-	err = tree.Walk(func(path string, entry *git.TreeEntry) int {
+	err = tree.Walk(func(path string, entry *git.TreeEntry) error {
+
 		if entry.Type == git.ObjectBlob {
 			b := &libgitBlob{
 				entry:  entry,
@@ -215,10 +216,10 @@ func (r *libgitRepo) WalkBlobs(commit Commit, callback BlobWalkCallback) error {
 			}
 			walkErr = callback(b)
 			if walkErr != nil {
-				return -1
+				return walkErr
 			}
 		}
-		return 0
+		return nil
 	})
 
 	if walkErr != nil {
