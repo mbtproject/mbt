@@ -11,9 +11,12 @@ then
     ./scripts/import_git2go.sh
 fi
 
-rm -rf $GIT2GO_PATH/vendor/libgit2
-
-ln -s $DIR/libgit2 $GIT2GO_PATH/vendor/libgit2
+if [ ! -L $GIT2GO_PATH/vendor/libgit2 ]; then
+    rm -rf $GIT2GO_PATH/vendor/libgit2
+    ln -s $DIR/libgit2 $GIT2GO_PATH/vendor/libgit2
+fi
 
 cd $GIT2GO_PATH
 make install-static
+
+cd ${DIR}
