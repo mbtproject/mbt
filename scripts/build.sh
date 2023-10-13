@@ -36,7 +36,7 @@ go get golang.org/x/tools/cmd/cover
 go get github.com/mattn/goveralls
 
 # Set environment so to static link libgit2 when building git2go
-export PKG_CONFIG_PATH="$GIT2GO_PATH/static-build/build"
+export PKG_CONFIG_PATH="$GIT2GO_PATH/static-build/build:$LIBGIT2_PATH/build"
 export CGO_LDFLAGS="$(pkg-config --libs --static $GIT2GO_PATH/static-build/build/libgit2.pc)"
 
 # All preparation is done at this point.
@@ -74,7 +74,7 @@ if [ ! -z $COVERALLS_TOKEN ] && [ -f ./coverage.out ]; then
 fi
 
 go build -tags static,system_libgit2 -o "build/${OUT}"
-shasum -a 1 -p "build/${OUT}" | cut -d ' ' -f 1 > "build/${OUT}.sha1"
+shasum -a 1 -U "build/${OUT}" | cut -d ' ' -f 1 > "build/${OUT}.sha1"
 
 # Run go vet (this should happen after the build)
 go vet ./*.go
