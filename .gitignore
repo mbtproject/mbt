@@ -6,5 +6,6 @@ tmp/
 repo/
 build/
 libgit2/
+git2go/
 
 .idea/

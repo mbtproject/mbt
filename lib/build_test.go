@@ -25,12 +25,12 @@ import (
 	"runtime"
 	"testing"
 
-	git "github.com/libgit2/git2go/v28"
+	git "github.com/libgit2/git2go/v34"
 	"github.com/mbtproject/mbt/e"
 	"github.com/stretchr/testify/assert"
 )
 
-//noinspection GoUnusedParameter
+// noinspection GoUnusedParameter
 func noopCb(a *Module, s CmdStage, err error) {}
 
 func stdTestCmdOptions(buff *bytes.Buffer) *CmdOptions {

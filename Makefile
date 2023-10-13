@@ -1,12 +1,16 @@
 default: install
 
 .PHONY: install
-install: build_libgit2
+install: build_libgit2 build_git2go
 	go install ./...
 
 .PHONY: build_libgit2
 build_libgit2:
 	./scripts/build_libgit2.sh
+
+.PHONY: build_git2go
+build_git2go:
+	./scripts/build_git2go.sh
 
 .PHONY: build
 build: clean
@@ -23,14 +27,14 @@ restore:
 
 .PHONY: test
 test: build_libgit2
-	go test -covermode=count ./e
-	go test -covermode=count ./lib
-	go test -covermode=count ./cmd
-	go test -covermode=count ./trie
-	go test -covermode=count ./intercept
-	go test -covermode=count ./graph
-	go test -covermode=count ./utils
-	go test -covermode=count .
+	go test -tags static,system_libgit2 -covermode=count ./e
+	go test -tags static,system_libgit2 -covermode=count ./lib
+	go test -tags static,system_libgit2 -covermode=count ./cmd
+	go test -tags static,system_libgit2 -covermode=count ./trie
+	go test -tags static,system_libgit2 -covermode=count ./intercept
+	go test -tags static,system_libgit2 -covermode=count ./graph
+	go test -tags static,system_libgit2 -covermode=count ./utils
+	go test -tags static,system_libgit2 -covermode=count .
 
 .PHONY: showcover
 showcover:

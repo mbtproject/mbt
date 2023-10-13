@@ -8,8 +8,7 @@ set -e
 
 DIR="$(pwd)"
 LIBGIT2_PATH="$DIR/libgit2"
-LIBGIT2_VERSION="v0.28.5"
-
+LIBGIT2_VERSION="v1.5.2"
 
 if [ -d $LIBGIT2_PATH ]; then
   rm -rf $LIBGIT2_PATH
